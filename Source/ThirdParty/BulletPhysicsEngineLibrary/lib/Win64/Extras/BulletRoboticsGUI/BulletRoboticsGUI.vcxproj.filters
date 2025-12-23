@@ -1,0 +1,279 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\InProcessExampleBrowser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsServerExample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsClientExample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\RemoteGUIHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\RemoteGUIHelperTCP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsServerExample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsServerExampleBullet2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\SharedMemoryInProcessPhysicsC_API.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\Common2dCanvasInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonCallbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonCameraInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonExampleInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonFileIOInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonGraphicsAppInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonGUIHelperInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonMultiBodyBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonParameterInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonRenderInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonRigidBodyBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\CommonInterfaces\CommonWindowInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\OpenGLWindow\SimpleCamera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\TinyRenderer\geometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\TinyRenderer\model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\TinyRenderer\tgaimage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\TinyRenderer\our_gl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\TinyRenderer\TinyRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\plugins\collisionFilterPlugin\collisionFilterPlugin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\plugins\pdControlPlugin\pdControlPlugin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\b3RobotSimulatorClientAPI_NoGUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\b3RobotSimulatorClientAPI_NoDirect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\IKTrajectoryHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\plugins\tinyRendererPlugin\tinyRendererPlugin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\plugins\tinyRendererPlugin\TinyRendererVisualShapeConverter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\InProcessMemory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsServerSharedMemory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsDirect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsDirectC_API.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsServerCommandProcessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\b3PluginManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsClientSharedMemory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsClientSharedMemory_C_API.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsClientC_API.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\SharedMemoryPublic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\Win32SharedMemory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PosixSharedMemory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3ResourcePath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\RobotLoggingUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3Clock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\ChromeTraceUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3ERPCFMHelper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3ReferenceFrameHelper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\tinyxml2\tinyxml2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\Wavefront\tiny_obj_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\stb_image\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\BussIK\Jacobian.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\BussIK\LinearR2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\BussIK\LinearR3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\BussIK\LinearR4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\BussIK\MatrixRmn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\BussIK\Node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\BussIK\Tree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\BussIK\VectorRn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportColladaDemo\LoadMeshFromCollada.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportObjDemo\LoadMeshFromObj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportObjDemo\Wavefront2GLInstanceGraphicsShape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportMJCFDemo\BulletMJCFImporter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\BulletUrdfImporter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\MyMultiBodyCreator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\URDF2Bullet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\UrdfParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\urdfStringSplit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\URDFImporterInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\URDFJointTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\SDFAudioTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\UrdfRenderingInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportURDFDemo\MultiBodyCreationInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Importers\ImportMeshUtility\b3ImportMeshUtility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\MultiThreading\b3PosixThreadSupport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\MultiThreading\b3Win32ThreadSupport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\MultiThreading\b3ThreadSupportInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsServerExample.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsClientExample.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\RemoteGUIHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsSharedMemoryCommands.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsSharedMemoryPublic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\Extras\BulletRoboticsGUI\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{897198D0-B187-3426-8FF1-E8A8A70F1093}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{C10AAE9B-458E-3CC4-922B-E4392DFF8BC9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src\SimpleSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src\ActiveSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src\PassiveSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src\ActiveSocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src\Host.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src\PassiveSocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src\SimpleSocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src\StatTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{897198D0-B187-3426-8FF1-E8A8A70F1093}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{C10AAE9B-458E-3CC4-922B-E4392DFF8BC9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\Extras\obj2sdf\obj2sdf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3ResourcePath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\Wavefront\tiny_obj_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3ResourcePath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\Extras\obj2sdf\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{897198D0-B187-3426-8FF1-E8A8A70F1093}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{C10AAE9B-458E-3CC4-922B-E4392DFF8BC9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

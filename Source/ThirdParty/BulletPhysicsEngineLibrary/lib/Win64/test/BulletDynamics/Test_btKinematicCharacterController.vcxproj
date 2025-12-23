@@ -1,0 +1,385 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{0ABA4323-713A-3AE3-A04C-128F254F585D}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>Test_btKinematicCharacterController</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Test_btKinematicCharacterController.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Test_btKinematicCharacterController</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Test_btKinematicCharacterController.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Test_btKinematicCharacterController</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Test_btKinematicCharacterController.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Test_btKinematicCharacterController</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Test_btKinematicCharacterController.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Test_btKinematicCharacterController</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <StringPooling>true</StringPooling>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;USE_GTEST;_VARIADIC_MAX=10;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;USE_GTEST;_VARIADIC_MAX=10;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>..\..\RelWithDebInfo\Debug\BulletDynamics_Debug.lib;..\..\RelWithDebInfo\Debug\BulletCollision_Debug.lib;..\..\RelWithDebInfo\Debug\LinearMath_Debug.lib;..\..\RelWithDebInfo\Debug\gtest_Debug.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/Debug/Test_btKinematicCharacterController.lib</ImportLibrary>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/Debug/Test_btKinematicCharacterController.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <StringPooling>true</StringPooling>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;USE_GTEST;_VARIADIC_MAX=10;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;USE_GTEST;_VARIADIC_MAX=10;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>..\..\RelWithDebInfo\Release\BulletDynamics.lib;..\..\RelWithDebInfo\Release\BulletCollision.lib;..\..\RelWithDebInfo\Release\LinearMath.lib;..\..\RelWithDebInfo\Release\gtest.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/Release/Test_btKinematicCharacterController.lib</ImportLibrary>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/Release/Test_btKinematicCharacterController.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <StringPooling>true</StringPooling>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;USE_GTEST;_VARIADIC_MAX=10;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;USE_GTEST;_VARIADIC_MAX=10;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>..\..\RelWithDebInfo\MinSizeRel\BulletDynamics_MinsizeRel.lib;..\..\RelWithDebInfo\MinSizeRel\BulletCollision_MinsizeRel.lib;..\..\RelWithDebInfo\MinSizeRel\LinearMath_MinsizeRel.lib;..\..\RelWithDebInfo\MinSizeRel\gtest_MinsizeRel.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/MinSizeRel/Test_btKinematicCharacterController.lib</ImportLibrary>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/MinSizeRel/Test_btKinematicCharacterController.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <StringPooling>true</StringPooling>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;USE_GTEST;_VARIADIC_MAX=10;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;USE_GTEST;_VARIADIC_MAX=10;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\gtest-1.7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>..\..\RelWithDebInfo\RelWithDebInfo\BulletDynamics_RelWithDebugInfo.lib;..\..\RelWithDebInfo\RelWithDebInfo\BulletCollision_RelWithDebugInfo.lib;..\..\RelWithDebInfo\RelWithDebInfo\LinearMath_RelWithDebugInfo.lib;..\..\RelWithDebInfo\RelWithDebInfo\gtest_RelWithDebugInfo.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/RelWithDebInfo/Test_btKinematicCharacterController.lib</ImportLibrary>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/RelWithDebInfo/Test_btKinematicCharacterController.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\BulletDynamics\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/test/BulletDynamics/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/test/BulletDynamics/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/test/BulletDynamics/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/test/BulletDynamics/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/test/BulletDynamics/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\test\BulletDynamics\test_btKinematicCharacterController.cpp" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\ZERO_CHECK.vcxproj">
+      <Project>{07735AA9-8FF1-381F-A1ED-3A6499C69B09}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletCollision\BulletCollision.vcxproj">
+      <Project>{4221976D-E485-3D38-8652-3872CF29E626}</Project>
+      <Name>BulletCollision</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletDynamics\BulletDynamics.vcxproj">
+      <Project>{C5A5314C-9A2F-3A00-918E-BE6E4F1D4EE6}</Project>
+      <Name>BulletDynamics</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\LinearMath\LinearMath.vcxproj">
+      <Project>{AE5648F6-8AA2-3647-A196-FDA92B98E1B1}</Project>
+      <Name>LinearMath</Name>
+    </ProjectReference>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\gtest-1.7.0\gtest.vcxproj">
+      <Project>{118B5210-E089-37B3-8888-76816FC1C7F2}</Project>
+      <Name>gtest</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

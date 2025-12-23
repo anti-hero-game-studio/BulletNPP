@@ -1,0 +1,28 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "BulletNPP",
+	"Description": "Intergration of Bullet Physics Engine & Network Prediction Plugin",
+	"Category": "Other",
+	"CreatedBy": "Greggory Addison",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "BulletNPP",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "BulletNativeTags",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
