@@ -46,15 +46,16 @@ void UBulletLiaisonComponent::FinalizeFrame(const FBulletSyncState* SyncState, c
 
 void UBulletLiaisonComponent::InitializeSimulationState(FBulletSyncState* OutSync, FBulletAuxStateContext* OutAux)
 {
+	//TODO:@GreggoryAddison::Init | Register my dynamic rigid body with the Bullet Physics World
 }
 
 void UBulletLiaisonComponent::SimulationTick(const FNetSimTimeStep& TimeStep,
 	const TNetSimInput<BulletBufferTypes>& SimInput, const TNetSimOutput<BulletBufferTypes>& SimOutput)
 {
+	//TODO:@GreggoryAddison::TEST | Add simple forces to the owner's dynamic rb based on the input or even simpler a deterministic randomized vector force just to see what happens
 }
 
-void UBulletLiaisonComponent::FinalizeSmoothingFrame(const FBulletSyncState* Sync,
-	const FBulletAuxStateContext* AuxState)
+void UBulletLiaisonComponent::FinalizeSmoothingFrame(const FBulletSyncState* Sync, const FBulletAuxStateContext* AuxState)
 {
 }
 
