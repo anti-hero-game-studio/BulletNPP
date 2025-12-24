@@ -28,7 +28,8 @@ public class BulletNPP : ModuleRules
 				"Core", 
 				"NetCore",
 				"NetworkPrediction",
-				"GameplayTags"
+				"GameplayTags",
+				"BulletPhysicsEngineLibrary",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

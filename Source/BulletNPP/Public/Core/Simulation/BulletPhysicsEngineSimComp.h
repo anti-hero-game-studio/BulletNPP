@@ -6,7 +6,11 @@
 #include "Components/ActorComponent.h"
 #include "Core/DataTypes/BulletPhysicsTypes.h"
 #include "Core/DataTypes/BulletSimulationTypes.h"
+#include "Core/Interfaces/BulletBackendLiaisonInterface.h"
+#include "UObject/WeakInterfacePtr.h"
 #include "BulletPhysicsEngineSimComp.generated.h"
+
+
 
 namespace BulletComponentConstants
 {
@@ -67,8 +71,9 @@ public:
 	BULLETNPP_API virtual void RegisterComponentTickFunctions(bool bRegister) override;
 	BULLETNPP_API virtual void PostLoad() override;
 	BULLETNPP_API virtual void BeginPlay() override;
-	
-	
+	BULLETNPP_API virtual void InitializeSimulation();
+
+
 	// Broadcast before each simulation tick.
 	// Note - Guaranteed to run on the game thread (even in async simulation).
 	UPROPERTY(BlueprintAssignable, Category = Bullet)
@@ -149,4 +154,18 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = Bullet)
 	BULLETNPP_API USceneComponent* GetUpdatedComponent() const;
+	
+	
+protected:
+	
+	
+	
+	
+	// Specifies which supporting back end class should drive this Mover actor
+	UPROPERTY(EditDefaultsOnly, Category = Mover, meta = (MustImplement = "/Script/BulletNPP.BulletBackendLiaisonInterface"))
+	TSubclassOf<UActorComponent> BackendClass;
+	
+	UPROPERTY(Transient)
+	TScriptInterface<IBulletBackendLiaisonInterface> BackendLiaisonComp;
+	
 };

@@ -7,17 +7,21 @@
 #include "NetworkPredictionStateTypes.h"
 #include "NetworkPredictionTickState.h"
 #include "Core/DataTypes/BulletSimulationTypes.h"
+#include "Core/Interfaces/BulletBackendLiaisonInterface.h"
 #include "BulletLiaisonComponent.generated.h"
 
 using BulletBufferTypes = TNetworkPredictionStateTypes<FBulletInputCmdContext, FBulletSyncState, FBulletAuxStateContext>;
 
 
 UCLASS(BlueprintType, Blueprintable)
-class BULLETNPP_API UBulletLiaisonComponent : public UNetworkPredictionComponent
+class BULLETNPP_API UBulletLiaisonComponent : public UNetworkPredictionComponent, public IBulletBackendLiaisonInterface
 {
 	GENERATED_BODY()
 
 public:
+	
+	// Sets default values for this component's properties
+	UBulletLiaisonComponent();
 	
 	// Begin NP Driver interface
 	// Get latest local input prior to simulation step. Called by Network Prediction system on owner's instance (autonomous or authority).
@@ -39,10 +43,47 @@ public:
 	void FinalizeSmoothingFrame(const FBulletSyncState* Sync, const FBulletAuxStateContext* AuxState);
 	
 	
-	// Sets default values for this component's properties
-	UBulletLiaisonComponent();
+	
+	// UObject interface
+	virtual void InitializeComponent() override;
+	virtual void OnRegister() override;
+	virtual void RegisterComponentTickFunctions(bool bRegister) override;
+	// End UObject interface
+
+	// UNetworkPredictionComponent interface
+	virtual void InitializeNetworkPredictionProxy() override;
+	// End UNetworkPredictionComponent interface
+	
+	
+	//virtual float GetCurrentSimTimeMs() const;
+	//virtual int32 GetCurrentSimFrame() const;
+	//virtual float GetSyncedInterpolationTime() const;
+	virtual ENetRole GetCachedSimNetRole() const;
+
+
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	
+	
+#pragma region SETTINGS
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Settings)
+	uint8 bDoesSimulationProcessLocalInput : 1 = 0;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Settings)
+	uint8 bDoSimProxiesForwardPredictThisSimulation : 1 = 1;
+	
+#pragma endregion SETTINGS
+	
+
+	UPROPERTY()
+	TObjectPtr<UBulletPhysicsEngineSimComp> SimulationComponent;	// the component that we're in charge of driving
+	
+	
+	virtual ENetworkPredictionLocalInputPolicy GetLocalInputPolicy() const; 
+	
+	
+	
 };

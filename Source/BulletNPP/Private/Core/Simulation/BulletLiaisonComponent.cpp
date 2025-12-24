@@ -2,9 +2,13 @@
 
 
 #include "Core/Simulation/BulletLiaisonComponent.h"
-
+#include "NetworkPredictionProxyWrite.h"
+#include "NetworkPredictionProxyInit.h"
+#include "NetworkPredictionProxy.h"
 #include "NetworkPredictionModelDef.h"
 #include "NetworkPredictionModelDefRegistry.h"
+#include "NetworkPredictionWorldManager.h"
+#include "Core/Simulation/BulletPhysicsEngineSimComp.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletLiaisonComponent)
 
@@ -59,6 +63,60 @@ void UBulletLiaisonComponent::FinalizeSmoothingFrame(const FBulletSyncState* Syn
 {
 }
 
+void UBulletLiaisonComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+}
+
+void UBulletLiaisonComponent::OnRegister()
+{
+	Super::OnRegister();
+}
+
+void UBulletLiaisonComponent::RegisterComponentTickFunctions(bool bRegister)
+{
+	Super::RegisterComponentTickFunctions(bRegister);
+}
+
+void UBulletLiaisonComponent::InitializeNetworkPredictionProxy()
+{
+	SimulationComponent = GetOwner()->FindComponentByClass<UBulletPhysicsEngineSimComp>();
+	
+	if (ensureAlwaysMsgf(SimulationComponent, TEXT("UActionScriptNetworkHandlerComponent on actor %s failed to find associated ASC component. This actor will not be simulated. Verify its setup."), *GetNameSafe(GetOwner())))
+	{
+		SimulationComponent->InitializeSimulation();
+
+		NetworkPredictionProxy.Init<FBulletActorModelDef>(GetWorld(), GetReplicationProxies(), this, this);
+		FNetworkPredictionInstanceConfig Config;
+		Config.InputPolicy = GetLocalInputPolicy();
+		Config.NetworkLOD = ENetworkLOD::ForwardPredict;
+		NetworkPredictionProxy.Configure(Config);
+	}
+}
+
+ENetRole UBulletLiaisonComponent::GetCachedSimNetRole() const
+{
+	switch (NetworkPredictionProxy.GetCachedNetRole())
+	{
+	case ROLE_None:
+		break;
+	case ROLE_SimulatedProxy:
+		if (UNetworkPredictionWorldManager* M = GetWorld()->GetSubsystem<UNetworkPredictionWorldManager>())
+		{
+			return M->GetSettings().SimulatedProxyNetworkLOD == ENetworkLOD::Interpolated  && bDoSimProxiesForwardPredictThisSimulation ? ROLE_AutonomousProxy : ROLE_SimulatedProxy; 
+		}
+		return ROLE_SimulatedProxy;
+	case ROLE_AutonomousProxy:
+		return ROLE_AutonomousProxy;
+	case ROLE_Authority:
+		return ROLE_Authority;
+	case ROLE_MAX:
+		break;
+	}
+
+	return ROLE_None;
+}
+
 // Sets default values for this component's properties
 UBulletLiaisonComponent::UBulletLiaisonComponent()
 {
@@ -77,6 +135,21 @@ void UBulletLiaisonComponent::BeginPlay()
 
 	// ...
 	
+}
+
+ENetworkPredictionLocalInputPolicy UBulletLiaisonComponent::GetLocalInputPolicy() const
+{
+	switch (GetOwner()->GetLocalRole())
+	{
+		case ROLE_Authority:
+			return NetworkPredictionProxy.GetCachedHasNetConnection() ? ENetworkPredictionLocalInputPolicy::Passive : ENetworkPredictionLocalInputPolicy::PollPerSimFrame;
+		case ROLE_AutonomousProxy:
+			return ENetworkPredictionLocalInputPolicy::PollPerSimFrame;
+		case ROLE_SimulatedProxy:
+			return ENetworkPredictionLocalInputPolicy::Passive;
+	}
+	
+	return ENetworkPredictionLocalInputPolicy::Passive;
 }
 
 
