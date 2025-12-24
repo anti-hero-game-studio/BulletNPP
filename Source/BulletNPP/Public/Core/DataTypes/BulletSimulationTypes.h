@@ -15,7 +15,7 @@
 class UBulletBlackboard;
 
 // Names for our default modes
-namespace DefaultModeNames
+namespace BulletDefaultModeNames
 {
 	const FName Walking = TEXT("Walking");
 	const FName Falling = TEXT("Falling");
@@ -24,7 +24,7 @@ namespace DefaultModeNames
 }
 
 // Commonly-used blackboard object keys
-namespace CommonBlackboard
+namespace BulletCommonBlackboard
 {
 	const FName LastFloorResult = TEXT("LastFloor");
 	const FName LastWaterResult = TEXT("LastWater");

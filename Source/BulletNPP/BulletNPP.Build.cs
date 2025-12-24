@@ -26,6 +26,7 @@ public class BulletNPP : ModuleRules
 			new string[]
 			{
 				"Core", 
+				"NetCore",
 				"NetworkPrediction",
 				"GameplayTags"
 				// ... add other public dependencies that you statically link with here ...
