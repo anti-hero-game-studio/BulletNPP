@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+#include "CoreMinimal.h"
 #include "NetworkPredictionComponent.h"
 #include "NetworkPredictionSimulation.h"
 #include "NetworkPredictionStateTypes.h"
@@ -83,6 +83,9 @@ protected:
 	
 	
 	virtual ENetworkPredictionLocalInputPolicy GetLocalInputPolicy() const; 
+	
+	float ElapsedTime = 0.f;
+	bool bIsFirstTick = true;
 	
 	
 	
