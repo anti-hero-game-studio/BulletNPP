@@ -155,7 +155,7 @@ struct FBulletMoverInputCmdContext
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadWrite, Category = Mover)
-	FBulletMoverDataCollection InputCollection;
+	FBulletMoverDataCollection Collection;
 
 	UScriptStruct* GetStruct() const
 	{
@@ -165,22 +165,22 @@ struct FBulletMoverInputCmdContext
 	void NetSerialize(const FBulletNetSerializeParams& P)
 	{
 		bool bIgnoredResult(false);
-		InputCollection.NetSerialize(P.Ar, P.Map, bIgnoredResult);
+		Collection.NetSerialize(P.Ar, P.Map, bIgnoredResult);
 	}
 
 	void ToString(FAnsiStringBuilderBase& Out) const
 	{
-		InputCollection.ToString(Out);
+		Collection.ToString(Out);
 	}
 
 	void Interpolate(const FBulletMoverInputCmdContext* From, const FBulletMoverInputCmdContext* To, float Pct)
 	{
-		InputCollection.Interpolate(From->InputCollection, To->InputCollection, Pct);
+		Collection.Interpolate(From->Collection, To->Collection, Pct);
 	}
 
 	void Reset()
 	{
-		InputCollection.Empty();
+		Collection.Empty();
 	}
 };
 
@@ -212,7 +212,7 @@ public:
 	FBulletMovementModifierGroup MovementModifiers;
 
 	UPROPERTY(BlueprintReadWrite, Category = Mover)
-	FBulletMoverDataCollection SyncStateCollection;
+	FBulletMoverDataCollection Collection;
 
 	FBulletMoverSyncState()
 	{
@@ -225,7 +225,7 @@ public:
 			LayeredMoves.HasSameContents(Other.LayeredMoves) &&
 			LayeredMoveInstances.HasSameContents(Other.LayeredMoveInstances) &&
 			MovementModifiers.HasSameContents(Other.MovementModifiers) &&
-			SyncStateCollection.HasSameContents(Other.SyncStateCollection);
+			Collection.HasSameContents(Other.Collection);
 	}
 
 	UScriptStruct* GetStruct() const { return StaticStruct(); }
@@ -239,7 +239,7 @@ public:
 		MovementModifiers.NetSerialize(P.Ar);
 
 		bool bIgnoredResult(false);
-		SyncStateCollection.NetSerialize(P.Ar, P.Map, bIgnoredResult);
+		Collection.NetSerialize(P.Ar, P.Map, bIgnoredResult);
 	}
 
 	void ToString(FAnsiStringBuilderBase& Out) const
@@ -248,13 +248,13 @@ public:
 		Out.Appendf("Layered Moves: %s\n", TCHAR_TO_ANSI(*LayeredMoves.ToSimpleString()));
 		Out.Appendf("Layered Moves: %s\n", TCHAR_TO_ANSI(*LayeredMoveInstances.ToSimpleString()));
 		Out.Appendf("Movement Modifiers: %s\n", TCHAR_TO_ANSI(*MovementModifiers.ToSimpleString()));
-		SyncStateCollection.ToString(Out);
+		Collection.ToString(Out);
 	}
 
 	bool ShouldReconcile(const FBulletMoverSyncState& AuthorityState) const
 	{
 		return (MovementMode != AuthorityState.MovementMode) || 
-			   SyncStateCollection.ShouldReconcile(AuthorityState.SyncStateCollection) ||
+			   Collection.ShouldReconcile(AuthorityState.Collection) ||
 			   MovementModifiers.ShouldReconcile(AuthorityState.MovementModifiers);
 	}
 
@@ -265,7 +265,7 @@ public:
 		LayeredMoveInstances = To->LayeredMoveInstances;
 		MovementModifiers = To->MovementModifiers;
 
-		SyncStateCollection.Interpolate(From->SyncStateCollection, To->SyncStateCollection, Pct);
+		Collection.Interpolate(From->Collection, To->Collection, Pct);
 	}
 
 	// Resets the sync state to its default configuration and removes any
@@ -273,7 +273,7 @@ public:
 	void Reset()
 	{
 		MovementMode = NAME_None;
-		SyncStateCollection.Empty();
+		Collection.Empty();
 		LayeredMoves.Reset();
 		LayeredMoveInstances.Reset();
 		MovementModifiers.Reset();
@@ -327,27 +327,27 @@ public:
 
 	bool ShouldReconcile(const FBulletMoverAuxStateContext& AuthorityState) const
 	{ 
-		return AuxStateCollection.ShouldReconcile(AuthorityState.AuxStateCollection); 
+		return Collection.ShouldReconcile(AuthorityState.Collection); 
 	}
 
 	void NetSerialize(const FBulletNetSerializeParams& P)
 	{
 		bool bIgnoredResult(false);
-		AuxStateCollection.NetSerialize(P.Ar, P.Map, bIgnoredResult);
+		Collection.NetSerialize(P.Ar, P.Map, bIgnoredResult);
 	}
 
 	void ToString(FAnsiStringBuilderBase& Out) const
 	{
-		AuxStateCollection.ToString(Out);
+		Collection.ToString(Out);
 	}
 
 	void Interpolate(const FBulletMoverAuxStateContext* From, const FBulletMoverAuxStateContext* To, float Pct)
 	{
-		AuxStateCollection.Interpolate(From->AuxStateCollection, To->AuxStateCollection, Pct);
+		Collection.Interpolate(From->Collection, To->Collection, Pct);
 	}
 
 	UPROPERTY(BlueprintReadWrite, Category = Mover)
-	FBulletMoverDataCollection AuxStateCollection;
+	FBulletMoverDataCollection Collection;
 };
 
 

@@ -15,7 +15,7 @@ void FBulletMoverInputContainerDataStruct::Interpolate(const FBulletMoverDataStr
 	const FBulletMoverInputContainerDataStruct* FromContainer = static_cast<const FBulletMoverInputContainerDataStruct*>(&From);
 	const FBulletMoverInputContainerDataStruct* ToContainer = static_cast<const FBulletMoverInputContainerDataStruct*>(&To);
 
-	InputCollection.Interpolate(FromContainer->InputCollection, ToContainer->InputCollection, LerpFactor);
+	Collection.Interpolate(FromContainer->Collection, ToContainer->Collection, LerpFactor);
 }
 
 
@@ -33,7 +33,7 @@ bool FBulletMoverInputContainerDataStruct::NetSerialize(FArchive& Ar, UPackageMa
 		return false;
 	}
 
-	if (!InputCollection.NetSerialize(Ar, Map, bOutSuccess))
+	if (!Collection.NetSerialize(Ar, Map, bOutSuccess))
 	{
 		bOutSuccess = false;
 		return false;

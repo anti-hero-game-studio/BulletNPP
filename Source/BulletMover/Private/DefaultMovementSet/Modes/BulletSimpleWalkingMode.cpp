@@ -10,7 +10,7 @@
 void UBulletSimpleWalkingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep,
                                                    FBulletProposedMove& OutProposedMove) const
 {
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
 
 	if (CommonLegacySettings.Get() == nullptr || !StartingSyncState)
 	{
@@ -28,7 +28,7 @@ void UBulletSimpleWalkingMode::GenerateMove_Implementation(const FBulletMoverTic
 	EBulletMoveInputType MoveInputType;
 	FVector DesiredFacingDir;
 	 
-	if (const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.InputCollection.FindDataByType<FBulletCharacterDefaultInputs>())
+	if (const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>())
 	{
 		DesiredVelocity = CharacterInputs->GetMoveInput_WorldSpace();
 		MoveInputType = CharacterInputs->GetMoveInputType();

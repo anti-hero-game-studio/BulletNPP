@@ -80,6 +80,9 @@ public:
 	void GetPhysicsState(int ID, FTransform& transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
+	void GetMotionState(int Id, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force);
+	
+	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void StepPhysics(float deltaSeconds, int maxSubSteps = 1, float fixedTimeStep = 0.016666667f);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
@@ -228,6 +231,11 @@ protected:
 	TMap<const btCollisionObject*, FUnrealShapeDescriptor> GlobalShapeDescriptorDataCache; 
 	
 	FUnrealShapeDescriptor GetShapeDescriptorData(const AActor* Actor) const;
+	
+	
+public:
+	
+	int32 GetActorRootShapeId(const AActor* Actor) const;
 	
 #pragma endregion
 };

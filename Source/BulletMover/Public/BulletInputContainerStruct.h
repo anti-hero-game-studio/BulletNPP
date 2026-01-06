@@ -21,7 +21,7 @@
 
 public:
 	// All input data in this struct
-	FBulletMoverDataCollection InputCollection;
+	FBulletMoverDataCollection Collection;
 
 	// Implementation of FBulletMoverDataStructBase
 

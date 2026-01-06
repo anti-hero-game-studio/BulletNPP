@@ -48,6 +48,7 @@ public:
 
 	// Primary movement simulation update. Given an starting state and timestep, produce a new state. Called by Network Prediction system.
 	UE_API void SimulationTick(const FBulletNetSimTimeStep& TimeStep, const TBulletNetSimInput<KinematicMoverStateTypes>& SimInput, const TBulletNetSimOutput<KinematicMoverStateTypes>& SimOutput);
+	UE_API void PostPhysicsTick(const FBulletNetSimTimeStep& TimeStep, const TBulletNetSimInput<KinematicMoverStateTypes>& SimInput, const TBulletNetSimOutput<KinematicMoverStateTypes>& SimOutput);
 	// End NP Driver interface
 
 	// IBulletMoverBackendLiaisonInterface

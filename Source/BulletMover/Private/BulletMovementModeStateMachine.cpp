@@ -197,7 +197,7 @@ void UBulletMovementModeStateMachine::OnSimulationTick(USceneComponent* UpdatedC
 
 		WorkingSubstepStartData.SyncState.MovementMode = CurrentModeName;
 
-		FBulletMoverDefaultSyncState* OutputSyncState = &OutputState.SyncState.SyncStateCollection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+		FBulletMoverDefaultSyncState* OutputSyncState = &OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
 		OutputState.SyncState.MovementMode = CurrentModeName;
 
 		OutputState.MovementEndState.ResetToDefaults();
@@ -230,11 +230,11 @@ void UBulletMovementModeStateMachine::OnSimulationTick(USceneComponent* UpdatedC
 		if (ApplyInstantEffects(EffectParams, OutputState.SyncState))
 		{
 			// Copying over our sync state collection to SubstepStartData so it is effectively the input sync state later for the movement mode. Doing this makes sure state modification from Instant Effects isn't overridden later by the movement mode
-			for (auto SyncDataIt = OutputState.SyncState.SyncStateCollection.GetCollectionDataIterator(); SyncDataIt; ++SyncDataIt)
+			for (auto SyncDataIt = OutputState.SyncState.Collection.GetCollectionDataIterator(); SyncDataIt; ++SyncDataIt)
 			{
 				if (SyncDataIt->Get())
 				{
-					WorkingSubstepStartData.SyncState.SyncStateCollection.AddDataByCopy(SyncDataIt->Get());
+					WorkingSubstepStartData.SyncState.Collection.AddDataByCopy(SyncDataIt->Get());
 				}
 			}
 

@@ -156,14 +156,14 @@ void FGameplayDebuggerCategory_BulletMover::CollectData(APlayerController* Owner
 			DataPack.ActiveModifiers.Add(*It->Get()->ToSimpleString());
 		}
 
-		for (auto It = SyncState.SyncStateCollection.GetDataArray().CreateConstIterator(); It; ++It)
+		for (auto It = SyncState.Collection.GetDataArray().CreateConstIterator(); It; ++It)
 		{
 			DataPack.SyncStateDataTypes.Add(It->Get()->GetScriptStruct()->GetName());
 		}
 
 		const FBulletMoverInputCmdContext& LastInputCmd = MyMoverComponent->GetLastInputCmd();
 
-		if (const FBulletCharacterDefaultInputs* DefaultInputs = LastInputCmd.InputCollection.FindDataByType<FBulletCharacterDefaultInputs>())
+		if (const FBulletCharacterDefaultInputs* DefaultInputs = LastInputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>())
 		{
 			DataPack.MoveInputType = (int8)DefaultInputs->GetMoveInputType();
 			DataPack.MoveInput = DefaultInputs->GetMoveInput_WorldSpace();
@@ -291,7 +291,7 @@ void FGameplayDebuggerCategory_BulletMover::DrawInWorldInfo(AActor& DebugActor, 
 		if (MoverComp)
 		{
 			const FBulletMoverSyncState& LastState = MoverComp->GetSyncState();
-			const FBulletMoverDefaultSyncState* MoverState = LastState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+			const FBulletMoverDefaultSyncState* MoverState = LastState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
 
 			if (MoverState)
 			{

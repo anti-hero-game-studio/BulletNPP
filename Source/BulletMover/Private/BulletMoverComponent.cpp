@@ -32,6 +32,8 @@
 #include "Misc/DataValidation.h"
 #endif
 
+#include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletMoverComponent)
 
 #define LOCTEXT_NAMESPACE "BulletMover"
@@ -172,7 +174,7 @@ void UBulletMoverComponent::InitializeComponent()
 	CreateDefaultInputAndState(CachedLastProducedInputCmd, DefaultMoverSyncState, CachedLastAuxState);
 	MoverSyncStateDoubleBuffer.SetBufferedData(DefaultMoverSyncState);
 	CachedLastUsedInputCmd = CachedLastProducedInputCmd;
-	LastMoverDefaultSyncState = MoverSyncStateDoubleBuffer.GetReadable().SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	LastMoverDefaultSyncState = MoverSyncStateDoubleBuffer.GetReadable().Collection.FindDataByType<FBulletMoverDefaultSyncState>();
 }
 
 
@@ -341,7 +343,7 @@ void UBulletMoverComponent::UnbindProcessGeneratedMovement()
 
 void UBulletMoverComponent::ProduceInput(const int32 DeltaTimeMS, FBulletMoverInputCmdContext* Cmd)
 {
-	Cmd->InputCollection.Empty();
+	Cmd->Collection.Empty();
 	
 	for (TObjectPtr<UObject> InputProducerComponent : InputProducers)
 	{
@@ -365,7 +367,7 @@ void UBulletMoverComponent::RestoreFrame(const FBulletMoverSyncState* SyncState,
 
 void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
 {
-	const FBulletMoverDefaultSyncState* MoverState = SyncState->SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletMoverDefaultSyncState* MoverState = SyncState->Collection.FindDataByType<FBulletMoverDefaultSyncState>();
 
 	// TODO: Revisit this location check -- it seems simplistic now that we have composable state. Consider supporting a version that allows each sync state data struct a chance to react.
 	// The component will often be in the "right place" already on FinalizeFrame, so a comparison check makes sense before setting it.
@@ -413,7 +415,7 @@ void UBulletMoverComponent::FinalizeSmoothingFrame(const FBulletMoverSyncState* 
 		if (SmoothingMode == EBulletMoverSmoothingMode::VisualComponentOffset && (PrimaryVisualComponent != UpdatedComponent))
 		{
 			// Offset the visual component so it aligns with the smoothed state transform, while leaving the actual root component in place
-			if (const FBulletMoverDefaultSyncState* MoverState = SyncState->SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>())
+			if (const FBulletMoverDefaultSyncState* MoverState = SyncState->Collection.FindDataByType<FBulletMoverDefaultSyncState>())
 			{
 				FTransform ActorTransform = FTransform(MoverState->GetOrientation_WorldSpace(), MoverState->GetLocation_WorldSpace(), FVector::OneVector);
 				PrimaryVisualComponent->SetWorldTransform(BaseVisualComponentTransform * ActorTransform);	// smoothed location with base offset applied
@@ -429,13 +431,13 @@ void UBulletMoverComponent::TickInterpolatedSimProxy(const FBulletMoverTimeStep&
 		CachedLastUsedInputCmd = InputCmd;
 
 		// Copy any structs that may be inputs from sync state to input cmd - note the use of the special container class that lets the inputs avoid causing rollbacks
-		if (FBulletMoverInputContainerDataStruct* InputContainer = static_cast<FBulletMoverInputContainerDataStruct*>(SyncState.SyncStateCollection.FindDataByType(FBulletMoverInputContainerDataStruct::StaticStruct())))
+		if (FBulletMoverInputContainerDataStruct* InputContainer = static_cast<FBulletMoverInputContainerDataStruct*>(SyncState.Collection.FindDataByType(FBulletMoverInputContainerDataStruct::StaticStruct())))
 		{
-			for (auto InputStructIt = InputContainer->InputCollection.GetCollectionDataIterator(); InputStructIt; ++InputStructIt)
+			for (auto InputStructIt = InputContainer->Collection.GetCollectionDataIterator(); InputStructIt; ++InputStructIt)
 			{
 				if (const FBulletMoverDataStructBase* InputDataStruct = InputStructIt->Get())
 				{
-					CachedLastUsedInputCmd.InputCollection.AddDataByCopy(InputDataStruct);
+					CachedLastUsedInputCmd.Collection.AddDataByCopy(InputDataStruct);
 				}
 			}
 		}
@@ -520,7 +522,7 @@ void UBulletMoverComponent::InitializeSimulationState(FBulletMoverSyncState* Out
 
 	CachedLastUsedInputCmd = CachedLastProducedInputCmd;
 	MoverSyncStateDoubleBuffer.SetBufferedData(*OutSync);
-	LastMoverDefaultSyncState = MoverSyncStateDoubleBuffer.GetReadable().SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	LastMoverDefaultSyncState = MoverSyncStateDoubleBuffer.GetReadable().Collection.FindDataByType<FBulletMoverDefaultSyncState>();
 	
 	CachedLastAuxState = *OutAux;
 
@@ -561,21 +563,21 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 
 		if (PersistentSyncEntry.bCopyFromPriorFrame)
 		{
-			if (const FBulletMoverDataStructBase* PriorFrameData = SimInput.SyncState.SyncStateCollection.FindDataByType(PersistentSyncEntry.RequiredType))
+			if (const FBulletMoverDataStructBase* PriorFrameData = SimInput.SyncState.Collection.FindDataByType(PersistentSyncEntry.RequiredType))
 			{
-				SimOutput.SyncState.SyncStateCollection.AddDataByCopy(PriorFrameData);
+				SimOutput.SyncState.Collection.AddDataByCopy(PriorFrameData);
 				bShouldAddDefaultData = false;
 			}
 		}
 
 		if (bShouldAddDefaultData)
 		{
-			SimOutput.SyncState.SyncStateCollection.FindOrAddDataByType(PersistentSyncEntry.RequiredType);
+			SimOutput.SyncState.Collection.FindOrAddDataByType(PersistentSyncEntry.RequiredType);
 		}
 	}
 
 	// Make sure any other sync state structs that aren't supposed to be persistent are removed
-	const TArray<TSharedPtr<FBulletMoverDataStructBase>>& AllSyncStructs = SimOutput.SyncState.SyncStateCollection.GetDataArray();
+	const TArray<TSharedPtr<FBulletMoverDataStructBase>>& AllSyncStructs = SimOutput.SyncState.Collection.GetDataArray();
 	for (int32 i = AllSyncStructs.Num()-1; i >= 0; --i)
 	{
 		bool bShouldRemoveStructType = true;
@@ -593,13 +595,13 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 
 		if (bShouldRemoveStructType)
 		{
-			SimOutput.SyncState.SyncStateCollection.RemoveDataByType(ScriptStruct);
+			SimOutput.SyncState.Collection.RemoveDataByType(ScriptStruct);
 		}	
 	}
 
 	SimOutput.AuxState = SimInput.AuxState;
 
-	FBulletCharacterDefaultInputs* Input = SimInput.InputCmd.InputCollection.FindMutableDataByType<FBulletCharacterDefaultInputs>();
+	FBulletCharacterDefaultInputs* Input = SimInput.InputCmd.Collection.FindMutableDataByType<FBulletCharacterDefaultInputs>();
 	
 	if (Input && !Input->SuggestedMovementMode.IsNone())
 	{
@@ -625,7 +627,7 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 		ModeFSM->OnSimulationTick(UpdatedComponent, UpdatedCompAsPrimitive, SimBlackboard.Get(), SimInput, MoverTimeStep, SimOutput);
 	}
 
-	if (FBulletMoverDefaultSyncState* OutputSyncState = SimOutput.SyncState.SyncStateCollection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
+	if (FBulletMoverDefaultSyncState* OutputSyncState = SimOutput.SyncState.Collection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
 	{
 		const FName MovementModeAfterTick = ModeFSM->GetCurrentModeName();
 		SimOutput.SyncState.MovementMode = MovementModeAfterTick;
@@ -673,19 +675,36 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 	{
 		// stow all inputs away in a special container struct that avoids causing potential rollbacks 
 		// so they can be available to other clients even if they're only interpolated sim proxies
-		if (FBulletMoverInputContainerDataStruct* InputContainer = static_cast<FBulletMoverInputContainerDataStruct*>(SimOutput.SyncState.SyncStateCollection.FindOrAddDataByType(FBulletMoverInputContainerDataStruct::StaticStruct())))
+		if (FBulletMoverInputContainerDataStruct* InputContainer = static_cast<FBulletMoverInputContainerDataStruct*>(SimOutput.SyncState.Collection.FindOrAddDataByType(FBulletMoverInputContainerDataStruct::StaticStruct())))
 		{	
-			for (auto InputCmdIt = SimInput.InputCmd.InputCollection.GetCollectionDataIterator(); InputCmdIt; ++InputCmdIt)
+			for (auto InputCmdIt = SimInput.InputCmd.Collection.GetCollectionDataIterator(); InputCmdIt; ++InputCmdIt)
 			{
 				if (InputCmdIt->Get())
 				{
-					InputContainer->InputCollection.AddDataByCopy(InputCmdIt->Get());
+					InputContainer->Collection.AddDataByCopy(InputCmdIt->Get());
 				}
 			}
 		}
 	}
 	
-	FinalizeStateFromBulletSimulation(SimOutput);
+}
+
+void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)
+{
+	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+	{
+		FBulletMoverDefaultSyncState& FinalState = SimOutput.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+		
+		const int Id = Subsystem->GetActorRootShapeId(GetOwner());
+		FTransform T;
+		FVector V, A, F;
+		Subsystem->GetMotionState(Id, T, V, A, F);
+		
+		//TODO:@GreggoryAddison::CodeCompletion || The current base a player is standing on will need to be passed in... I think.
+		FRotator UnrealRotation(0, 0, 90);
+		T.SetRotation((T.GetRotation().Rotator() + UnrealRotation).Quaternion());
+		FinalState.SetTransforms_WorldSpace(T.GetLocation(), T.GetRotation().Rotator(), V, A, nullptr);
+	}
 }
 
 UBulletBaseMovementMode* UBulletMoverComponent::FindMovementMode(TSubclassOf<UBulletBaseMovementMode> MovementMode) const
@@ -937,7 +956,7 @@ void UBulletMoverComponent::UpdateCachedFrameState(const FBulletMoverSyncState* 
 	// TODO integrate dirty tracking
 	FBulletMoverSyncState& BufferedSyncState = MoverSyncStateDoubleBuffer.GetWritable();
 	BufferedSyncState = *SyncState;
-	LastMoverDefaultSyncState = BufferedSyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	LastMoverDefaultSyncState = BufferedSyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
 	MoverSyncStateDoubleBuffer.Flip();
 
 	// TODO: when AuxState starts getting used we need to double buffer it here as well
@@ -1002,12 +1021,12 @@ void UBulletMoverComponent::CreateDefaultInputAndState(FBulletMoverInputCmdConte
 	{
 		if (PersistentSyncEntry.RequiredType.Get()) // This can happen if a previously existing required type was removed, causing a crash
 		{
-			OutSyncState.SyncStateCollection.FindOrAddDataByType(PersistentSyncEntry.RequiredType);
+			OutSyncState.Collection.FindOrAddDataByType(PersistentSyncEntry.RequiredType);
 		}
 	}
 
 	// Mirror the scene component transform if we have one, otherwise it will be left at origin
-	FBulletMoverDefaultSyncState* MoverState = OutSyncState.SyncStateCollection.FindMutableDataByType<FBulletMoverDefaultSyncState>();
+	FBulletMoverDefaultSyncState* MoverState = OutSyncState.Collection.FindMutableDataByType<FBulletMoverDefaultSyncState>();
 	if (MoverState && UpdatedComponent)
 	{
 		MoverState->SetTransforms_WorldSpace(
@@ -1042,7 +1061,7 @@ void UBulletMoverComponent::UpdateBasedMovementScheduling(const FBulletMoverTick
 {
 	// If we have a dynamic movement base, enable later based movement tick
 	UPrimitiveComponent* SyncStateDynamicBase = nullptr;
-	if (const FBulletMoverDefaultSyncState* OutputSyncState = SimOutput.SyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>())
+	if (const FBulletMoverDefaultSyncState* OutputSyncState = SimOutput.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>())
 	{
 		if (UBulletBasedMovementUtils::IsADynamicBase(OutputSyncState->GetMovementBase()))
 		{
@@ -2151,7 +2170,7 @@ FRotator UBulletMoverComponent::GetTargetOrientation() const
 {
 	// Prefer the input's intended orientation, but if it can't be determined, assume it matches the actual orientation
 	const FBulletMoverInputCmdContext& LastInputCmd = GetLastInputCmd();
-	if (const FBulletCharacterDefaultInputs* MoverInputs = LastInputCmd.InputCollection.FindDataByType<FBulletCharacterDefaultInputs>())
+	if (const FBulletCharacterDefaultInputs* MoverInputs = LastInputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>())
 	{
 		const FVector TargetOrientationDir = MoverInputs->GetOrientationIntentDir_WorldSpace();
 
@@ -2305,7 +2324,7 @@ TArray<FBulletTrajectorySampleInfo> UBulletMoverComponent::GetPredictedTrajector
 
 		if (const UBulletBaseMovementMode* CurrentMovementMode = GetMovementMode())
 		{
-			if (FBulletMoverDefaultSyncState* StepSyncState = StepState.SyncState.SyncStateCollection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
+			if (FBulletMoverDefaultSyncState* StepSyncState = StepState.SyncState.Collection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
 			{
 				const bool bOrigHasGravityOverride = bHasGravityOverride;
 				const FVector OrigGravityAccelOverride = GravityAccelOverride;
@@ -2625,7 +2644,7 @@ void UBulletMoverComponent::SetSimulationOutput(const FBulletMoverTimeStep& Time
 
 	FBulletMoverSyncState& BufferedSyncState = MoverSyncStateDoubleBuffer.GetWritable();
 	BufferedSyncState = OutputData.SyncState;
-	LastMoverDefaultSyncState = BufferedSyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	LastMoverDefaultSyncState = BufferedSyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
 	MoverSyncStateDoubleBuffer.Flip();
 
 	for (const TSharedPtr<FBulletMoverSimulationEventData>& EventData : OutputData.Events)
@@ -2712,7 +2731,7 @@ void UBulletMoverComponent::CheckForExternalMovement(const FBulletMoverTickStart
 		return;
 	}
 
-	if (const FBulletMoverDefaultSyncState* StartingSyncState = SimStartingData.SyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>())
+	if (const FBulletMoverDefaultSyncState* StartingSyncState = SimStartingData.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>())
 	{		
 		if (StartingSyncState->GetMovementBase())
 		{

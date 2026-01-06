@@ -14,9 +14,9 @@ void UBulletSimpleSpringWalkingMode::SimulationTick_Implementation(const FBullet
 	Super::SimulationTick_Implementation(Params, OutputState);
 
 	// We've already updated the spring state during GenerateMove, and just need to copy it into the output simulation state
-	if (const FBulletSimpleSpringState* InSpringState = Params.StartState.SyncState.SyncStateCollection.FindDataByType<FBulletSimpleSpringState>())
+	if (const FBulletSimpleSpringState* InSpringState = Params.StartState.SyncState.Collection.FindDataByType<FBulletSimpleSpringState>())
 	{
-		FBulletSimpleSpringState& OutputSpringState = OutputState.SyncState.SyncStateCollection.FindOrAddMutableDataByType<FBulletSimpleSpringState>();
+		FBulletSimpleSpringState& OutputSpringState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletSimpleSpringState>();
 		OutputSpringState = *InSpringState;
 	}
 }
@@ -24,7 +24,7 @@ void UBulletSimpleSpringWalkingMode::SimulationTick_Implementation(const FBullet
 void UBulletSimpleSpringWalkingMode::GenerateWalkMove_Implementation(FBulletMoverTickStartData& StartState, float DeltaSeconds, const FVector& DesiredVelocity,
 	const FQuat& DesiredFacing, const FQuat& CurrentFacing, FVector& InOutAngularVelocityDegrees, FVector& InOutVelocity)
 {
-	FBulletSimpleSpringState& SpringState = StartState.SyncState.SyncStateCollection.FindOrAddMutableDataByType<FBulletSimpleSpringState>();
+	FBulletSimpleSpringState& SpringState = StartState.SyncState.Collection.FindOrAddMutableDataByType<FBulletSimpleSpringState>();
 
 	// Linear //
 	

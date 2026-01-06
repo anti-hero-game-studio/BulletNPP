@@ -8,6 +8,7 @@
 #include "BulletNetworkPredictionService_Interpolate.inl"
 #include "BulletNetworkPredictionService_Input.inl"
 #include "BulletNetworkPredictionService_Finalize.inl"
+#include "BulletNetworkPredictionService_Physics.inl"
 #include "BulletNetworkPredictionService_ServerRPC.inl"
 #include "BulletNetworkPredictionService_Smooth.inl"
 
@@ -177,6 +178,7 @@ public:
 	JNP_DECLARE_SERVICE(FixedInputLocal,				IBulletInputService);
 	JNP_DECLARE_SERVICE(FixedInputRemote,			IBulletInputService);
 	JNP_DECLARE_SERVICE(FixedTick,					IBulletLocalTickService);
+	JNP_DECLARE_SERVICE(FixedPhysics,					IBulletLocalPhysicsService);
 	JNP_DECLARE_SERVICE(FixedFinalize,				IBulletFinalizeService);
 	JNP_DECLARE_SERVICE(FixedSmoothing,				IBulletFixedSmoothingService);
 
@@ -185,7 +187,9 @@ public:
 	JNP_DECLARE_SERVICE(IndependentInterpolate,		IBulletIndependentInterpolateService);
 	JNP_DECLARE_SERVICE(IndependentLocalInput,		IBulletInputService);
 	JNP_DECLARE_SERVICE(IndependentLocalTick,		IBulletLocalTickService);
+	JNP_DECLARE_SERVICE(IndependentLocalPhysics,		IBulletLocalPhysicsService);
 	JNP_DECLARE_SERVICE(IndependentRemoteTick,		IBulletRemoteIndependentTickService);
+	JNP_DECLARE_SERVICE(IndependentRemotePhysics,		IBulletRemoteIndependentPhysicsService);
 	JNP_DECLARE_SERVICE(IndependentLocalFinalize,	IBulletFinalizeService);
 	JNP_DECLARE_SERVICE(IndependentRemoteFinalize,	IBulletRemoteFinalizeService);
 	
@@ -205,6 +209,7 @@ private:
 			JNP_DEFINE_SERVICE_CALL(FixedInputLocal,				TBulletLocalInputService);
 			JNP_DEFINE_SERVICE_CALL(FixedInputRemote,			TBulletRemoteInputService);
 			JNP_DEFINE_SERVICE_CALL(FixedTick,					TBulletLocalTickService);
+			JNP_DEFINE_SERVICE_CALL(FixedPhysics,					TBulletLocalPhysicsService);
 			JNP_DEFINE_SERVICE_CALL(FixedFinalize,				TBulletFinalizeService);
 			JNP_DEFINE_SERVICE_CALL(FixedSmoothing,				TBulletFixedSmoothingService);
 		}
@@ -216,7 +221,9 @@ private:
 			JNP_DEFINE_SERVICE_CALL(IndependentInterpolate,		TBulletIndependentInterpolateService);
 			JNP_DEFINE_SERVICE_CALL(IndependentLocalInput,		TBulletLocalInputService);
 			JNP_DEFINE_SERVICE_CALL(IndependentLocalTick,		TBulletLocalTickService);
+			JNP_DEFINE_SERVICE_CALL(IndependentLocalPhysics,		TBulletLocalPhysicsService);
 			JNP_DEFINE_SERVICE_CALL(IndependentRemoteTick,		TBulletRemoteIndependentTickService);
+			JNP_DEFINE_SERVICE_CALL(IndependentRemotePhysics,		TBulletRemoteIndependentPhysicsService);
 			JNP_DEFINE_SERVICE_CALL(IndependentLocalFinalize,	TBulletFinalizeService);
 			JNP_DEFINE_SERVICE_CALL(IndependentRemoteFinalize,	TBulletRemoteFinalizeService);
 		}

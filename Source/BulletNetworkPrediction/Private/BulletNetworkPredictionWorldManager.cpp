@@ -448,8 +448,18 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 					const double FixedTimeStep = Step.StepMS * 0.001;
 					Subsystem->StepPhysics(DeltaTimeSeconds, 1, FixedTimeStep);
 				}
-				//TODO:@GreggoryAddison::CodeCompletion || Once the Bullet Tick has processed we need to write the bullet state back into the sync state.
+				
 			}
+			
+			
+			{
+				TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::PostBulletPhysicsTick);
+				for (TUniquePtr<IBulletLocalPhysicsService>& Ptr : Services.FixedPhysics.Array)
+				{
+					Ptr->Tick(Step, ServiceStep);
+				}
+			}
+			
 			
 			if (Settings.bEnableFixedTickSmoothing)
 			{
@@ -538,11 +548,21 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 		{
 			Ptr->Tick(Step, ServiceStep);
 		}	
+		
+		for (TUniquePtr<IBulletLocalPhysicsService>& Ptr : Services.IndependentLocalPhysics.Array)
+		{
+			Ptr->Tick(Step, ServiceStep);
+		}	
 
 		// -------------------------------------------------------------------------
 		//	Remote Independent Tick
 		// -------------------------------------------------------------------------
 		for (TUniquePtr<IBulletRemoteIndependentTickService>& Ptr : Services.IndependentRemoteTick.Array)
+		{
+			Ptr->Tick(DeltaTimeSeconds, &VariableTickState);
+		}
+		
+		for (TUniquePtr<IBulletRemoteIndependentPhysicsService>& Ptr : Services.IndependentRemotePhysics.Array)
 		{
 			Ptr->Tick(DeltaTimeSeconds, &VariableTickState);
 		}

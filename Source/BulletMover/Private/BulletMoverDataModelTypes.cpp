@@ -311,11 +311,6 @@ void FBulletMoverDefaultSyncState::Interpolate(const FBulletMoverDataStructBase&
 	}
 }
 
-void FBulletMoverDefaultSyncState::SetTransforms_WorldSpace(FVector WorldLocation, FRotator WorldOrient, FVector WorldVelocity, UPrimitiveComponent* Base,
-	FName BaseBone)
-{
-	SetTransforms_WorldSpace(WorldLocation, WorldOrient, WorldVelocity, FVector::ZeroVector, Base, BaseBone);
-}
 
 void FBulletMoverDefaultSyncState::SetTransforms_WorldSpace(FVector WorldLocation, FRotator WorldOrient, FVector WorldVelocity, FVector WorldAngularVelocityDegrees, UPrimitiveComponent* Base, FName BaseBone)
 {

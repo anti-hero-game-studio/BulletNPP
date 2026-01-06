@@ -20,7 +20,7 @@ FBulletLayeredMove_MultiJump::FBulletLayeredMove_MultiJump()
 
 bool FBulletLayeredMove_MultiJump::WantsToJump(const FBulletMoverInputCmdContext& InputCmd)
 {
-	if (const FBulletCharacterDefaultInputs* CharacterInputs = InputCmd.InputCollection.FindDataByType<FBulletCharacterDefaultInputs>())
+	if (const FBulletCharacterDefaultInputs* CharacterInputs = InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>())
 	{
 		return CharacterInputs->bIsJumpJustPressed;
 	}
@@ -30,8 +30,8 @@ bool FBulletLayeredMove_MultiJump::WantsToJump(const FBulletMoverInputCmdContext
 
 bool FBulletLayeredMove_MultiJump::GenerateMove(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, UBulletMoverBlackboard* SimBlackboard, FBulletProposedMove& OutProposedMove)
 {
-	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.InputCollection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* SyncState = StartState.SyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
+	const FBulletMoverDefaultSyncState* SyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
 	check(SyncState);
 
 	OutProposedMove.MixMode = MixMode;

@@ -16,6 +16,7 @@ protected:
 		// This world origin must be in *UE dimensions*
 		FVector WorldOrigin;
 		btTransform CenterOfMassTransform;
+		btTransform FinalTransform;
 
 
 	public:
@@ -26,7 +27,7 @@ protected:
 
 		FBulletMotionState(AActor* ParentActor, const FVector& WorldCentre, const btTransform& CenterOfMassOffset = btTransform::getIdentity())
 		{
-			UpdatedComponent=ParentActor->GetRootComponent(); //TODO:@GreggoryAddison::CodeUpgrade | This needs to be more dynamic to allow for runtime changes.
+			UpdatedComponent = ParentActor->GetRootComponent(); //TODO:@GreggoryAddison::CodeUpgrade | This needs to be more dynamic to allow for runtime changes.
 			WorldOrigin=WorldCentre;
 			CenterOfMassTransform=CenterOfMassOffset;
 		}
@@ -47,9 +48,16 @@ protected:
 		{// send this to actor
 			if (UpdatedComponent.IsValid(false))
 			{
-				btTransform GraphicTrans = CenterOfMassWorldTrans * CenterOfMassTransform;
-				UpdatedComponent->SetWorldTransform(BulletHelpers::ToUnrealTransform(GraphicTrans, WorldOrigin));
+				
+				
+				FinalTransform = CenterOfMassWorldTrans * CenterOfMassTransform;
+				UpdatedComponent->SetWorldTransform(BulletHelpers::ToUnrealTransform(FinalTransform, WorldOrigin));
 			}
+		}
+	
+		FTransform GetFinalTransform() const
+		{
+			return BulletHelpers::ToUnrealTransform(FinalTransform, WorldOrigin);
 		}
 };
 

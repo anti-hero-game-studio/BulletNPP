@@ -161,7 +161,7 @@ void UCharacterBulletMoverComponent::OnMoverPreSimulationTick(const FBulletMover
 {
 	if (bHandleJump)
 	{
-		const FBulletCharacterDefaultInputs* CharacterInputs = InputCmd.InputCollection.FindDataByType<FBulletCharacterDefaultInputs>();
+		const FBulletCharacterDefaultInputs* CharacterInputs = InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
 		if (CharacterInputs && CharacterInputs->bIsJumpJustPressed && CanActorJump())
 		{
 			Jump();

@@ -131,8 +131,8 @@ bool FBulletLayeredMove_RootMotionAttribute::GenerateMove(const FBulletMoverTick
 
 	if (bDidAttrHaveRootMotion)
 	{
-		const FBulletMoverDefaultSyncState* SyncState = SimState.SyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
-		const FBulletCharacterDefaultInputs* InputCmd = SimState.InputCmd.InputCollection.FindDataByType<FBulletCharacterDefaultInputs>();
+		const FBulletMoverDefaultSyncState* SyncState = SimState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+		const FBulletCharacterDefaultInputs* InputCmd = SimState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
 
 		if (!bHasValidWarpingContext &&
 				((InputCmd && InputCmd->bIsJumpJustPressed) || MoverComp->HasGameplayTagInState(SimState.SyncState, BulletMover_SkipAnimRootMotion, false)))

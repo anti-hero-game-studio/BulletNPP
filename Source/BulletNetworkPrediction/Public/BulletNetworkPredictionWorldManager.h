@@ -413,6 +413,7 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 					BindReplayNetSendRecv_IndependentRemote<TIndependentTickReplicator_SP<ModelDef>>(ID, RepProxies.Replay, DataStore, Role);
 
 					ServiceMask |= EBulletNetworkPredictionService::IndependentRemoteTick;
+					ServiceMask |= EBulletNetworkPredictionService::IndependentRemotePhysics;
 					ServiceMask |= EBulletNetworkPredictionService::IndependentRemoteFinalize;
 
 					// Point view to the ServerRecv PendingFrame instead
@@ -441,6 +442,7 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 							ServiceMask |= EBulletNetworkPredictionService::IndependentLocalInput;
 						}
 						ServiceMask |= EBulletNetworkPredictionService::IndependentLocalTick;
+						ServiceMask |= EBulletNetworkPredictionService::IndependentLocalPhysics;
 						ServiceMask |= EBulletNetworkPredictionService::IndependentLocalFinalize;
 					}
 				}
@@ -458,6 +460,7 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 
 				ServiceMask |= EBulletNetworkPredictionService::IndependentLocalInput;
 				ServiceMask |= EBulletNetworkPredictionService::IndependentLocalTick;
+				ServiceMask |= EBulletNetworkPredictionService::IndependentLocalPhysics;
 				ServiceMask |= EBulletNetworkPredictionService::IndependentLocalFinalize;
 
 				ServiceMask |= EBulletNetworkPredictionService::ServerRPC;
@@ -538,6 +541,7 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 			if (FBulletNetworkPredictionDriver<ModelDef>::HasSimulation())
 			{
 				ServiceMask |= EBulletNetworkPredictionService::FixedTick;
+				ServiceMask |= EBulletNetworkPredictionService::FixedPhysics;
 				ServiceMask |= EBulletNetworkPredictionService::FixedFinalize;
 
 				if (FBulletNetworkPredictionDriver<ModelDef>::HasFinalizeSmoothingFrame && Settings.bEnableFixedTickSmoothing)
@@ -554,6 +558,7 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 			{
 			case EBulletNetworkLOD::ForwardPredict:
 				ServiceMask |= EBulletNetworkPredictionService::FixedRollback;
+				ServiceMask |= EBulletNetworkPredictionService::FixedPhysics;
 
 				if (FBulletNetworkPredictionDriver<ModelDef>::HasSimulation())
 				{

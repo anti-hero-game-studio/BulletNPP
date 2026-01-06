@@ -14,9 +14,9 @@ void UBulletSmoothWalkingMode::SimulationTick_Implementation(const FBulletSimula
 	Super::SimulationTick_Implementation(Params, OutputState);
 
 	// We've already updated the spring state during GenerateMove, and just need to copy it into the output simulation state
-	if (const FBulletSmoothWalkingState* InSpringState = Params.StartState.SyncState.SyncStateCollection.FindDataByType<FBulletSmoothWalkingState>())
+	if (const FBulletSmoothWalkingState* InSpringState = Params.StartState.SyncState.Collection.FindDataByType<FBulletSmoothWalkingState>())
 	{
-		FBulletSmoothWalkingState& OutputSpringState = OutputState.SyncState.SyncStateCollection.FindOrAddMutableDataByType<FBulletSmoothWalkingState>();
+		FBulletSmoothWalkingState& OutputSpringState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletSmoothWalkingState>();
 		OutputSpringState = *InSpringState;
 	}
 }
@@ -29,7 +29,7 @@ void UBulletSmoothWalkingMode::GenerateWalkMove_Implementation(FBulletMoverTickS
 		return;
 	}
 	
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
 	if (!ensure(StartingSyncState))
 	{
 		return;
@@ -37,7 +37,7 @@ void UBulletSmoothWalkingMode::GenerateWalkMove_Implementation(FBulletMoverTickS
 
 	// Find or add a FBulletSmoothWalkingState to the SyncState
 	bool bSmoothWalkingStateAdded = false;
-	FBulletSmoothWalkingState& SpringState = StartState.SyncState.SyncStateCollection.FindOrAddMutableDataByType<FBulletSmoothWalkingState>(bSmoothWalkingStateAdded);
+	FBulletSmoothWalkingState& SpringState = StartState.SyncState.Collection.FindOrAddMutableDataByType<FBulletSmoothWalkingState>(bSmoothWalkingStateAdded);
 
 	// If the state was not there already we need to initialize some of the intermediate state to whatever we have as the current state to avoid 
 	// a discontinuity. Unfortunately there is no way currently to initialize the angular velocities or accelerations right now as these are not 

@@ -385,6 +385,20 @@ FUnrealShapeDescriptor UBulletPhysicsWorldSubsystem::GetShapeDescriptorData(cons
 	return FUnrealShapeDescriptor();
 }
 
+int32 UBulletPhysicsWorldSubsystem::GetActorRootShapeId(const AActor* Actor) const
+{
+	if (!Actor) return INDEX_NONE;
+	if (GlobalShapeDescriptorDataCache.IsEmpty()) return INDEX_NONE;
+
+	for (const TTuple<const btCollisionObject*, FUnrealShapeDescriptor>& Descriptor : GlobalShapeDescriptorDataCache)
+	{
+		if (Descriptor.Value.ShapeOwner != Actor) continue;
+		return Descriptor.Value.WorldArrayIndex;
+	}
+	
+	return INDEX_NONE;
+}
+
 
 btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBody(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, btVector3 Inertia, float Mass, float Friction, float Restitution)
 {
@@ -434,15 +448,67 @@ void UBulletPhysicsWorldSubsystem::SetPhysicsState(int ID, FTransform transforms
 
 void UBulletPhysicsWorldSubsystem::GetPhysicsState(int ID, FTransform& transforms, FVector& Velocity, FVector& AngularVelocity,FVector& Force)
 {
-	if (BtRigidBodies.Num()<=ID) {
-		UE_LOG(LogTemp, Warning, TEXT("No rigid "));
+	btCollisionObjectArray& CollisionObjects = GetBulletWorld()->getCollisionObjectArray();
+	
+	if (CollisionObjects.size()<=ID) {
+		UE_LOG(LogTemp, Warning, TEXT("No Collision Object"));
 		return;
 	}
-	if (BtRigidBodies[ID]) {
-		transforms= BulletHelpers::ToUnrealTransform( BtRigidBodies[ID]->getWorldTransform(),UE_WORLD_ORIGIN) ;
-		Velocity = BulletHelpers::ToUnrealPosition(BtRigidBodies[ID]->getLinearVelocity(), UE_WORLD_ORIGIN);
-		AngularVelocity = BulletHelpers::ToUnrealPosition(BtRigidBodies[ID]->getAngularVelocity(), FVector(0));
-		Force = BulletHelpers::ToUnrealPosition(BtRigidBodies[ID]->getTotalForce(), UE_WORLD_ORIGIN);
+	
+	if (!CollisionObjects[ID]) {
+		UE_LOG(LogTemp, Warning, TEXT("Null Collision Object"));
+		return;
+	}
+
+	if (btRigidBody* Rb = btRigidBody::upcast(CollisionObjects[ID]))
+	{
+		transforms= BulletHelpers::ToUnrealTransform( Rb->getWorldTransform(),UE_WORLD_ORIGIN) ;
+		Velocity = BulletHelpers::ToUnrealPosition(Rb->getLinearVelocity(), UE_WORLD_ORIGIN);
+		AngularVelocity = BulletHelpers::ToUnrealPosition(Rb->getAngularVelocity(), FVector(0));
+		Force = BulletHelpers::ToUnrealPosition(Rb->getTotalForce(), UE_WORLD_ORIGIN);
+	}
+	
+}
+
+void UBulletPhysicsWorldSubsystem::GetMotionState(int Id, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force)
+{
+	btCollisionObjectArray& CollisionObjects = GetBulletWorld()->getCollisionObjectArray();
+	
+	if (CollisionObjects.size()<=Id)
+	{
+		UE_LOG(LogBullet, Error, TEXT("No Collision Object"));
+		return;
+	}
+	
+	if (!CollisionObjects[Id]) 
+	{
+		UE_LOG(LogBullet, Error, TEXT("Null Collision Object"));
+		return;
+	}
+
+	if (btRigidBody* Rb = btRigidBody::upcast(CollisionObjects[Id]))
+	{
+		if (!Rb->getMotionState()) 
+		{
+			UE_LOG(LogBullet, Error, TEXT("Rigid body doesn't have a valid motion state"));
+			return;
+		}
+		
+		const FBulletMotionState* MotionState = static_cast<FBulletMotionState*>(Rb->getMotionState());
+		if (!MotionState) 
+		{
+			UE_LOG(LogBullet, Error, TEXT("Rigid body doesn't have a valid motion state"));
+			return;
+		}
+		
+		Transforms = MotionState->GetFinalTransform();
+		Velocity = BulletHelpers::ToUnrealPosition(Rb->getLinearVelocity(), UE_WORLD_ORIGIN);
+		AngularVelocity = BulletHelpers::ToUnrealPosition(Rb->getAngularVelocity(), FVector(0));
+		Force = BulletHelpers::ToUnrealPosition(Rb->getTotalForce(), UE_WORLD_ORIGIN);
+	}
+	else
+	{
+		UE_LOG(LogBullet, Error, TEXT("ID did not point to a rigid body"));
 	}
 }
 

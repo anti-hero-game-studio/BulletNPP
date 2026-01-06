@@ -26,23 +26,26 @@ enum class EBulletNetworkPredictionService : uint32
 	FixedInputLocal				= 1 << 4,
 	FixedInputRemote			= 1 << 5,
 	FixedTick					= 1 << 6,
-	FixedSmoothing				= 1 << 7,
-	FixedFinalize				= 1 << 8,
+    FixedPhysics			    = 1 << 7,
+	FixedSmoothing				= 1 << 8,
+	FixedFinalize				= 1 << 9,
 	MAX_FIXED					= FixedFinalize,
 
 	// Services exclusive to independent tick mode
-	ServerRPC               =  1 << 9,
-	IndependentRollback		= 1 << 10,
-	IndependentExtrapolate	= 1 << 11,	// TODO
-	IndependentInterpolate	= 1 << 12,
+	ServerRPC               =  1 << 10,
+	IndependentRollback		= 1 << 11,
+	IndependentExtrapolate	= 1 << 12,	// TODO
+	IndependentInterpolate	= 1 << 13,
 
-	IndependentLocalInput	= 1 << 13,
-	IndependentLocalTick	= 1 << 14,
-	IndependentRemoteTick	= 1 << 15,
+	IndependentLocalInput	= 1 << 14,
+	IndependentLocalTick	= 1 << 15,
+	IndependentLocalPhysics	= 1 << 16,
+	IndependentRemoteTick	= 1 << 17,
+	IndependentRemotePhysics	= 1 << 18,
 	
-	IndependentSmoothingFinalize	= 1 << 16,	// TODO
-	IndependentLocalFinalize		= 1 << 17,
-	IndependentRemoteFinalize		= 1 << 18,
+	IndependentSmoothingFinalize	= 1 << 19,	// TODO
+	IndependentLocalFinalize		= 1 << 20,
+	IndependentRemoteFinalize		= 1 << 21,
 	MAX_INDEPENDENT					= IndependentRemoteFinalize,
 
 	// Helper masks

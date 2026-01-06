@@ -179,6 +179,9 @@ public:
 
 	// Primary movement simulation update. Given an starting state and timestep, produce a new state. Called by backend system.
 	BULLETMOVER_API void SimulationTick(const FBulletMoverTimeStep& InTimeStep, const FBulletMoverTickStartData& SimInput, OUT FBulletMoverTickEndData& SimOutput);
+	
+	// Primary movement simulation update. Given an starting state and timestep, produce a new state. Called by backend system.
+	BULLETMOVER_API void PostPhysicsTick(OUT FBulletMoverTickEndData& SimOutput);
 
 	// Specifies which supporting back end class should drive this Mover actor
 	UPROPERTY(EditDefaultsOnly, Category = Mover, meta = (MustImplement = "/Script/BulletMover.MoverBackendLiaisonInterface"))

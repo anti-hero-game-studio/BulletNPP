@@ -1,17 +1,15 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 // HEADER_UNIT_SKIP - Not included directly
-
 #include "BulletNetworkPredictionInstanceData.h"
 #include "BulletNetworkPredictionTickState.h"
 #include "BulletNetworkPredictionTrace.h"
 #include "BulletNetworkPredictionUtil.h"
 
+
 // Common util used by the ticking services. Might make sense to move to FBulletNetworkPredictionDriverBase if needed elsewhere
 template<typename ModelDef>
-struct TBulletTickUtil
+struct TBulletPhysicsUtil
 {
 	using StateTypes = typename ModelDef::StateTypes;
 	using InputType = typename StateTypes::InputType;
@@ -23,7 +21,7 @@ struct TBulletTickUtil
 	template<typename SimulationType = typename ModelDef::Simulation>
 	static typename TEnableIf<!std::is_same_v<SimulationType, void>>::Type DoTick(TInstanceData<ModelDef>& Instance, FrameDataType& InputFrameData, FrameDataType& OutputFrameData, const FBulletNetSimTimeStep& Step, const int32 CueTimeMS, EBulletSimulationTickContext TickContext)
 	{
-		Instance.CueDispatcher->PushContext({Step.Frame, CueTimeMS, TickContext});
+		// Instance.CueDispatcher->PushContext({Step.Frame, CueTimeMS, TickContext}); TODO:@GreggoryAddison::PotentialIssue || This could cause cues to fire twice in a frame.
 		
 		// Update cached view before calling tick. If something tries to do an OOB mod to this simulation, it 
 		// can only write to the output/pending state. (Input state is frozen now).
@@ -41,13 +39,13 @@ struct TBulletTickUtil
 		FBulletNetSimTimeStep TickStep(Step);
 		TickStep.InterpolationTimeMS = View->LatestInterpTimeMS;
 		TickStep.IsResimulating = TickContext == EBulletSimulationTickContext::Resimulate || TickContext == EBulletSimulationTickContext::ResimExtrapolate;
-		Instance.Info.Simulation->SimulationTick( TickStep,
+		Instance.Info.Simulation->PostPhysicsTick( TickStep,
 			{ InputFrameData.InputCmd, InputFrameData.SyncState, InputFrameData.AuxState }, // TBulletNetSimInput
 			{ OutputFrameData.SyncState, LazyAux, Instance.CueDispatcher.Get() } ); // TBulletNetSimOutput
 
 		
 		View->bTickInProgress = false;
-		Instance.CueDispatcher->PopContext();
+		// Instance.CueDispatcher->PopContext(); TODO:@GreggoryAddison::PotentialIssue || This could cause cues to fire twice in a frame.
 
 		// Fixme: should only trace aux if it changed
 		UE_JNP_TRACE_USER_STATE_SYNC(ModelDef, OutputFrameData.SyncState.Get());
@@ -63,16 +61,16 @@ struct TBulletTickUtil
 
 
 // The tick service's role is to tick new simulation frames based on local frame state (fixed or independent/variable)
-class IBulletLocalTickService
+class IBulletLocalPhysicsService
 {
 public:
 
-	virtual ~IBulletLocalTickService() = default;
+	virtual ~IBulletLocalPhysicsService() = default;
 	virtual void Tick(const FBulletNetSimTimeStep& Step, const FBulletServiceTimeStep& ServiceStep) = 0;
 };
 
 template<typename InModelDef>
-class TBulletLocalTickServiceBase : public IBulletLocalTickService
+class TBulletLocalPhysicsServiceBase : public IBulletLocalPhysicsService
 {
 public:
 
@@ -82,7 +80,7 @@ public:
 	using SyncType = typename StateTypes::SyncType;
 	using AuxType = typename StateTypes::AuxType;
 
-	TBulletLocalTickServiceBase(TBulletModelDataStore<ModelDef>* InDataStore)
+	TBulletLocalPhysicsServiceBase(TBulletModelDataStore<ModelDef>* InDataStore)
 		: DataStore(InDataStore) { }
 
 	void RegisterInstance(FBulletNetworkPredictionID ID)
@@ -111,7 +109,7 @@ public:
 		{
 			TInstanceData<ModelDef>& Instance = DataStore->Instances.GetByIndexChecked(It.Value.InstanceIdx);
 			UE_JNP_TRACE_SIM(Instance.TraceID);
-			Instance.CueDispatcher->NotifyRollback(ServerFrame);
+			// Instance.CueDispatcher->NotifyRollback(ServerFrame); TODO:@GreggoryAddison::PotentialIssue || This could cause cues to fire twice in a frame.
 		}
 	}
 
@@ -143,7 +141,7 @@ protected:
 				OutputFrameData.InputCmd = InputFrameData.InputCmd;
 			}
 			
-			TBulletTickUtil<ModelDef>::DoTick(Instance, InputFrameData, OutputFrameData, Step, EndTime, GetTickContext<bIsResim>(Instance.NetRole));
+			TBulletPhysicsUtil<ModelDef>::DoTick(Instance, InputFrameData, OutputFrameData, Step, EndTime, GetTickContext<bIsResim>(Instance.NetRole));
 		}
 	}
 
@@ -196,11 +194,11 @@ protected:
 
 // To allow template specialization
 template<typename InModelDef>
-class TBulletLocalTickService : public TBulletLocalTickServiceBase<InModelDef>
+class TBulletLocalPhysicsService : public TBulletLocalPhysicsServiceBase<InModelDef>
 {
 public:
-	TBulletLocalTickService(TBulletModelDataStore<InModelDef>* InDataStore) 
-		: TBulletLocalTickServiceBase<InModelDef>(InDataStore)
+	TBulletLocalPhysicsService(TBulletModelDataStore<InModelDef>* InDataStore) 
+		: TBulletLocalPhysicsServiceBase<InModelDef>(InDataStore)
 	{
 
 	}
@@ -211,17 +209,17 @@ public:
 
 // Service for ticking independent simulations that are remotely controlled.
 // E.g, only used by the server for ticking remote clients that are in independent ticking mode,
-class IBulletRemoteIndependentTickService
+class IBulletRemoteIndependentPhysicsService
 {
 public:
 
-	virtual ~IBulletRemoteIndependentTickService() = default;
+	virtual ~IBulletRemoteIndependentPhysicsService() = default;
 	virtual void Tick(float DeltaTimeSeconds, const FBulletVariableTickState* VariableTickState) = 0;
 };
 
 // Ticking remote clients on the server. 
 template<typename InModelDef>
-class TBulletRemoteIndependentTickService : public IBulletRemoteIndependentTickService
+class TBulletRemoteIndependentPhysicsService : public IBulletRemoteIndependentPhysicsService
 {
 public:
 	using ModelDef = InModelDef;
@@ -233,7 +231,7 @@ public:
 	static constexpr int32 MaxRemoteClientStepsPerFrame = 6;
 	static constexpr int32 MaxRemoteClientTotalMSPerFrame = 200;
 
-	TBulletRemoteIndependentTickService(TBulletModelDataStore<ModelDef>* InDataStore)
+	TBulletRemoteIndependentPhysicsService(TBulletModelDataStore<ModelDef>* InDataStore)
 		: DataStore(InDataStore) { }
 
 	void RegisterInstance(FBulletNetworkPredictionID ID)
@@ -317,7 +315,7 @@ public:
 					UE_JNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, Step.StepMS, Step.Frame);
 					UE_JNP_TRACE_SIM_TICK(TraceID);
 
-					TBulletTickUtil<ModelDef>::DoTick(InstanceData, InputFrameData, OutputFrameData, Step, CueTimeMS, EBulletSimulationTickContext::Authority);
+					TBulletPhysicsUtil<ModelDef>::DoTick(InstanceData, InputFrameData, OutputFrameData, Step, CueTimeMS, EBulletSimulationTickContext::Authority);
 					
 				}
 

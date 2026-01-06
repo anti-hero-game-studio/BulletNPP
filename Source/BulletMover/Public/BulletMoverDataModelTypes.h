@@ -214,9 +214,6 @@ public:
 	UE_API virtual bool ShouldReconcile(const FBulletMoverDataStructBase& AuthorityState) const override;
 
 	UE_API virtual void Interpolate(const FBulletMoverDataStructBase& From, const FBulletMoverDataStructBase& To, float Pct) override;
-
-	UE_DEPRECATED(5.7, "Use the SetTransforms_WorldSpace with an angular velocity")
-	UE_API void SetTransforms_WorldSpace(FVector WorldLocation, FRotator WorldOrient, FVector WorldVelocity, UPrimitiveComponent* Base=nullptr, FName BaseBone = NAME_None);
 	
 	UE_API void SetTransforms_WorldSpace(FVector WorldLocation, FRotator WorldOrient, FVector WorldVelocity, FVector WorldAngularVelocityDegrees, UPrimitiveComponent* Base=nullptr, FName BaseBone = NAME_None);
 

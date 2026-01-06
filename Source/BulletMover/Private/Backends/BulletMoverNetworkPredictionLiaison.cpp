@@ -135,7 +135,7 @@ void UBulletMoverNetworkPredictionLiaisonComponent::SimulationTick(const FBullet
 	// Ensure persistent SyncStates are present in the start state for a SimTick.
 	for (const FBulletMoverDataPersistence& PersistentSyncEntry : MoverComp->PersistentSyncStateDataTypes)
 	{
-		StartData.SyncState.SyncStateCollection.FindOrAddDataByType(PersistentSyncEntry.RequiredType);
+		StartData.SyncState.Collection.FindOrAddDataByType(PersistentSyncEntry.RequiredType);
 	}
 	
 	FBulletMoverTimeStep MoverTimeStep;
@@ -148,6 +148,21 @@ void UBulletMoverNetworkPredictionLiaisonComponent::SimulationTick(const FBullet
 
 	*SimOutput.Sync = EndData.SyncState;
     *SimOutput.Aux.Get() = EndData.AuxState;
+}
+
+void UBulletMoverNetworkPredictionLiaisonComponent::PostPhysicsTick(const FBulletNetSimTimeStep& TimeStep, const TBulletNetSimInput<KinematicMoverStateTypes>& SimInput, const TBulletNetSimOutput<KinematicMoverStateTypes>& SimOutput)
+{
+	check(MoverComp);
+
+	FBulletMoverTickEndData EndData;
+	
+	EndData.AuxState = *SimOutput.Aux.Get();
+	EndData.SyncState = *SimOutput.Sync;
+	
+	MoverComp->PostPhysicsTick(OUT EndData);
+
+	*SimOutput.Sync = EndData.SyncState;
+	*SimOutput.Aux.Get() = EndData.AuxState;
 }
 
 
@@ -254,7 +269,7 @@ void UBulletMoverNetworkPredictionLiaisonComponent::BeginPlay()
 
 	if (StartingOutSync && StartingOutAux)
 	{
-		if (FBulletMoverDefaultSyncState* StartingSyncState = StartingOutSync->SyncStateCollection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
+		if (FBulletMoverDefaultSyncState* StartingSyncState = StartingOutSync->Collection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
 		{
 			const FTransform UpdatedComponentTransform = MoverComp->GetUpdatedComponentTransform();
 			// if our location has changed between initialization and begin play (ex: Actors sharing an exact start location and one gets "pushed" to make them fit) lets write the new location to avoid any disagreements
