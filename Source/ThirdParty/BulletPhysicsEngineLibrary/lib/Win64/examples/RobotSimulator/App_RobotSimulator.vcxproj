@@ -22,7 +22,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{40C3DF98-14CD-3306-87AC-376DD855BCF5}</ProjectGuid>
+    <ProjectGuid>{F6BA7459-1BBF-3C00-90DB-B837C16D9052}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <Platform>x64</Platform>
@@ -59,25 +59,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">App_RobotSimulator.dir\Debug\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">App_RobotSimulator_d</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">App_RobotSimulator.dir\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">App_RobotSimulator</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\MinSizeRel\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\MinSizeRel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">App_RobotSimulator.dir\MinSizeRel\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">App_RobotSimulator</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\RelWithDebInfo\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">App_RobotSimulator.dir\RelWithDebInfo\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">App_RobotSimulator</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
@@ -86,7 +86,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -110,10 +110,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;B3_USE_ROBOTSIM_GUI;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;BT_ENABLE_CLSOCKET;GLEW_STATIC;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -127,9 +127,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/Debug/App_RobotSimulator_d.lib</ImportLibrary>
+      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/Debug/App_RobotSimulator_d.lib</ImportLibrary>
       <OptimizeReferences>true</OptimizeReferences>
-      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/Debug/App_RobotSimulator_d.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/Debug/App_RobotSimulator_d.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -138,7 +138,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
@@ -163,10 +163,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;B3_USE_ROBOTSIM_GUI;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;BT_ENABLE_CLSOCKET;GLEW_STATIC;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -180,9 +180,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/Release/App_RobotSimulator.lib</ImportLibrary>
+      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/Release/App_RobotSimulator.lib</ImportLibrary>
       <OptimizeReferences>true</OptimizeReferences>
-      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/Release/App_RobotSimulator.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/Release/App_RobotSimulator.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -191,7 +191,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
@@ -216,10 +216,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;B3_USE_ROBOTSIM_GUI;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;BT_ENABLE_CLSOCKET;GLEW_STATIC;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -233,9 +233,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/MinSizeRel/App_RobotSimulator.lib</ImportLibrary>
+      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/MinSizeRel/App_RobotSimulator.lib</ImportLibrary>
       <OptimizeReferences>true</OptimizeReferences>
-      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/MinSizeRel/App_RobotSimulator.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/MinSizeRel/App_RobotSimulator.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -244,7 +244,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -268,10 +268,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;B3_USE_ROBOTSIM_GUI;_WIN64;BT_USE_DOUBLE_PRECISION;USE_GRAPHICAL_BENCHMARK;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;BT_ENABLE_CLSOCKET;GLEW_STATIC;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\enet\include;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ThirdPartyLibs\clsocket\src;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\btgui\OpenGLWindow\GlewWindows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -285,9 +285,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/RelWithDebInfo/App_RobotSimulator.lib</ImportLibrary>
+      <ImportLibrary>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/RelWithDebInfo/App_RobotSimulator.lib</ImportLibrary>
       <OptimizeReferences>true</OptimizeReferences>
-      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/RelWithDebInfo/App_RobotSimulator.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/RelWithDebInfo/App_RobotSimulator.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -295,11 +295,11 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\CMakeLists.txt">
+    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\CMakeLists.txt">
       <UseUtf8Encoding>Always</UseUtf8Encoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/examples/RobotSimulator/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/examples/RobotSimulator/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/CMakeFiles/generate.stamp
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -308,11 +308,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/examples/RobotSimulator/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/examples/RobotSimulator/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/CMakeFiles/generate.stamp
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -321,11 +321,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/examples/RobotSimulator/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/examples/RobotSimulator/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/CMakeFiles/generate.stamp
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -334,11 +334,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/examples/RobotSimulator/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/examples/RobotSimulator/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/CMakeFiles/generate.stamp
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/examples/RobotSimulator/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -347,88 +347,88 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\RobotSimulatorMain.cpp" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\b3RobotSimulatorClientAPI.cpp" />
-    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\b3RobotSimulatorClientAPI.h" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\MinitaurSetup.cpp" />
-    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\MinitaurSetup.h" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\InProcessExampleBrowser.cpp" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsServerExample.cpp" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsClientExample.cpp" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\RemoteGUIHelper.cpp" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\RemoteGUIHelperTCP.cpp" />
-    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsServerExample.h" />
-    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsClientExample.h" />
-    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\RemoteGUIHelper.h" />
-    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsSharedMemoryCommands.h" />
-    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsSharedMemoryPublic.h" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsServerExample.cpp" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsServerExampleBullet2.cpp" />
-    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\SharedMemoryInProcessPhysicsC_API.cpp" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\RobotSimulatorMain.cpp" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\b3RobotSimulatorClientAPI.cpp" />
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\b3RobotSimulatorClientAPI.h" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\MinitaurSetup.cpp" />
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\RobotSimulator\MinitaurSetup.h" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\InProcessExampleBrowser.cpp" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsServerExample.cpp" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsClientExample.cpp" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\RemoteGUIHelper.cpp" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\RemoteGUIHelperTCP.cpp" />
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsServerExample.h" />
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsClientExample.h" />
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\RemoteGUIHelper.h" />
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsSharedMemoryCommands.h" />
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\GraphicsSharedMemoryPublic.h" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsServerExample.cpp" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\PhysicsServerExampleBullet2.cpp" />
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\SharedMemory\SharedMemoryInProcessPhysicsC_API.cpp" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\ZERO_CHECK.vcxproj">
-      <Project>{07735AA9-8FF1-381F-A1ED-3A6499C69B09}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\ZERO_CHECK.vcxproj">
+      <Project>{2268731E-66DB-3EC0-9DA8-868A81D65AE2}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Common\Bullet3Common.vcxproj">
-      <Project>{2567E3E0-E1EF-350F-A6FC-1C1D1439B45D}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Common\Bullet3Common.vcxproj">
+      <Project>{C2DDF306-4DEB-3457-B77F-92CBDFD7694F}</Project>
       <Name>Bullet3Common</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletCollision\BulletCollision.vcxproj">
-      <Project>{4221976D-E485-3D38-8652-3872CF29E626}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletCollision\BulletCollision.vcxproj">
+      <Project>{34F37658-9D9F-3E2D-AEE2-BC186C069DED}</Project>
       <Name>BulletCollision</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletDynamics\BulletDynamics.vcxproj">
-      <Project>{C5A5314C-9A2F-3A00-918E-BE6E4F1D4EE6}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletDynamics\BulletDynamics.vcxproj">
+      <Project>{24A38B08-398D-3A6C-AC22-05834CECAFEB}</Project>
       <Name>BulletDynamics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ExampleBrowser\BulletExampleBrowserLib.vcxproj">
-      <Project>{E55F3FBE-E61A-3565-A38B-06AFC6406BCA}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ExampleBrowser\BulletExampleBrowserLib.vcxproj">
+      <Project>{5C9FC732-0CF5-3617-AAD7-9F372C03378B}</Project>
       <Name>BulletExampleBrowserLib</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletFileLoader\BulletFileLoader.vcxproj">
-      <Project>{F0F83166-94FE-317A-AE6E-D69508E6D17E}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletFileLoader\BulletFileLoader.vcxproj">
+      <Project>{D0C0BA04-AC73-3F2A-ABEF-354327DB3EC0}</Project>
       <Name>BulletFileLoader</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletInverseDynamics\BulletInverseDynamics.vcxproj">
-      <Project>{06EDD432-7E4A-3D30-9A73-90366BE7863E}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletInverseDynamics\BulletInverseDynamics.vcxproj">
+      <Project>{7B78025B-9B48-31CB-83FA-D3939056DF20}</Project>
       <Name>BulletInverseDynamics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\InverseDynamics\BulletInverseDynamicsUtils.vcxproj">
-      <Project>{A48465E5-1CAB-3FD2-AE07-381ADE547ED0}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\InverseDynamics\BulletInverseDynamicsUtils.vcxproj">
+      <Project>{0D3F130D-FA79-3E00-876F-96868A9B65EB}</Project>
       <Name>BulletInverseDynamicsUtils</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\BulletRobotics\BulletRobotics.vcxproj">
-      <Project>{018C4AB7-2249-3986-91E2-FB4C02E00924}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\BulletRobotics\BulletRobotics.vcxproj">
+      <Project>{241B5314-C076-3D33-B6CC-9A1D05C5D81B}</Project>
       <Name>BulletRobotics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletSoftBody\BulletSoftBody.vcxproj">
-      <Project>{83379BED-2FA5-3BC5-9DDB-72270B312839}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletSoftBody\BulletSoftBody.vcxproj">
+      <Project>{7B92C7EE-7F7A-3705-BDE9-90C2D5A3147F}</Project>
       <Name>BulletSoftBody</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletWorldImporter\BulletWorldImporter.vcxproj">
-      <Project>{6B739DA1-494D-3DF5-A13E-D7E454D30992}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletWorldImporter\BulletWorldImporter.vcxproj">
+      <Project>{34C28347-D174-3B5B-A686-24CD85A48B28}</Project>
       <Name>BulletWorldImporter</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\LinearMath\LinearMath.vcxproj">
-      <Project>{AE5648F6-8AA2-3647-A196-FDA92B98E1B1}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\LinearMath\LinearMath.vcxproj">
+      <Project>{0814D27D-A810-3EC6-AB6E-F4482B758D04}</Project>
       <Name>LinearMath</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\OpenGLWindow\OpenGLWindow.vcxproj">
-      <Project>{FBCD4940-AEB7-3F12-8ACE-D36EAE894B79}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\OpenGLWindow\OpenGLWindow.vcxproj">
+      <Project>{74B17BC7-EF27-35CF-82F4-D294ECEE8C27}</Project>
       <Name>OpenGLWindow</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ThirdPartyLibs\Gwen\gwen.vcxproj">
-      <Project>{CF592381-DEF2-3741-8B08-5A588D39C86C}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ThirdPartyLibs\Gwen\gwen.vcxproj">
+      <Project>{DA98B6AE-48CD-3F80-8F92-2FA1F9A04B6E}</Project>
       <Name>gwen</Name>
     </ProjectReference>
   </ItemGroup>

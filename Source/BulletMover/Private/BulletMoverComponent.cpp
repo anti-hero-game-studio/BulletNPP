@@ -1,0 +1,2785 @@
+// Copyright Epic Games, Inc. All Rights Reserved.
+
+
+#include "BulletMoverComponent.h"
+#include "BulletMoverSimulationTypes.h"
+#include "BulletMovementModeStateMachine.h"
+#include "MotionWarpingBulletMoverAdapter.h"
+#include "DefaultMovementSet/Modes/BulletWalkingMode.h"
+#include "DefaultMovementSet/Modes/BulletFallingMode.h"
+#include "DefaultMovementSet/Modes/BulletFlyingMode.h"
+#include "MoveLibrary/BulletMovementMixer.h"
+#include "MoveLibrary/BulletMovementUtils.h"
+#include "MoveLibrary/BulletFloorQueryUtils.h"
+#include "MoveLibrary/BulletRollbackBlackboard.h"
+#include "BulletInputContainerStruct.h"
+#include "BulletMoverLog.h"
+#include "BulletInstantMovementEffect.h"
+#include "Backends/BulletMoverNetworkPredictionLiaison.h"
+#include "Components/MeshComponent.h"
+#include "Components/PrimitiveComponent.h"
+#include "Engine/ScopedMovementUpdate.h"
+#include "Engine/World.h"
+#include "GameFramework/PhysicsVolume.h"
+#include "Misc/AssertionMacros.h"
+#include "Misc/TransactionObjectEvent.h"
+#include "Blueprint/BlueprintExceptionInfo.h"
+#include "UObject/ObjectSaveContext.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "MotionWarpingComponent.h"
+
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletMoverComponent)
+
+#define LOCTEXT_NAMESPACE "BulletMover"
+
+namespace BulletMoverComponentCVars
+{
+	static int32 WarnOnPostSimDifference = 0;
+	FAutoConsoleVariableRef CVarMoverWarnOnPostSimDifference(
+		TEXT("bullet.mover.debug.WarnOnPostSimDifference"),
+		WarnOnPostSimDifference,
+		TEXT("If != 0, then any differences between the sim sync state and the component locations just after movement simulation will emit warnings.\n")
+	);
+
+} // end BulletMoverComponentCVars
+
+
+
+namespace BulletMoverComponentConstants
+{
+	const FVector DefaultGravityAccel	= FVector(0.0, 0.0, -980.0);
+	const FVector DefaultUpDir			= FVector(0.0, 0.0, 1.0);
+}
+
+
+static constexpr float ROTATOR_TOLERANCE = (1e-3);
+
+UBulletMoverComponent::UBulletMoverComponent()
+{
+	PrimaryComponentTick.TickGroup = TG_PrePhysics;
+	PrimaryComponentTick.bCanEverTick = false;
+
+	BasedMovementTickFunction.bCanEverTick = true;
+	BasedMovementTickFunction.bStartWithTickEnabled = false;
+	BasedMovementTickFunction.SetTickFunctionEnable(false);
+	BasedMovementTickFunction.TickGroup = TG_PostPhysics;
+
+	bWantsInitializeComponent = true;
+	bAutoActivate = true;
+
+	PersistentSyncStateDataTypes.Add(FBulletMoverDataPersistence(FBulletMoverDefaultSyncState::StaticStruct(), true));
+
+	BackendClass = UBulletMoverNetworkPredictionLiaisonComponent::StaticClass();
+}
+
+
+void UBulletMoverComponent::InitializeComponent()
+{
+	TGuardValue<bool> InInitializeComponentGuard(bInInitializeComponent, true);
+
+	Super::InitializeComponent();
+
+	const UWorld* MyWorld = GetWorld();
+
+	if (MyWorld && MyWorld->IsGameWorld())
+	{
+		if (SimBlackboard)
+		{
+			SimBlackboard->InvalidateAll();
+		}
+
+		SimBlackboard = NewObject<UBulletMoverBlackboard>(this, TEXT("BulletMoverBlackboard"), RF_Transient);
+
+		RollbackBlackboard = NewObject<UBulletRollbackBlackboard>(this, TEXT("RollbackBlackboard"), RF_Transient);
+		RollbackBlackboard_InternalWrapper = NewObject<UBulletRollbackBlackboard_InternalWrapper>(this, TEXT("RollbackBlackboard_Internal"), RF_Transient);
+		RollbackBlackboard_InternalWrapper->Init(*RollbackBlackboard);
+
+		// create any internal entries
+		static UBulletRollbackBlackboard::EntrySettings ModeChangeRecordSettings;
+		ModeChangeRecordSettings.SizingPolicy = EBulletBlackboardSizingPolicy::FixedDeclaredSize;
+		ModeChangeRecordSettings.FixedSize = 4;
+		ModeChangeRecordSettings.PersistencePolicy = EBulletBlackboardPersistencePolicy::Forever;
+		ModeChangeRecordSettings.RollbackPolicy = EBulletBlackboardRollbackPolicy::InvalidatedOnRollback;
+
+		RollbackBlackboard->CreateEntry<FBulletMovementModeChangeRecord>(CommonBlackboard::LastModeChangeRecord, ModeChangeRecordSettings);
+
+
+		FindDefaultUpdatedComponent();
+
+		// Set up FSM and initial movement states
+		ModeFSM = NewObject<UBulletMovementModeStateMachine>(this, TEXT("BulletMoverStateMachine"), RF_Transient);
+		ModeFSM->ClearAllMovementModes();
+		ModeFSM->ClearAllGlobalTransitions();
+
+		bool bHasMatchingStartingState = false;
+
+		for (const TPair<FName, TObjectPtr<UBulletBaseMovementMode>>& Element : MovementModes)
+		{
+			if (Element.Value.Get() == nullptr)
+			{
+				UE_LOG(LogBulletMover, Warning, TEXT("Invalid Movement Mode type '%s' detected on %s. Mover actor will not function correctly."),
+					*Element.Key.ToString(), *GetNameSafe(GetOwner()));
+				continue;
+			}
+
+			ModeFSM->RegisterMovementMode(Element.Key, Element.Value);
+
+			bHasMatchingStartingState |= (StartingMovementMode == Element.Key);
+		}
+
+		for (TObjectPtr<UBulletBaseMovementModeTransition>& Transition : Transitions)
+		{
+			ModeFSM->RegisterGlobalTransition(Transition);
+		}
+
+		UE_CLOG(!bHasMatchingStartingState, LogBulletMover, Warning, TEXT("Invalid StartingMovementMode '%s' specified on %s. Mover actor will not function."),
+			*StartingMovementMode.ToString(), *GetNameSafe(GetOwner()));
+
+		if (bHasMatchingStartingState && StartingMovementMode != NAME_None)
+		{
+			ModeFSM->SetDefaultMode(StartingMovementMode);
+			ModeFSM->QueueNextMode(StartingMovementMode);
+		}
+
+		// Instantiate our sister backend component that will actually talk to the system driving the simulation
+		if (BackendClass)
+		{
+			UActorComponent* NewLiaisonComp = NewObject<UActorComponent>(this, BackendClass, TEXT("BackendLiaisonComponent"));
+			BackendLiaisonComp.SetObject(NewLiaisonComp);
+			BackendLiaisonComp.SetInterface(CastChecked<IBulletMoverBackendLiaisonInterface>(NewLiaisonComp));
+			if (BackendLiaisonComp)
+			{
+				NewLiaisonComp->RegisterComponent();
+				NewLiaisonComp->InitializeComponent();
+				NewLiaisonComp->SetNetAddressable();
+			}
+		}
+		else
+		{
+			UE_LOG(LogBulletMover, Error, TEXT("No backend class set on %s. Mover actor will not function."), *GetNameSafe(GetOwner()));
+		}
+		
+		InitializeWithBullet();
+		
+	}
+
+	// Gather initial state to fulfill queries
+	FBulletMoverSyncState DefaultMoverSyncState;
+	CreateDefaultInputAndState(CachedLastProducedInputCmd, DefaultMoverSyncState, CachedLastAuxState);
+	MoverSyncStateDoubleBuffer.SetBufferedData(DefaultMoverSyncState);
+	CachedLastUsedInputCmd = CachedLastProducedInputCmd;
+	LastMoverDefaultSyncState = MoverSyncStateDoubleBuffer.GetReadable().SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+}
+
+
+void UBulletMoverComponent::UninitializeComponent()
+{
+	if (UActorComponent* LiaisonAsComp = Cast<UActorComponent>(BackendLiaisonComp.GetObject()))
+	{
+		LiaisonAsComp->DestroyComponent();
+	}
+	BackendLiaisonComp = nullptr;
+
+	if (SimBlackboard)
+	{
+		SimBlackboard->InvalidateAll();
+	}
+
+	if (ModeFSM)
+	{
+		ModeFSM->ClearAllMovementModes();
+		ModeFSM->ClearAllGlobalTransitions();
+	}
+
+	Super::UninitializeComponent();
+}
+
+
+void UBulletMoverComponent::OnRegister()
+{
+	TGuardValue<bool> InOnRegisterGuard(bInOnRegister, true);
+
+	Super::OnRegister();
+
+	FindDefaultUpdatedComponent();
+}
+
+
+void UBulletMoverComponent::RegisterComponentTickFunctions(bool bRegister)
+{
+	Super::RegisterComponentTickFunctions(bRegister);
+
+	// Super may start up the tick function when we don't want to.
+	UpdateTickRegistration();
+
+	// If the owner ticks, make sure we tick first. This is to ensure the owner's location will be up to date when it ticks.
+	AActor* Owner = GetOwner();
+
+	if (bRegister && PrimaryComponentTick.bCanEverTick && Owner && Owner->CanEverTick())
+	{
+		Owner->PrimaryActorTick.AddPrerequisite(this, PrimaryComponentTick);
+	}
+
+
+	if (bRegister)
+	{
+		if (SetupActorComponentTickFunction(&BasedMovementTickFunction))
+		{
+			BasedMovementTickFunction.TargetMoverComp = this;
+			BasedMovementTickFunction.AddPrerequisite(this, this->PrimaryComponentTick);
+		}
+	}
+	else
+	{
+		if (BasedMovementTickFunction.IsTickFunctionRegistered())
+		{
+			BasedMovementTickFunction.UnRegisterTickFunction();
+		}
+	}
+}
+
+
+void UBulletMoverComponent::PostLoad()
+{
+	Super::PostLoad();
+
+	RefreshSharedSettings();
+}
+
+void UBulletMoverComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	FindDefaultUpdatedComponent();
+	ensureMsgf(UpdatedComponent != nullptr, TEXT("No root component found on %s. Simulation initialization will most likely fail."), *GetPathNameSafe(GetOwner()));
+
+	WorldToGravityTransform = FQuat::FindBetweenNormals(FVector::UpVector, GetUpDirection());
+	GravityToWorldTransform = WorldToGravityTransform.Inverse();
+	
+	AActor* MyActor = GetOwner();
+	if (MyActor)
+	{
+		// If no primary visual component is already set, fall back to searching for any kind of mesh,
+		// favoring a direct scene child of the UpdatedComponent.
+		if (!PrimaryVisualComponent)
+		{
+			if (UpdatedComponent)
+			{
+				for (USceneComponent* ChildComp : UpdatedComponent->GetAttachChildren())
+				{
+					if (ChildComp->IsA<UMeshComponent>())
+					{
+						SetPrimaryVisualComponent(ChildComp);
+						break;
+					}
+				}
+			}
+
+			if (!PrimaryVisualComponent)
+			{
+				SetPrimaryVisualComponent(MyActor->FindComponentByClass<UMeshComponent>());
+			}
+		}
+
+		ensureMsgf(UpdatedComponent, TEXT("A Mover actor (%s) must have an UpdatedComponent"), *GetNameSafe(MyActor));
+
+		// Optional motion warping support
+		if (UMotionWarpingComponent* WarpingComp = MyActor->FindComponentByClass<UMotionWarpingComponent>())
+		{
+			UMotionWarpingBulletMoverAdapter* WarpingAdapter = WarpingComp->CreateOwnerAdapter<UMotionWarpingBulletMoverAdapter>();
+			WarpingAdapter->SetMoverComp(this);
+		}
+
+		// If an InputProducer isn't already set, check if the actor is one
+		if (!InputProducer &&
+			MyActor->GetClass()->ImplementsInterface(UBulletMoverInputProducerInterface::StaticClass()))
+		{
+			InputProducer = MyActor;
+		}
+
+		if (InputProducer)
+		{
+			InputProducers.AddUnique(InputProducer);
+		}
+
+		TSet<UActorComponent*> Components = MyActor->GetComponents();
+		for (UActorComponent* Component : Components)
+		{
+			if (IsValid(Component) &&
+				Component->GetClass()->ImplementsInterface(UBulletMoverInputProducerInterface::StaticClass()))
+			{
+				InputProducers.AddUnique(Component);
+			}
+		}
+	}
+	
+	if (!MovementMixer)
+	{
+		MovementMixer = NewObject<UBulletMovementMixer>(this, TEXT("Default Movement Mixer"));
+	}
+
+	// Initialize the fixed delay for event scheduling
+	if (BackendLiaisonComp)
+	{
+		EventSchedulingMinDelaySeconds = BackendLiaisonComp->GetEventSchedulingMinDelaySeconds();
+	}
+}
+
+void UBulletMoverComponent::BindProcessGeneratedMovement(FBulletMover_ProcessGeneratedMovement ProcessGeneratedMovementEvent)
+{
+	ProcessGeneratedMovement = ProcessGeneratedMovementEvent;
+}
+
+void UBulletMoverComponent::UnbindProcessGeneratedMovement()
+{
+	ProcessGeneratedMovement.Clear();
+}
+
+void UBulletMoverComponent::ProduceInput(const int32 DeltaTimeMS, FBulletMoverInputCmdContext* Cmd)
+{
+	Cmd->InputCollection.Empty();
+	
+	for (TObjectPtr<UObject> InputProducerComponent : InputProducers)
+	{
+		if (IsValid(InputProducerComponent))
+		{
+			IBulletMoverInputProducerInterface::Execute_ProduceInput(InputProducerComponent, DeltaTimeMS, IN OUT *Cmd);
+		}
+	}
+
+	CachedLastProducedInputCmd = *Cmd;
+}
+
+void UBulletMoverComponent::RestoreFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState, const FBulletMoverTimeStep& NewBaseTimeStep)
+{
+	const FBulletMoverSyncState& InvalidSyncState = GetSyncState();
+	const FBulletMoverAuxStateContext& InvalidAuxState = CachedLastAuxState;
+	OnSimulationPreRollback(&InvalidSyncState, SyncState, &InvalidAuxState, AuxState, NewBaseTimeStep);
+	SetFrameStateFromContext(SyncState, AuxState, /* rebase? */ true);
+	OnSimulationRollback(SyncState, AuxState, NewBaseTimeStep);
+}
+
+void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
+{
+	const FBulletMoverDefaultSyncState* MoverState = SyncState->SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+
+	// TODO: Revisit this location check -- it seems simplistic now that we have composable state. Consider supporting a version that allows each sync state data struct a chance to react.
+	// The component will often be in the "right place" already on FinalizeFrame, so a comparison check makes sense before setting it.
+	if (MoverState &&
+			(UpdatedComponent->GetComponentLocation().Equals(MoverState->GetLocation_WorldSpace()) == false ||
+			 UpdatedComponent->GetComponentQuat().Rotator().Equals(MoverState->GetOrientation_WorldSpace(), ROTATOR_TOLERANCE) == false))
+	{
+		SetFrameStateFromContext(SyncState, AuxState, /* rebase? */ false);
+	}
+	else
+	{
+		UpdateCachedFrameState(SyncState, AuxState);
+	}
+
+	if (PrimaryVisualComponent)
+	{
+		if (!PrimaryVisualComponent->GetRelativeTransform().Equals(BaseVisualComponentTransform))
+		{
+			PrimaryVisualComponent->SetRelativeTransform(BaseVisualComponentTransform);
+		}
+	}
+	
+	if (OnPostFinalize.IsBound())
+	{
+		OnPostFinalize.Broadcast(MoverSyncStateDoubleBuffer.GetReadable(), CachedLastAuxState);
+	}
+}
+
+void UBulletMoverComponent::FinalizeUnchangedFrame()
+{
+	CachedLastSimTickTimeStep.BaseSimTimeMs = BackendLiaisonComp->GetCurrentSimTimeMs();
+	CachedLastSimTickTimeStep.ServerFrame = BackendLiaisonComp->GetCurrentSimFrame();
+
+	if (OnPostFinalize.IsBound())
+	{
+		OnPostFinalize.Broadcast(MoverSyncStateDoubleBuffer.GetReadable(), CachedLastAuxState);
+	}
+}
+
+
+void UBulletMoverComponent::FinalizeSmoothingFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
+{
+	if (PrimaryVisualComponent)
+	{
+		if (SmoothingMode == EBulletMoverSmoothingMode::VisualComponentOffset && (PrimaryVisualComponent != UpdatedComponent))
+		{
+			// Offset the visual component so it aligns with the smoothed state transform, while leaving the actual root component in place
+			if (const FBulletMoverDefaultSyncState* MoverState = SyncState->SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>())
+			{
+				FTransform ActorTransform = FTransform(MoverState->GetOrientation_WorldSpace(), MoverState->GetLocation_WorldSpace(), FVector::OneVector);
+				PrimaryVisualComponent->SetWorldTransform(BaseVisualComponentTransform * ActorTransform);	// smoothed location with base offset applied
+			}
+		}
+	}
+}
+
+void UBulletMoverComponent::TickInterpolatedSimProxy(const FBulletMoverTimeStep& TimeStep, const FBulletMoverInputCmdContext& InputCmd, UBulletMoverComponent* MoverComp, const FBulletMoverSyncState& CachedSyncState, const FBulletMoverSyncState& SyncState, const FBulletMoverAuxStateContext& AuxState)
+{
+	if (bSyncInputsForSimProxy)
+	{
+		CachedLastUsedInputCmd = InputCmd;
+
+		// Copy any structs that may be inputs from sync state to input cmd - note the use of the special container class that lets the inputs avoid causing rollbacks
+		if (FBulletMoverInputContainerDataStruct* InputContainer = static_cast<FBulletMoverInputContainerDataStruct*>(SyncState.SyncStateCollection.FindDataByType(FBulletMoverInputContainerDataStruct::StaticStruct())))
+		{
+			for (auto InputStructIt = InputContainer->InputCollection.GetCollectionDataIterator(); InputStructIt; ++InputStructIt)
+			{
+				if (const FBulletMoverDataStructBase* InputDataStruct = InputStructIt->Get())
+				{
+					CachedLastUsedInputCmd.InputCollection.AddDataByCopy(InputDataStruct);
+				}
+			}
+		}
+	}
+
+	TArray<TSharedPtr<FBulletMovementModifierBase>> ModifiersToStart;
+	TArray<TSharedPtr<FBulletMovementModifierBase>> ModifiersToEnd;
+
+	for (auto ModifierFromSyncStateIt = SyncState.MovementModifiers.GetActiveModifiersIterator(); ModifierFromSyncStateIt; ++ModifierFromSyncStateIt)
+	{
+		const TSharedPtr<FBulletMovementModifierBase> ModifierFromSyncState = *ModifierFromSyncStateIt;
+		
+		bool bContainsModifier = false;
+		for (auto ModifierFromCacheIt = CachedSyncState.MovementModifiers.GetActiveModifiersIterator(); ModifierFromCacheIt; ++ModifierFromCacheIt)
+		{
+			const TSharedPtr<FBulletMovementModifierBase> ModifierFromCache = *ModifierFromCacheIt;
+			
+			if (ModifierFromSyncState->Matches(ModifierFromCache.Get()))
+			{
+				bContainsModifier = true;
+				break;
+			}
+		}
+
+		if (!bContainsModifier)
+		{
+			ModifiersToStart.Add(ModifierFromSyncState);
+		}
+	}
+
+	for (auto ModifierFromCacheIt = CachedSyncState.MovementModifiers.GetActiveModifiersIterator(); ModifierFromCacheIt; ++ModifierFromCacheIt)
+	{
+		const TSharedPtr<FBulletMovementModifierBase> ModifierFromCache = *ModifierFromCacheIt;
+		
+		bool bContainsModifier = false;
+		for (auto ModifierFromSyncStateIt = SyncState.MovementModifiers.GetActiveModifiersIterator(); ModifierFromSyncStateIt; ++ModifierFromSyncStateIt)
+		{
+			const TSharedPtr<FBulletMovementModifierBase> ModifierFromSyncState = *ModifierFromSyncStateIt;
+			
+			if (ModifierFromSyncState->Matches(ModifierFromCache.Get()))
+			{
+				bContainsModifier = true;
+				break;
+			}
+		}
+
+		if (!bContainsModifier)
+		{
+			ModifiersToEnd.Add(ModifierFromCache);
+		}
+	}
+
+	for (TSharedPtr<FBulletMovementModifierBase> Modifier : ModifiersToStart)
+	{
+		Modifier->GenerateHandle();
+		Modifier->OnStart(MoverComp, TimeStep, SyncState, AuxState);
+	}
+
+	for (auto ModifierIt = SyncState.MovementModifiers.GetActiveModifiersIterator(); ModifierIt; ++ModifierIt)
+	{
+		if (ModifierIt->IsValid())
+		{
+			ModifierIt->Get()->OnPreMovement(this, TimeStep);
+			ModifierIt->Get()->OnPostMovement(this, TimeStep, SyncState, AuxState);
+		}
+	}
+
+	for (TSharedPtr<FBulletMovementModifierBase> Modifier : ModifiersToEnd)
+	{
+		Modifier->OnEnd(MoverComp, TimeStep, SyncState, AuxState);
+	}
+}
+
+
+void UBulletMoverComponent::InitializeSimulationState(FBulletMoverSyncState* OutSync, FBulletMoverAuxStateContext* OutAux)
+{
+	jnpCheckSlow(UpdatedComponent);
+	jnpCheckSlow(OutSync);
+	jnpCheckSlow(OutAux);
+
+	CreateDefaultInputAndState(CachedLastProducedInputCmd, *OutSync, *OutAux);
+
+	CachedLastUsedInputCmd = CachedLastProducedInputCmd;
+	MoverSyncStateDoubleBuffer.SetBufferedData(*OutSync);
+	LastMoverDefaultSyncState = MoverSyncStateDoubleBuffer.GetReadable().SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	
+	CachedLastAuxState = *OutAux;
+
+}
+
+void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeStep, const FBulletMoverTickStartData& SimInput, OUT FBulletMoverTickEndData& SimOutput)
+{
+	// Send mover info to the Chaos Visual Debugger (this will do nothing if CVD is not recording, or the mover info data channel not enabled)
+	//UE::BulletMoverUtils::FBulletMoverCVDRuntimeTrace::TraceMoverData(this, &SimInput.InputCmd, &SimInput.SyncState);
+
+	const bool bIsResimulating = InTimeStep.BaseSimTimeMs <= CachedNewestSimTickTimeStep.BaseSimTimeMs;
+
+	FBulletMoverTimeStep MoverTimeStep(InTimeStep);
+	MoverTimeStep.bIsResimulating = bIsResimulating;
+
+	if (bHasRolledBack)
+	{
+		ProcessFirstSimTickAfterRollback(InTimeStep);
+	}
+
+	PreSimulationTick(MoverTimeStep, SimInput.InputCmd);
+	
+	BulletPreSimulationTick(MoverTimeStep, SimInput, SimOutput);
+
+	if (!ModeFSM)
+	{
+		SimOutput.SyncState = SimInput.SyncState;
+		SimOutput.AuxState = SimInput.AuxState;
+		return;
+	}
+
+	CheckForExternalMovement(SimInput);
+
+	// Some sync state data should carry over between frames
+	for (const FBulletMoverDataPersistence& PersistentSyncEntry : PersistentSyncStateDataTypes)
+	{
+		bool bShouldAddDefaultData = true;
+
+		if (PersistentSyncEntry.bCopyFromPriorFrame)
+		{
+			if (const FBulletMoverDataStructBase* PriorFrameData = SimInput.SyncState.SyncStateCollection.FindDataByType(PersistentSyncEntry.RequiredType))
+			{
+				SimOutput.SyncState.SyncStateCollection.AddDataByCopy(PriorFrameData);
+				bShouldAddDefaultData = false;
+			}
+		}
+
+		if (bShouldAddDefaultData)
+		{
+			SimOutput.SyncState.SyncStateCollection.FindOrAddDataByType(PersistentSyncEntry.RequiredType);
+		}
+	}
+
+	// Make sure any other sync state structs that aren't supposed to be persistent are removed
+	const TArray<TSharedPtr<FBulletMoverDataStructBase>>& AllSyncStructs = SimOutput.SyncState.SyncStateCollection.GetDataArray();
+	for (int32 i = AllSyncStructs.Num()-1; i >= 0; --i)
+	{
+		bool bShouldRemoveStructType = true;
+
+		const UScriptStruct* ScriptStruct = AllSyncStructs[i]->GetScriptStruct();
+
+		for (const FBulletMoverDataPersistence& PersistentSyncEntry : PersistentSyncStateDataTypes)
+		{
+			if (PersistentSyncEntry.RequiredType == ScriptStruct)
+			{
+				bShouldRemoveStructType = false;
+				break;
+			}
+		}
+
+		if (bShouldRemoveStructType)
+		{
+			SimOutput.SyncState.SyncStateCollection.RemoveDataByType(ScriptStruct);
+		}	
+	}
+
+	SimOutput.AuxState = SimInput.AuxState;
+
+	FBulletCharacterDefaultInputs* Input = SimInput.InputCmd.InputCollection.FindMutableDataByType<FBulletCharacterDefaultInputs>();
+	
+	if (Input && !Input->SuggestedMovementMode.IsNone())
+	{
+		ModeFSM->QueueNextMode(Input->SuggestedMovementMode);
+	}
+
+	if (OnPreMovement.IsBound())
+	{
+		OnPreMovement.Broadcast(MoverTimeStep, SimInput.InputCmd, SimInput.SyncState, SimInput.AuxState);
+	}
+
+	RollbackBlackboard_InternalWrapper->BeginSimulationFrame(MoverTimeStep);
+
+	// Tick the actual simulation. This is where the proposed moves are queried and executed, affecting change to the moving actor's gameplay state and captured in the output sim state
+	if (IsInGameThread())
+	{
+		// If we're on the game thread, we can make use of a scoped movement update for better perf of multi-step movements.  If not, then we're definitely not moving the component in immediate mode so the scope would have no effect.
+		FScopedMovementUpdate ScopedMovementUpdate(UpdatedComponent, EScopedUpdate::DeferredUpdates);
+		ModeFSM->OnSimulationTick(UpdatedComponent, UpdatedCompAsPrimitive, SimBlackboard.Get(), SimInput, MoverTimeStep, SimOutput);
+	}
+	else
+	{
+		ModeFSM->OnSimulationTick(UpdatedComponent, UpdatedCompAsPrimitive, SimBlackboard.Get(), SimInput, MoverTimeStep, SimOutput);
+	}
+
+	if (FBulletMoverDefaultSyncState* OutputSyncState = SimOutput.SyncState.SyncStateCollection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
+	{
+		const FName MovementModeAfterTick = ModeFSM->GetCurrentModeName();
+		SimOutput.SyncState.MovementMode = MovementModeAfterTick;
+
+		if (BulletMoverComponentCVars::WarnOnPostSimDifference)
+		{
+			if (UpdatedComponent->GetComponentLocation().Equals(OutputSyncState->GetLocation_WorldSpace()) == false ||
+				UpdatedComponent->GetComponentQuat().Equals(OutputSyncState->GetOrientation_WorldSpace().Quaternion(), UE_KINDA_SMALL_NUMBER) == false)
+			{
+				UE_LOG(LogBulletMover, Warning, TEXT("Detected pos/rot difference between Mover actor (%s) sync state and scene component after sim ticking. This indicates a movement mode may not be authoring the final state correctly."), *GetNameSafe(UpdatedComponent->GetOwner()));
+			}
+		}
+	}
+
+	RollbackBlackboard_InternalWrapper->EndSimulationFrame();
+
+	if (!SimOutput.MoveRecord.GetTotalMoveDelta().IsZero())
+	{
+		UE_LOG(LogBulletMover, VeryVerbose, TEXT("KinematicSimTick: %s (role %i) frame %d: %s"),
+			*GetNameSafe(UpdatedComponent->GetOwner()), UpdatedComponent->GetOwnerRole(), MoverTimeStep.ServerFrame, *SimOutput.MoveRecord.ToString());
+	}
+
+	if (OnPostMovement.IsBound())
+	{
+		OnPostMovement.Broadcast(MoverTimeStep, SimOutput.SyncState, SimOutput.AuxState);
+	}
+
+	CachedLastUsedInputCmd = SimInput.InputCmd;
+
+	if (bSupportsKinematicBasedMovement)
+	{ 
+		UpdateBasedMovementScheduling(SimOutput);
+	}
+
+	OnPostSimulationTick.Broadcast(MoverTimeStep);
+
+	CachedLastSimTickTimeStep = MoverTimeStep;
+
+	if (MoverTimeStep.ServerFrame > CachedNewestSimTickTimeStep.ServerFrame || MoverTimeStep.BaseSimTimeMs > CachedNewestSimTickTimeStep.BaseSimTimeMs)
+	{
+		CachedNewestSimTickTimeStep = MoverTimeStep;
+	}	
+
+	if (bSyncInputsForSimProxy)
+	{
+		// stow all inputs away in a special container struct that avoids causing potential rollbacks 
+		// so they can be available to other clients even if they're only interpolated sim proxies
+		if (FBulletMoverInputContainerDataStruct* InputContainer = static_cast<FBulletMoverInputContainerDataStruct*>(SimOutput.SyncState.SyncStateCollection.FindOrAddDataByType(FBulletMoverInputContainerDataStruct::StaticStruct())))
+		{	
+			for (auto InputCmdIt = SimInput.InputCmd.InputCollection.GetCollectionDataIterator(); InputCmdIt; ++InputCmdIt)
+			{
+				if (InputCmdIt->Get())
+				{
+					InputContainer->InputCollection.AddDataByCopy(InputCmdIt->Get());
+				}
+			}
+		}
+	}
+	
+	FinalizeStateFromBulletSimulation(SimOutput);
+}
+
+UBulletBaseMovementMode* UBulletMoverComponent::FindMovementMode(TSubclassOf<UBulletBaseMovementMode> MovementMode) const
+{
+	return FindMode_Mutable(MovementMode);
+}
+
+void UBulletMoverComponent::K2_FindMovementModifier(FBulletMovementModifierHandle ModifierHandle, bool& bFoundModifier, int32& TargetAsRawBytes) const
+{
+	// This will never be called, the exec version below will be hit instead
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UBulletMoverComponent::execK2_FindMovementModifier)
+{
+	P_GET_STRUCT(FBulletMovementModifierHandle, ModifierHandle);
+	P_GET_UBOOL_REF(bFoundModifier);
+
+	Stack.MostRecentPropertyAddress = nullptr;
+	Stack.MostRecentPropertyContainer = nullptr;
+	Stack.StepCompiledIn<FStructProperty>(nullptr);
+	
+	void* ModifierPtr = Stack.MostRecentPropertyAddress;
+	FStructProperty* StructProp = CastField<FStructProperty>(Stack.MostRecentProperty);
+
+	P_FINISH;
+
+	bFoundModifier = false;
+	
+	if (!ModifierPtr)
+	{
+		FBlueprintExceptionInfo ExceptionInfo(
+			EBlueprintExceptionType::AbortExecution,
+			LOCTEXT("BulletMoverComponent_FindMovementModifier_UnresolvedTarget", "Failed to resolve the OutMovementModifier for FindMovementModifier")
+		);
+	
+		FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
+	}
+	else if (!StructProp)
+	{
+		FBlueprintExceptionInfo ExceptionInfo(
+			EBlueprintExceptionType::AbortExecution,
+			LOCTEXT("BulletMoverComponent_FindMovementModifier_TargetNotStruct", "FindMovementModifier: Target for OutMovementModifier is not a valid type. It must be a Struct and a child of FBulletMovementModifierBase.")
+		);
+	
+		FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
+	}
+	else if (!StructProp->Struct || !StructProp->Struct->IsChildOf(FBulletMovementModifierBase::StaticStruct()))
+	{
+		FBlueprintExceptionInfo ExceptionInfo(
+			EBlueprintExceptionType::AbortExecution,
+			LOCTEXT("BulletMoverComponent_FindMovementModifier_BadType", "FindMovementModifier: Target for OutMovementModifier is not a valid type. Must be a child of FBulletMovementModifierBase.")
+		);
+	
+		FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
+	}
+	else
+	{
+		P_NATIVE_BEGIN;
+		
+		if (const FBulletMovementModifierBase* FoundActiveMove = P_THIS->FindMovementModifier(ModifierHandle))
+		{
+			StructProp->Struct->CopyScriptStruct(ModifierPtr, FoundActiveMove);
+			bFoundModifier = true;
+		}
+
+		P_NATIVE_END;
+	}
+}
+
+bool UBulletMoverComponent::IsModifierActiveOrQueued(const FBulletMovementModifierHandle& ModifierHandle) const
+{
+	return FindMovementModifier(ModifierHandle) ? true : false;
+}
+
+const FBulletMovementModifierBase* UBulletMoverComponent::FindMovementModifier(const FBulletMovementModifierHandle& ModifierHandle) const
+{
+	if (!ModifierHandle.IsValid())
+	{
+		return nullptr;
+	}
+	
+	const FBulletMoverSyncState& CachedSyncState = MoverSyncStateDoubleBuffer.GetReadable();
+	
+	// Check active modifiers for modifier handle
+	for (auto ActiveModifierFromSyncStateIt = CachedSyncState.MovementModifiers.GetActiveModifiersIterator(); ActiveModifierFromSyncStateIt; ++ActiveModifierFromSyncStateIt)
+	{
+		const TSharedPtr<FBulletMovementModifierBase> ActiveModifierFromSyncState = *ActiveModifierFromSyncStateIt;
+
+		if (ModifierHandle == ActiveModifierFromSyncState->GetHandle())
+		{
+			return ActiveModifierFromSyncState.Get();
+		}
+	}
+
+	// Check queued modifiers for modifier handle
+	for (auto QueuedModifierFromSyncStateIt = CachedSyncState.MovementModifiers.GetQueuedModifiersIterator(); QueuedModifierFromSyncStateIt; ++QueuedModifierFromSyncStateIt)
+	{
+		const TSharedPtr<FBulletMovementModifierBase> QueuedModifierFromSyncState = *QueuedModifierFromSyncStateIt;
+
+		if (ModifierHandle == QueuedModifierFromSyncState->GetHandle())
+		{
+			return QueuedModifierFromSyncState.Get();
+		}
+	}
+	
+	return ModeFSM->FindQueuedModifier(ModifierHandle);
+}
+
+const FBulletMovementModifierBase* UBulletMoverComponent::FindMovementModifierByType(const UScriptStruct* DataStructType) const
+{
+	const FBulletMoverSyncState& CachedSyncState = MoverSyncStateDoubleBuffer.GetReadable();
+	
+	// Check active modifiers for modifier handle
+	for (auto ActiveModifierFromSyncStateIt = CachedSyncState.MovementModifiers.GetActiveModifiersIterator(); ActiveModifierFromSyncStateIt; ++ActiveModifierFromSyncStateIt)
+	{
+		const TSharedPtr<FBulletMovementModifierBase> ActiveModifierFromSyncState = *ActiveModifierFromSyncStateIt;
+
+		if (DataStructType == ActiveModifierFromSyncState->GetScriptStruct())
+		{
+			return ActiveModifierFromSyncState.Get();
+		}
+	}
+
+	// Check queued modifiers for modifier handle
+	for (auto QueuedModifierFromSyncStateIt = CachedSyncState.MovementModifiers.GetQueuedModifiersIterator(); QueuedModifierFromSyncStateIt; ++QueuedModifierFromSyncStateIt)
+	{
+		const TSharedPtr<FBulletMovementModifierBase> QueuedModifierFromSyncState = *QueuedModifierFromSyncStateIt;
+
+		if (DataStructType == QueuedModifierFromSyncState->GetScriptStruct())
+		{
+			return QueuedModifierFromSyncState.Get();
+		}
+	}
+	
+	return ModeFSM->FindQueuedModifierByType(DataStructType);
+}
+
+bool UBulletMoverComponent::HasGameplayTag(FGameplayTag TagToFind, bool bExactMatch) const
+{
+	return HasGameplayTagInState(MoverSyncStateDoubleBuffer.GetReadable(), TagToFind, bExactMatch);
+}
+
+bool UBulletMoverComponent::HasGameplayTagInState(const FBulletMoverSyncState& SyncState, FGameplayTag TagToFind, bool bExactMatch) const 
+{
+	// Check loose / external tags
+	if (bExactMatch)
+	{
+		if (ExternalGameplayTags.HasTagExact(TagToFind))
+		{
+			return true;
+		}
+	}
+	else
+	{
+		if (ExternalGameplayTags.HasTag(TagToFind))
+		{
+			return true;
+		}
+	}
+
+	// Check active Movement Mode
+	if (const UBulletBaseMovementMode* ActiveMovementMode = FindMovementModeByName(SyncState.MovementMode))
+	{
+		if (ActiveMovementMode->HasGameplayTag(TagToFind, bExactMatch))
+		{
+			return true;
+		}
+	}
+
+	// Search Movement Modifiers
+	for (auto ModifierFromSyncStateIt = SyncState.MovementModifiers.GetActiveModifiersIterator(); ModifierFromSyncStateIt; ++ModifierFromSyncStateIt)
+	{
+		if (const TSharedPtr<FBulletMovementModifierBase> ModifierFromSyncState = *ModifierFromSyncStateIt)
+		{
+			if (ModifierFromSyncState.IsValid() && ModifierFromSyncState->HasGameplayTag(TagToFind, bExactMatch))
+			{
+				return true;
+			}
+		}
+	}
+
+	// Search Layered Moves
+	for (const TSharedPtr<FBulletLayeredMoveBase>& LayeredMove : SyncState.LayeredMoves.GetActiveMoves())
+	{
+		if (LayeredMove->HasGameplayTag(TagToFind, bExactMatch))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+void UBulletMoverComponent::AddGameplayTag(FGameplayTag TagToAdd)
+{
+	ExternalGameplayTags.AddTag(TagToAdd);
+}
+
+void UBulletMoverComponent::AddGameplayTags(const FGameplayTagContainer& TagsToAdd)
+{
+	ExternalGameplayTags.AppendTags(TagsToAdd);
+}
+
+void UBulletMoverComponent::RemoveGameplayTag(FGameplayTag TagToRemove)
+{
+	ExternalGameplayTags.RemoveTag(TagToRemove);
+}
+
+void UBulletMoverComponent::RemoveGameplayTags(const FGameplayTagContainer& TagsToRemove)
+{
+	ExternalGameplayTags.RemoveTags(TagsToRemove);
+}
+
+void UBulletMoverComponent::PreSimulationTick(const FBulletMoverTimeStep& TimeStep, const FBulletMoverInputCmdContext& InputCmd)
+{
+	if (OnPreSimulationTick.IsBound())
+	{
+		OnPreSimulationTick.Broadcast(TimeStep, InputCmd);
+	}
+
+	for (const TSubclassOf<UBulletLayeredMoveLogic>& PendingRegistrantClass : MovesPendingRegistration)
+	{
+		TObjectPtr<UBulletLayeredMoveLogic> RegisteredMove = NewObject<UBulletLayeredMoveLogic>(this, PendingRegistrantClass);
+		RegisteredMoves.Add(RegisteredMove);
+	}
+
+	for (const TSubclassOf<UBulletLayeredMoveLogic>& PendingUnregistrantClass : MovesPendingUnregistration)
+	{
+		RegisteredMoves.RemoveAll([&PendingUnregistrantClass, this]
+			(const TObjectPtr<UBulletLayeredMoveLogic>& MoveLogic)
+			{
+				if (MoveLogic->GetClass() == PendingUnregistrantClass)
+				{
+					return true;
+				}
+				
+				return false;
+			});
+	}
+	
+	MovesPendingRegistration.Empty();
+	MovesPendingUnregistration.Empty();
+}
+
+void UBulletMoverComponent::UpdateCachedFrameState(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
+{
+	// TODO integrate dirty tracking
+	FBulletMoverSyncState& BufferedSyncState = MoverSyncStateDoubleBuffer.GetWritable();
+	BufferedSyncState = *SyncState;
+	LastMoverDefaultSyncState = BufferedSyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	MoverSyncStateDoubleBuffer.Flip();
+
+	// TODO: when AuxState starts getting used we need to double buffer it here as well
+	CachedLastAuxState = *AuxState;
+	CachedLastSimTickTimeStep.BaseSimTimeMs = BackendLiaisonComp->GetCurrentSimTimeMs();
+	CachedLastSimTickTimeStep.ServerFrame = BackendLiaisonComp->GetCurrentSimFrame();
+}
+
+void UBulletMoverComponent::SetFrameStateFromContext(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState, bool bRebaseBasedState)
+{
+	UpdateCachedFrameState(SyncState, AuxState);
+
+	if (FBulletMoverDefaultSyncState* MoverState = const_cast<FBulletMoverDefaultSyncState*>(LastMoverDefaultSyncState))
+	{
+		if (bRebaseBasedState && MoverState->GetMovementBase())
+		{
+			// Note that this is modifying our cached mover state from what we received from Network Prediction. We are resampling
+			// the transform of the movement base, in case it has changed as well during the rollback.
+			MoverState->UpdateCurrentMovementBase();
+		}
+
+		// The state's properties are usually worldspace already, but may need to be adjusted to match the current movement base
+		const FVector WorldLocation = MoverState->GetLocation_WorldSpace();
+		const FRotator WorldOrientation = MoverState->GetOrientation_WorldSpace();
+		const FVector WorldVelocity = MoverState->GetVelocity_WorldSpace();
+
+		// Apply the desired transform to the scene component
+
+		// If we can, then we can utilize grouped movement updates to reduce the number of calls to SendPhysicsTransform
+		if (IsUsingDeferredGroupMovement())
+		{
+			// Signal to the USceneComponent that we are moving that this should be in a grouped update
+			// and not apply changes on the physics thread immediately
+			FScopedMovementUpdate MovementUpdate(
+				UpdatedComponent,
+				EScopedUpdate::DeferredGroupUpdates,
+				/*bRequireOverlapsEventFlagToQueueOverlaps*/ true);
+
+			FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
+			UpdatedComponent->SetWorldTransform(Transform, /*bSweep*/false, nullptr, ETeleportType::TeleportPhysics);
+			UpdatedComponent->ComponentVelocity = WorldVelocity;
+		}
+		else
+		{
+			FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
+			UpdatedComponent->SetWorldTransform(Transform, /*bSweep*/false, nullptr, ETeleportType::TeleportPhysics);
+			UpdatedComponent->ComponentVelocity = WorldVelocity;
+		}
+	}
+}
+
+
+void UBulletMoverComponent::CreateDefaultInputAndState(FBulletMoverInputCmdContext& OutInputCmd, FBulletMoverSyncState& OutSyncState, FBulletMoverAuxStateContext& OutAuxState) const
+{
+	OutInputCmd = FBulletMoverInputCmdContext();
+	// TODO: here is where we'd add persistent input cmd struct types once they're supported
+
+	OutSyncState = FBulletMoverSyncState();
+
+	// Add all initial persistent sync state types
+	for (const FBulletMoverDataPersistence& PersistentSyncEntry : PersistentSyncStateDataTypes)
+	{
+		if (PersistentSyncEntry.RequiredType.Get()) // This can happen if a previously existing required type was removed, causing a crash
+		{
+			OutSyncState.SyncStateCollection.FindOrAddDataByType(PersistentSyncEntry.RequiredType);
+		}
+	}
+
+	// Mirror the scene component transform if we have one, otherwise it will be left at origin
+	FBulletMoverDefaultSyncState* MoverState = OutSyncState.SyncStateCollection.FindMutableDataByType<FBulletMoverDefaultSyncState>();
+	if (MoverState && UpdatedComponent)
+	{
+		MoverState->SetTransforms_WorldSpace(
+			UpdatedComponent->GetComponentLocation(),
+			UpdatedComponent->GetComponentRotation(),
+			FVector::ZeroVector, // no initial velocity
+			FVector::ZeroVector);
+	}
+
+	OutSyncState.MovementMode = StartingMovementMode;
+	
+	OutAuxState = FBulletMoverAuxStateContext();
+
+}
+
+void UBulletMoverComponent::HandleImpact(FBulletMoverOnImpactParams& ImpactParams)
+{
+	if (ImpactParams.MovementModeName.IsNone())
+	{
+		ImpactParams.MovementModeName = ModeFSM->GetCurrentModeName();
+	}
+	
+	OnHandleImpact(ImpactParams);
+}
+
+void UBulletMoverComponent::OnHandleImpact(const FBulletMoverOnImpactParams& ImpactParams)
+{
+	// TODO: Handle physics impacts here - ie when player runs into box, impart force onto box
+}
+
+void UBulletMoverComponent::UpdateBasedMovementScheduling(const FBulletMoverTickEndData& SimOutput)
+{
+	// If we have a dynamic movement base, enable later based movement tick
+	UPrimitiveComponent* SyncStateDynamicBase = nullptr;
+	if (const FBulletMoverDefaultSyncState* OutputSyncState = SimOutput.SyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>())
+	{
+		if (UBulletBasedMovementUtils::IsADynamicBase(OutputSyncState->GetMovementBase()))
+		{
+			SyncStateDynamicBase = OutputSyncState->GetMovementBase();
+		}
+	}
+
+	// Remove any stale dependency
+	if (MovementBaseDependency && (MovementBaseDependency != SyncStateDynamicBase))
+	{
+		UBulletBasedMovementUtils::RemoveTickDependency(BasedMovementTickFunction, MovementBaseDependency);
+		MovementBaseDependency = nullptr;
+	}
+
+	// Set up current dependencies
+	if (SyncStateDynamicBase)
+	{
+		BasedMovementTickFunction.SetTickFunctionEnable(true);
+
+		if (UBulletBasedMovementUtils::IsBaseSimulatingPhysics(SyncStateDynamicBase))
+		{
+			BasedMovementTickFunction.TickGroup = TG_PostPhysics;
+		}
+		else
+		{
+			BasedMovementTickFunction.TickGroup = TG_PrePhysics;
+		}
+
+		if (MovementBaseDependency == nullptr)
+		{
+			UBulletBasedMovementUtils::AddTickDependency(BasedMovementTickFunction, SyncStateDynamicBase);
+			MovementBaseDependency = SyncStateDynamicBase;
+		}
+	}
+	else
+	{
+		BasedMovementTickFunction.SetTickFunctionEnable(false);
+		MovementBaseDependency = nullptr;
+
+		SimBlackboard->Invalidate(CommonBlackboard::LastFoundDynamicMovementBase);
+		SimBlackboard->Invalidate(CommonBlackboard::LastAppliedDynamicMovementBase);
+	}
+}
+
+
+void UBulletMoverComponent::FindDefaultUpdatedComponent()
+{
+	if (!IsValid(UpdatedComponent))
+	{
+		USceneComponent* NewUpdatedComponent = nullptr;
+
+		const AActor* MyActor = GetOwner();
+		const UWorld* MyWorld = GetWorld();
+
+		if (MyActor && MyWorld && MyWorld->IsGameWorld())
+		{
+			NewUpdatedComponent = MyActor->GetRootComponent();
+		}
+
+		SetUpdatedComponent(NewUpdatedComponent);
+	}
+}
+
+
+void UBulletMoverComponent::UpdateTickRegistration()
+{
+	const bool bHasUpdatedComponent = (UpdatedComponent != NULL);
+	SetComponentTickEnabled(bHasUpdatedComponent && bAutoActivate);
+}
+
+void UBulletMoverComponent::OnSimulationPreRollback(const FBulletMoverSyncState* InvalidSyncState, const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* InvalidAuxState, const FBulletMoverAuxStateContext* AuxState, const FBulletMoverTimeStep& NewBaseTimeStep)
+{
+	ModeFSM->OnSimulationPreRollback(InvalidSyncState, SyncState, InvalidAuxState, AuxState, NewBaseTimeStep);
+}
+
+
+void UBulletMoverComponent::OnSimulationRollback(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState, const FBulletMoverTimeStep& NewBaseTimeStep)
+{
+	SimBlackboard->Invalidate(EBulletInvalidationReason::Rollback);
+
+	RollbackBlackboard_InternalWrapper->BeginRollback(NewBaseTimeStep);
+
+	ModeFSM->OnSimulationRollback(SyncState, AuxState, NewBaseTimeStep);
+
+	RollbackBlackboard_InternalWrapper->EndRollback();
+	bHasRolledBack = true;
+}
+
+
+void UBulletMoverComponent::ProcessFirstSimTickAfterRollback(const FBulletMoverTimeStep& TimeStep)
+{
+	OnPostSimulationRollback.Broadcast(TimeStep, CachedLastSimTickTimeStep);
+	bHasRolledBack = false;
+}
+
+
+#if WITH_EDITOR
+
+void UBulletMoverComponent::PreSave(FObjectPreSaveContext ObjectSaveContext)
+{
+	Super::PreSave(ObjectSaveContext);
+
+	RefreshSharedSettings();
+}
+
+void UBulletMoverComponent::PostCDOCompiled(const FPostCDOCompiledContext& Context)
+{
+	Super::PostCDOCompiled(Context);
+
+	RefreshSharedSettings();
+}
+
+
+void UBulletMoverComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	if ((PropertyChangedEvent.Property) && (PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(UBulletMoverComponent, MovementModes)))
+	{
+		RefreshSharedSettings();
+	}
+
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+}
+
+
+void UBulletMoverComponent::PostTransacted(const FTransactionObjectEvent& TransactionEvent)
+{
+	Super::PostTransacted(TransactionEvent);
+
+	if ((TransactionEvent.GetEventType() == ETransactionObjectEventType::Finalized || TransactionEvent.GetEventType() == ETransactionObjectEventType::UndoRedo) &&
+		TransactionEvent.HasPropertyChanges() &&
+		TransactionEvent.GetChangedProperties().Contains(GET_MEMBER_NAME_CHECKED(UBulletMoverComponent, MovementModes)))
+	{
+		RefreshSharedSettings();		
+	}
+}
+
+
+EDataValidationResult UBulletMoverComponent::IsDataValid(FDataValidationContext& Context) const
+{
+	EDataValidationResult Result = Super::IsDataValid(Context);
+
+	if (!ValidateSetup(Context))
+	{
+		Result = EDataValidationResult::Invalid;
+	}
+
+	return Result;
+}
+
+
+bool UBulletMoverComponent::ValidateSetup(FDataValidationContext& Context) const
+{
+	bool bHasMatchingStartingMode = false;
+	bool bDidFindAnyProblems = false;
+	bool bIsAsyncBackend = false;
+
+	// Verify backend liaison
+	if (!BackendClass)
+	{
+		Context.AddError(FText::Format(LOCTEXT("MissingBackendClassError", "No BackendClass property specified on {0}. Mover actor will not function."),
+			FText::FromString(GetNameSafe(GetOwner()))));
+
+		bDidFindAnyProblems = true;
+	}
+	else if (!BackendClass->ImplementsInterface(UBulletMoverBackendLiaisonInterface::StaticClass()))
+	{
+		Context.AddError(FText::Format(LOCTEXT("InvalidBackendClassError", "BackendClass {0} on {1} does not implement IBulletMoverBackendLiaisonInterface. Mover actor will not function."),
+			FText::FromString(BackendClass->GetName()),
+			FText::FromString(GetNameSafe(GetOwner()))));
+
+		bDidFindAnyProblems = true;
+	}
+	else
+	{
+		IBulletMoverBackendLiaisonInterface* BackendCDOAsInterface = Cast<IBulletMoverBackendLiaisonInterface>(BackendClass->GetDefaultObject());
+		if (BackendCDOAsInterface)
+		{
+			bIsAsyncBackend = BackendCDOAsInterface->IsAsync();
+			if (BackendCDOAsInterface->ValidateData(Context, *this) == EDataValidationResult::Invalid)
+			{
+				bDidFindAnyProblems = true;
+			}
+		}
+	}
+
+	// Verify all movement modes
+	for (const TPair<FName, TObjectPtr<UBulletBaseMovementMode>>& Element : MovementModes)
+	{
+		if (StartingMovementMode == Element.Key)
+		{
+			bHasMatchingStartingMode = true;
+		}
+
+		// Verify movement mode is valid
+		if (!Element.Value)
+		{
+			Context.AddError(FText::Format(LOCTEXT("InvalidMovementModeError", "Invalid movement mode on {0}, mapped as {1}. Mover actor will not function."),
+				FText::FromString(GetNameSafe(GetOwner())),
+				FText::FromName(Element.Key)));
+
+			bDidFindAnyProblems = true;
+		}
+		else if (Element.Value->IsDataValid(Context) == EDataValidationResult::Invalid)
+		{
+			bDidFindAnyProblems = true;
+		}
+
+		// Verify that the movement mode's shared settings object exists (if any)
+		if (Element.Value)
+		{
+			if (bIsAsyncBackend && !Element.Value->bSupportsAsync)
+			{
+				Context.AddError(FText::Format(LOCTEXT("InvalidModeAsyncSupportsError", "Movement mode on {0}, mapped as {1} does not support asynchrony but its backend is asynchronous"),
+						FText::FromString(GetNameSafe(GetOwner())),
+						FText::FromName(Element.Key)));
+
+				bDidFindAnyProblems = true;
+			}
+
+			for (TSubclassOf<UObject>& Type : Element.Value->SharedSettingsClasses)
+			{
+				if (Type.Get() == nullptr)
+				{
+					Context.AddError(FText::Format(LOCTEXT("InvalidModeSettingsError", "Movement mode on {0}, mapped as {1}, has an invalid SharedSettingsClass. You may need to remove the invalid settings class."),
+						FText::FromString(GetNameSafe(GetOwner())),
+						FText::FromName(Element.Key)));
+
+					bDidFindAnyProblems = true;
+				}
+				else if (FindSharedSettings(Type) == nullptr)
+				{
+					Context.AddError(FText::Format(LOCTEXT("MissingModeSettingsError", "Movement mode on {0}, mapped as {1}, is missing its desired SharedSettingsClass {2}. You may need to save the asset and/or recompile."),
+						FText::FromString(GetNameSafe(GetOwner())),
+						FText::FromName(Element.Key),
+						FText::FromString(Type->GetName())));
+
+					bDidFindAnyProblems = true;
+				}
+			}
+
+			for (const UBulletBaseMovementModeTransition* Transition : Element.Value->Transitions)
+			{
+				if (!IsValid(Transition))
+				{
+					continue;
+				}
+
+				if (bIsAsyncBackend && !Transition->bSupportsAsync)
+				{
+					Context.AddError(FText::Format(LOCTEXT("InvalidModeTransitionAsyncSupportError", "Transition on mode {0} on {1} does not support asynchrony but its backend is asynchronous"),
+						FText::FromName(Element.Key),
+						FText::FromString(GetNameSafe(GetOwner()))));
+
+					bDidFindAnyProblems = true;
+				}
+
+				for (const TSubclassOf<UObject>& Type : Transition->SharedSettingsClasses)
+				{
+					if (Type.Get() == nullptr)
+					{
+						Context.AddError(FText::Format(LOCTEXT("InvalidModeTransitionSettingsError", "Transition on mode {0} on {1}, has an invalid SharedSettingsClass. You may need to remove the invalid settings class."),
+							FText::FromName(Element.Key),
+							FText::FromString(GetNameSafe(GetOwner()))));
+
+						bDidFindAnyProblems = true;
+					}
+					else if (FindSharedSettings(Type) == nullptr)
+					{
+						Context.AddError(FText::Format(LOCTEXT("MissingModeTransitionSettingsError", "Transition on mode {0} on {1}, is missing its desired SharedSettingsClass {2}. You may need to save the asset and/or recompile."),
+							FText::FromName(Element.Key),
+							FText::FromString(GetNameSafe(GetOwner())),
+							FText::FromString(Type->GetName())));
+
+						bDidFindAnyProblems = true;
+					}
+				}
+			}
+		}
+	}
+
+	// Verify we have a matching starting mode
+	if (!bHasMatchingStartingMode && StartingMovementMode != NAME_None)
+	{
+		Context.AddError(FText::Format(LOCTEXT("InvalidStartingModeError", "Invalid StartingMovementMode {0} specified on {1}. Mover actor will not function."),
+			FText::FromName(StartingMovementMode),
+			FText::FromString(GetNameSafe(GetOwner()))));
+
+		bDidFindAnyProblems = true;
+	}
+
+	// Verify transitions
+	for (const UBulletBaseMovementModeTransition* Transition : Transitions)
+	{
+		if (!IsValid(Transition))
+		{
+			Context.AddError(FText::Format(LOCTEXT("InvalidTransitionError", "Invalid or missing transition object on {0}. Clean up the Transitions array."),
+				FText::FromString(GetNameSafe(GetOwner()))));
+
+			bDidFindAnyProblems = true;
+			continue;
+		}
+
+		for (const TSubclassOf<UObject>& Type : Transition->SharedSettingsClasses)
+		{
+			if (Type.Get() == nullptr)
+			{
+				Context.AddError(FText::Format(LOCTEXT("InvalidTransitionSettingsError", "Transition on {0}, has an invalid SharedSettingsClass. You may need to remove the invalid settings class."),
+					FText::FromString(GetNameSafe(GetOwner()))));
+
+				bDidFindAnyProblems = true;
+			}
+			else if (FindSharedSettings(Type) == nullptr)
+			{
+				Context.AddError(FText::Format(LOCTEXT("MissingTransitionSettingsError", "Transition on {0}, is missing its desired SharedSettingsClass {2}. You may need to save the asset and/or recompile."),
+					FText::FromString(GetNameSafe(GetOwner())),
+					FText::FromString(Type->GetName())));
+
+				bDidFindAnyProblems = true;
+			}
+		}
+	}
+
+	// Verify persistent types
+	for (const FBulletMoverDataPersistence& PersistentSyncEntry : PersistentSyncStateDataTypes)
+	{
+		if (!PersistentSyncEntry.RequiredType || !PersistentSyncEntry.RequiredType->IsChildOf(FBulletMoverDataStructBase::StaticStruct()))
+		{
+			Context.AddError(FText::Format(LOCTEXT("InvalidSyncStateTypeError", "RequiredType '{0}' is not a valid type or is missing. Must be a child of FBulletMoverDataStructBase."),
+				FText::FromString(GetNameSafe(PersistentSyncEntry.RequiredType))));
+
+			bDidFindAnyProblems = true;
+		}
+	}
+
+	// Verify that the up direction override is a normalized vector
+	if (bHasUpDirectionOverride)
+	{
+		if (!UpDirectionOverride.IsNormalized())
+		{
+			Context.AddError(FText::Format(LOCTEXT("InvalidUpDirectionOverrideError", "UpDirectionOverride {0} needs to be a normalized vector, but it is not. {1}"),
+				FText::FromString(UpDirectionOverride.ToString()),
+				FText::FromString(GetNameSafe(GetOwner()))));
+
+			bDidFindAnyProblems = true;
+		}
+	}
+
+	return !bDidFindAnyProblems;
+}
+
+TArray<FString> UBulletMoverComponent::GetStartingMovementModeNames()
+{
+	TArray<FString> PossibleModeNames;
+
+	PossibleModeNames.Add(TEXT(""));
+
+	for (const TPair<FName, TObjectPtr<UBulletBaseMovementMode>>& Element : MovementModes)
+	{
+		FString ModeNameAsString;
+		Element.Key.ToString(ModeNameAsString);
+		PossibleModeNames.Add(ModeNameAsString);
+	}
+
+	return PossibleModeNames;
+}
+
+#endif // WITH_EDITOR
+
+
+void UBulletMoverComponent::PhysicsVolumeChanged(APhysicsVolume* NewVolume)
+{
+	// This itself feels bad. When will this be called? Its impossible to know what is allowed and not allowed to be done in this callback.
+	// Callbacks instead should be trapped within the simulation update function. This isn't really possible though since the UpdateComponent
+	// is the one that will call this.
+}
+
+
+void UBulletMoverComponent::RefreshSharedSettings()
+{
+	TArray<TObjectPtr<UObject>> UnreferencedSettingsObjs = SharedSettings;
+
+	// Add any missing settings
+	for (const TPair<FName, TObjectPtr<UBulletBaseMovementMode>>& Element : MovementModes)
+	{
+		if (UBulletBaseMovementMode* Mode = Element.Value.Get())
+		{
+			for (TSubclassOf<UObject>& SharedSettingsType : Mode->SharedSettingsClasses)
+			{
+				if (SharedSettingsType.Get() == nullptr)
+				{
+					UE_LOG(LogBulletMover, Warning, TEXT("Invalid shared setting class detected on Movement Mode %s."), *Mode->GetName());
+					continue;
+				}
+
+				bool bFoundMatchingClass = false;
+				for (const TObjectPtr<UObject>& SettingsObj : SharedSettings)
+				{
+					if (SettingsObj && SettingsObj->IsA(SharedSettingsType))
+					{
+						bFoundMatchingClass = true;
+						UnreferencedSettingsObjs.Remove(SettingsObj);
+						break;
+					}
+				}
+
+				if (!bFoundMatchingClass)
+				{
+					UObject* NewSettings = NewObject<UObject>(this, SharedSettingsType, NAME_None, GetMaskedFlags(RF_PropagateToSubObjects) | RF_Transactional);
+					SharedSettings.Add(NewSettings);
+				}
+			}
+
+			for (const UBulletBaseMovementModeTransition* Transition : Mode->Transitions)
+			{
+				if (!IsValid(Transition))
+				{
+					continue;
+				}
+
+				for (const TSubclassOf<UObject>& SharedSettingsType : Transition->SharedSettingsClasses)
+				{
+					if (SharedSettingsType.Get() == nullptr)
+					{
+						UE_LOG(LogBulletMover, Warning, TEXT("Invalid shared setting class detected on Transition on Movement Mode %s."), *Mode->GetName());
+						continue;
+					}
+
+					bool bFoundMatchingClass = false;
+					for (const TObjectPtr<UObject>& SettingsObj : SharedSettings)
+					{
+						if (SettingsObj && SettingsObj->IsA(SharedSettingsType))
+						{
+							bFoundMatchingClass = true;
+							UnreferencedSettingsObjs.Remove(SettingsObj);
+							break;
+						}
+					}
+
+					if (!bFoundMatchingClass)
+					{
+						UObject* NewSettings = NewObject<UObject>(this, SharedSettingsType, NAME_None, GetMaskedFlags(RF_PropagateToSubObjects) | RF_Transactional);
+						SharedSettings.Add(NewSettings);
+					}
+				}
+			}
+		}
+	}
+
+	for (const UBulletBaseMovementModeTransition* Transition : Transitions)
+	{
+		if (!IsValid(Transition))
+		{
+			continue;
+		}
+
+		for (const TSubclassOf<UObject>& SharedSettingsType : Transition->SharedSettingsClasses)
+		{
+			if (SharedSettingsType.Get() == nullptr)
+			{
+				UE_LOG(LogBulletMover, Warning, TEXT("Invalid shared setting class detected on Transition."));
+				continue;
+			}
+
+			bool bFoundMatchingClass = false;
+			for (const TObjectPtr<UObject>& SettingsObj : SharedSettings)
+			{
+				if (SettingsObj && SettingsObj->IsA(SharedSettingsType))
+				{
+					bFoundMatchingClass = true;
+					UnreferencedSettingsObjs.Remove(SettingsObj);
+					break;
+				}
+			}
+
+			if (!bFoundMatchingClass)
+			{
+				UObject* NewSettings = NewObject<UObject>(this, SharedSettingsType, NAME_None, GetMaskedFlags(RF_PropagateToSubObjects) | RF_Transactional);
+				SharedSettings.Add(NewSettings);
+			}
+		}
+	}
+
+	// Remove any settings that are no longer used
+	for (const TObjectPtr<UObject>& SettingsObjToRemove : UnreferencedSettingsObjs)
+	{
+		SharedSettings.Remove(SettingsObjToRemove);
+	}
+
+	// Sort by name for array order consistency
+	Algo::Sort(SharedSettings, [](const TObjectPtr<UObject>& LHS, const TObjectPtr<UObject>& RHS) 
+		{ return (LHS->GetClass()->GetPathName() < RHS.GetClass()->GetPathName()); });
+}
+
+
+const TArray<TObjectPtr<UBulletLayeredMoveLogic>>* UBulletMoverComponent::GetRegisteredMoves() const
+{
+	return &RegisteredMoves;
+}
+
+void UBulletMoverComponent::K2_RegisterMove(TSubclassOf<UBulletLayeredMoveLogic> MoveClass)
+{
+	MovesPendingUnregistration.Remove(MoveClass);
+	if (!MovesPendingRegistration.Contains(MoveClass))
+	{
+		const bool bAlreadyRegistered = RegisteredMoves.ContainsByPredicate([MoveClass](const TObjectPtr<UBulletLayeredMoveLogic>& Move) { return Move->GetClass() == MoveClass; });
+		if (!bAlreadyRegistered)
+		{
+			MovesPendingRegistration.AddUnique(MoveClass);
+		}
+	}
+}
+
+void UBulletMoverComponent::K2_RegisterMoves(TArray<TSubclassOf<UBulletLayeredMoveLogic>> MoveClasses)
+{
+	for (const TSubclassOf<UBulletLayeredMoveLogic>& MoveClass : MoveClasses)
+	{
+		K2_RegisterMove(MoveClass);
+	}
+}
+
+void UBulletMoverComponent::K2_UnregisterMove(TSubclassOf<UBulletLayeredMoveLogic> MoveClass)
+{
+	MovesPendingRegistration.Remove(MoveClass);
+	if (!MovesPendingUnregistration.Contains(MoveClass))
+	{
+		const bool bAlreadyUnregistered = RegisteredMoves.ContainsByPredicate([MoveClass](const TObjectPtr<UBulletLayeredMoveLogic>& Move) { return Move->GetClass() == MoveClass; });
+		if (!bAlreadyUnregistered)
+		{
+			MovesPendingUnregistration.AddUnique(MoveClass);
+		}
+	}
+}
+
+bool UBulletMoverComponent::K2_QueueLayeredMoveActivationWithContext(TSubclassOf<UBulletLayeredMoveLogic> MoveLogicClass, const int32& MoveAsRawData)
+{
+	// This will never be called, the exec version below will be hit instead
+	checkNoEntry();
+	return false;
+}
+
+DEFINE_FUNCTION(UBulletMoverComponent::execK2_QueueLayeredMoveActivationWithContext)
+{
+	P_GET_OBJECT(UClass, MoveLogicClass);
+	
+	Stack.MostRecentPropertyAddress = nullptr;
+	Stack.MostRecentPropertyContainer = nullptr;
+	Stack.StepCompiledIn<FStructProperty>(nullptr);
+
+	const FStructProperty* MoveActivationProperty = CastField<FStructProperty>(Stack.MostRecentProperty);
+	uint8* MoveActivationPtr = Stack.MostRecentPropertyAddress;
+	
+	P_FINISH
+	
+	P_NATIVE_BEGIN;
+
+	// TODO NS: throw some helpful warnings of what wasn't valid
+	const bool bHasValidActivationStructProp = MoveActivationProperty && MoveActivationProperty->Struct && MoveActivationProperty->Struct->IsChildOf(FBulletLayeredMoveActivationParams::StaticStruct());
+
+	bool bHasValidMoveData = MoveLogicClass && bHasValidActivationStructProp; 
+	if (bHasValidMoveData)
+	{
+		const FBulletLayeredMoveActivationParams* MoveActivationContext = reinterpret_cast<FBulletLayeredMoveActivationParams*>(MoveActivationPtr);
+		bHasValidMoveData = P_THIS->MakeAndQueueLayeredMove(MoveLogicClass, MoveActivationContext);
+	}
+	
+	*(bool*)RESULT_PARAM = bHasValidMoveData;
+	
+	P_NATIVE_END;
+}
+
+bool UBulletMoverComponent::QueueLayeredMoveActivation(TSubclassOf<UBulletLayeredMoveLogic> MoveLogicClass)
+{
+	return MakeAndQueueLayeredMove(MoveLogicClass, nullptr);
+}
+
+void UBulletMoverComponent::K2_QueueLayeredMove(const int32& MoveAsRawData)
+{
+	// This will never be called, the exec version below will be hit instead
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UBulletMoverComponent::execK2_QueueLayeredMove)
+{
+	Stack.StepCompiledIn<FStructProperty>(nullptr);
+	void* MovePtr = Stack.MostRecentPropertyAddress;
+	FStructProperty* StructProp = CastField<FStructProperty>(Stack.MostRecentProperty);
+
+	P_FINISH;
+
+	P_NATIVE_BEGIN;
+
+	const bool bHasValidStructProp = StructProp && StructProp->Struct && StructProp->Struct->IsChildOf(FBulletLayeredMoveBase::StaticStruct());
+
+	if (ensureMsgf((bHasValidStructProp && MovePtr), TEXT("An invalid type (%s) was sent to a QueueLayeredMove node. A struct derived from FBulletLayeredMoveBase is required. No layered move will be queued."),
+		StructProp ? *GetNameSafe(StructProp->Struct) : *Stack.MostRecentProperty->GetClass()->GetName()))
+	{
+		// Could we steal this instead of cloning? (move semantics)
+		FBulletLayeredMoveBase* MoveAsBasePtr = reinterpret_cast<FBulletLayeredMoveBase*>(MovePtr);
+		FBulletLayeredMoveBase* ClonedMove = MoveAsBasePtr->Clone();
+
+		P_THIS->QueueLayeredMove(TSharedPtr<FBulletLayeredMoveBase>(ClonedMove));
+	}
+
+	P_NATIVE_END;
+}
+
+
+void UBulletMoverComponent::QueueLayeredMove(TSharedPtr<FBulletLayeredMoveBase> LayeredMove)
+{	
+	ModeFSM->QueueLayeredMove(LayeredMove);
+}
+
+FBulletMovementModifierHandle UBulletMoverComponent::K2_QueueMovementModifier(const int32& MoveAsRawData)
+{
+	// This will never be called, the exec version below will be hit instead
+	checkNoEntry();
+	return 0;
+}
+
+DEFINE_FUNCTION(UBulletMoverComponent::execK2_QueueMovementModifier)
+{
+	Stack.StepCompiledIn<FStructProperty>(nullptr);
+	void* MovePtr = Stack.MostRecentPropertyAddress;
+	FStructProperty* StructProp = CastField<FStructProperty>(Stack.MostRecentProperty);
+
+	P_FINISH;
+
+	P_NATIVE_BEGIN;
+
+	const bool bHasValidStructProp = StructProp && StructProp->Struct && StructProp->Struct->IsChildOf(FBulletMovementModifierBase::StaticStruct());
+
+	if (ensureMsgf((bHasValidStructProp && MovePtr), TEXT("An invalid type (%s) was sent to a QueueMovementModifier node. A struct derived from FBulletMovementModifierBase is required. No modifier will be queued."),
+		StructProp ? *GetNameSafe(StructProp->Struct) : *Stack.MostRecentProperty->GetClass()->GetName()))
+	{
+		// Could we steal this instead of cloning? (move semantics)
+		FBulletMovementModifierBase* MoveAsBasePtr = reinterpret_cast<FBulletMovementModifierBase*>(MovePtr);
+		FBulletMovementModifierBase* ClonedMove = MoveAsBasePtr->Clone();
+
+		FBulletMovementModifierHandle ModifierID = P_THIS->QueueMovementModifier(TSharedPtr<FBulletMovementModifierBase>(ClonedMove));
+		*static_cast<FBulletMovementModifierHandle*>(RESULT_PARAM) = ModifierID;
+	}
+
+	P_NATIVE_END;
+}
+
+FBulletMovementModifierHandle UBulletMoverComponent::QueueMovementModifier(TSharedPtr<FBulletMovementModifierBase> Modifier)
+{
+	return ModeFSM->QueueMovementModifier(Modifier);
+}
+
+void UBulletMoverComponent::CancelModifierFromHandle(FBulletMovementModifierHandle ModifierHandle)
+{
+	ModeFSM->CancelModifierFromHandle(ModifierHandle);
+}
+
+
+void UBulletMoverComponent::CancelFeaturesWithTag(FGameplayTag TagToCancel, bool bRequireExactMatch)
+{
+	ModeFSM->CancelFeaturesWithTag(TagToCancel, bRequireExactMatch);
+}
+
+
+void UBulletMoverComponent::K2_QueueInstantMovementEffect(const int32& EffectAsRawData)
+{
+	// This will never be called, the exec version below will be hit instead
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UBulletMoverComponent::execK2_QueueInstantMovementEffect)
+{
+	Stack.StepCompiledIn<FStructProperty>(nullptr);
+	void* EffectPtr = Stack.MostRecentPropertyAddress;
+	FStructProperty* StructProp = CastField<FStructProperty>(Stack.MostRecentProperty);
+
+	P_FINISH;
+
+	P_NATIVE_BEGIN;
+
+	const bool bHasValidStructProp = StructProp && StructProp->Struct && StructProp->Struct->IsChildOf(FBulletInstantMovementEffect::StaticStruct());
+
+	if (ensureMsgf((bHasValidStructProp && EffectPtr), TEXT("An invalid type (%s) was sent to a QueueInstantMovementEffect node. A struct derived from FBulletInstantMovementEffect is required. No Movement Effect will be queued."),
+		StructProp ? *GetNameSafe(StructProp->Struct) : *Stack.MostRecentProperty->GetClass()->GetName()))
+	{
+		// Could we steal this instead of cloning? (move semantics)
+		FBulletInstantMovementEffect* EffectAsBasePtr = reinterpret_cast<FBulletInstantMovementEffect*>(EffectPtr);
+		FBulletInstantMovementEffect* ClonedMove = EffectAsBasePtr->Clone();
+
+		P_THIS->QueueInstantMovementEffect(TSharedPtr<FBulletInstantMovementEffect>(ClonedMove));
+	}
+
+	P_NATIVE_END;
+}
+
+void UBulletMoverComponent::K2_ScheduleInstantMovementEffect(const int32& EffectAsRawData)
+{
+	// This will never be called, the exec version below will be hit instead
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UBulletMoverComponent::execK2_ScheduleInstantMovementEffect)
+{
+	Stack.StepCompiledIn<FStructProperty>(nullptr);
+	void* EffectPtr = Stack.MostRecentPropertyAddress;
+	FStructProperty* StructProp = CastField<FStructProperty>(Stack.MostRecentProperty);
+
+	P_FINISH;
+
+	P_NATIVE_BEGIN;
+
+	const bool bHasValidStructProp = StructProp && StructProp->Struct && StructProp->Struct->IsChildOf(FBulletInstantMovementEffect::StaticStruct());
+
+	if (ensureMsgf((bHasValidStructProp && EffectPtr), TEXT("An invalid type (%s) was sent to a QueueInstantMovementEffect node. A struct derived from FBulletInstantMovementEffect is required. No Movement Effect will be queued."),
+		StructProp ? *GetNameSafe(StructProp->Struct) : *Stack.MostRecentProperty->GetClass()->GetName()))
+	{
+		// Could we steal this instead of cloning? (move semantics)
+		FBulletInstantMovementEffect* EffectAsBasePtr = reinterpret_cast<FBulletInstantMovementEffect*>(EffectPtr);
+		FBulletInstantMovementEffect* ClonedMove = EffectAsBasePtr->Clone();
+
+		P_THIS->ScheduleInstantMovementEffect(TSharedPtr<FBulletInstantMovementEffect>(ClonedMove));
+	}
+
+	P_NATIVE_END;
+}
+
+void UBulletMoverComponent::ScheduleInstantMovementEffect(TSharedPtr<FBulletInstantMovementEffect> InstantMovementEffect)
+{
+	ensureMsgf(IsInGameThread(), TEXT("UBulletMoverComponent::ScheduleInstantMovementEffect should only be called from the game thread. Inspect code for incorrect calls."));
+	FBulletMoverTimeStep TimeStep;
+	if (ensureMsgf(BackendLiaisonComp, TEXT("UBulletMoverComponent::ScheduleInstantMovementEffect was unexpectedly called with a null backend liaison component. The instant movement effect will be ignored.")))
+	{
+		TimeStep.BaseSimTimeMs = BackendLiaisonComp->GetCurrentSimTimeMs();
+		TimeStep.ServerFrame = BackendLiaisonComp->GetCurrentSimFrame();
+		// TimeStep.StepMs is not used by FBulletScheduledInstantMovementEffect::ScheduleEffect
+		QueueInstantMovementEffect(FBulletScheduledInstantMovementEffect::ScheduleEffect(GetWorld(), TimeStep, InstantMovementEffect, /* SchedulingDelaySeconds = */ EventSchedulingMinDelaySeconds));
+	}
+}
+
+void UBulletMoverComponent::QueueInstantMovementEffect_Internal(const FBulletMoverTimeStep& TimeStep, TSharedPtr<FBulletInstantMovementEffect> InstantMovementEffect)
+{
+	QueueInstantMovementEffect(FBulletScheduledInstantMovementEffect::ScheduleEffect(GetWorld(), TimeStep, InstantMovementEffect, /* SchedulingDelaySeconds = */ 0.0f));
+}
+
+void UBulletMoverComponent::QueueInstantMovementEffect(TSharedPtr<FBulletInstantMovementEffect> InstantMovementEffect)
+{
+	ensureMsgf(IsInGameThread(), TEXT("UBulletMoverComponent::QueueInstantMovementEffect(TSharedPtr<FBulletInstantMovementEffect>) should only be called from the game thread. Inspect code for incorrect calls."));
+	FBulletMoverTimeStep TimeStep;
+	if (ensureMsgf(BackendLiaisonComp, TEXT("UBulletMoverComponent::ScheduleInstantMovementEffect was unexpectedly called with a null backend liaison component. The instant movement effect will be ignored.")))
+	{
+		TimeStep.BaseSimTimeMs = BackendLiaisonComp->GetCurrentSimTimeMs();
+		TimeStep.ServerFrame = BackendLiaisonComp->GetCurrentSimFrame();
+		// TimeStep.StepMs is not used by FBulletScheduledInstantMovementEffect::ScheduleEffect
+		QueueInstantMovementEffect(FBulletScheduledInstantMovementEffect::ScheduleEffect(GetWorld(), TimeStep, InstantMovementEffect, /* SchedulingDelaySeconds = */ 0.0f));
+	}
+}
+
+void UBulletMoverComponent::QueueInstantMovementEffect(const FBulletScheduledInstantMovementEffect& InstantMovementEffect)
+{
+	// TODO Move QueueInstantMovementEffect to UBulletMoverSimulation and implement differently in sync or async mode
+	if (IsInGameThread())
+	{
+		QueuedInstantMovementEffects.Add(InstantMovementEffect);
+	}
+	else
+	{
+		ModeFSM->QueueInstantMovementEffect_Internal(InstantMovementEffect);
+	}	
+
+#if !defined(BUILD_SHIPPING) || !BUILD_SHIPPING
+	ENetMode NetMode = GetWorld() ? GetWorld()->GetNetMode() : NM_MAX;
+	UE_LOG(LogBulletMover, Verbose, TEXT("(%s) UBulletMoverComponent::QueueInstantMovementEffect: Game Thread queueing an instant movement effect scheduled for frame %d: %s."),
+		*ToString(NetMode), InstantMovementEffect.ExecutionServerFrame, InstantMovementEffect.Effect.IsValid() ? *InstantMovementEffect.Effect->ToSimpleString() : TEXT("INVALID INSTANT EFFECT"));
+#endif // !defined(BUILD_SHIPPING) || !BUILD_SHIPPING
+}
+
+const TArray<FBulletScheduledInstantMovementEffect>& UBulletMoverComponent::GetQueuedInstantMovementEffects() const
+{
+	return QueuedInstantMovementEffects;
+}
+
+void UBulletMoverComponent::ClearQueuedInstantMovementEffects()
+{
+	QueuedInstantMovementEffects.Empty();
+}
+
+UBulletBaseMovementMode* UBulletMoverComponent::FindMovementModeByName(FName MovementModeName) const
+{
+	if (const TObjectPtr<UBulletBaseMovementMode>* FoundMode = MovementModes.Find(MovementModeName))
+	{
+		return *FoundMode;
+	}
+	return nullptr;
+}
+
+void UBulletMoverComponent::K2_FindActiveLayeredMove(bool& DidSucceed, int32& TargetAsRawBytes) const
+{
+	// This will never be called, the exec version below will be hit instead
+	checkNoEntry();
+}
+
+DEFINE_FUNCTION(UBulletMoverComponent::execK2_FindActiveLayeredMove)
+{
+	P_GET_UBOOL_REF(DidSucceed);
+
+	Stack.MostRecentPropertyAddress = nullptr;
+	Stack.MostRecentPropertyContainer = nullptr;
+	Stack.StepCompiledIn<FStructProperty>(nullptr);
+	
+	void* MovePtr = Stack.MostRecentPropertyAddress;
+	FStructProperty* StructProp = CastField<FStructProperty>(Stack.MostRecentProperty);
+
+	P_FINISH;
+
+	DidSucceed = false;
+	
+	if (!MovePtr)
+	{
+		FBlueprintExceptionInfo ExceptionInfo(
+			EBlueprintExceptionType::AbortExecution,
+			LOCTEXT("BulletMoverComponent_GetActiveLayeredMove_UnresolvedTarget", "Failed to resolve the OutLayeredMove for GetActiveLayeredMove")
+		);
+
+		FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
+	}
+	else if (!StructProp)
+	{
+		FBlueprintExceptionInfo ExceptionInfo(
+			EBlueprintExceptionType::AbortExecution,
+			LOCTEXT("BulletMoverComponent_GetActiveLayeredMove_TargetNotStruct", "GetActiveLayeredMove: Target for OutLayeredMove is not a valid type. It must be a Struct and a child of FBulletLayeredMoveBase.")
+		);
+
+		FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
+	}
+	else if (!StructProp->Struct || !StructProp->Struct->IsChildOf(FBulletLayeredMoveBase::StaticStruct()))
+	{
+		FBlueprintExceptionInfo ExceptionInfo(
+			EBlueprintExceptionType::AbortExecution,
+			LOCTEXT("BulletMoverComponent_GetActiveLayeredMove_BadType", "GetActiveLayeredMove: Target for OutLayeredMove is not a valid type. Must be a child of FBulletLayeredMoveBase.")
+		);
+
+		FBlueprintCoreDelegates::ThrowScriptException(P_THIS, Stack, ExceptionInfo);
+	}
+	else
+	{
+		P_NATIVE_BEGIN;
+		
+		if (const FBulletLayeredMoveBase* FoundActiveMove = P_THIS->FindActiveLayeredMoveByType(StructProp->Struct))
+		{
+			StructProp->Struct->CopyScriptStruct(MovePtr, FoundActiveMove);
+			DidSucceed = true;
+		}
+
+		P_NATIVE_END;
+	}
+}
+
+const FBulletLayeredMoveBase* UBulletMoverComponent::FindActiveLayeredMoveByType(const UScriptStruct* LayeredMoveStructType) const
+{
+	const FBulletMoverSyncState& CachedSyncState = MoverSyncStateDoubleBuffer.GetReadable();
+	return CachedSyncState.LayeredMoves.FindActiveMove(LayeredMoveStructType);
+}
+
+void UBulletMoverComponent::QueueNextMode(FName DesiredModeName, bool bShouldReenter)
+{
+	DoQueueNextMode(DesiredModeName, bShouldReenter);
+}
+
+void UBulletMoverComponent::DoQueueNextMode(FName DesiredModeName, bool bShouldReenter)
+{
+	ModeFSM->QueueNextMode(DesiredModeName, bShouldReenter);
+}
+
+UBulletBaseMovementMode* UBulletMoverComponent::AddMovementModeFromClass(FName ModeName, TSubclassOf<UBulletBaseMovementMode> MovementMode)
+{
+	if (!MovementMode)
+	{
+		UE_LOG(LogBulletMover, Warning, TEXT("Attempted to add a movement mode that wasn't valid. AddMovementModeFromClass will not add anything. (%s)"), *GetNameSafe(GetOwner()));
+		return nullptr;
+	}
+	if (MovementMode->HasAnyClassFlags(CLASS_Abstract))
+	{
+		UE_LOG(LogBulletMover, Warning, TEXT("The Movement Mode class (%s) is abstract and is not a valid class to instantiate. AddMovementModeFromClass will not do anything. (%s)"), *GetNameSafe(MovementMode), *GetNameSafe(GetOwner()));
+		return nullptr;
+	}
+
+	TObjectPtr<UBulletBaseMovementMode> AddedMovementMode =  NewObject<UBulletBaseMovementMode>(this, MovementMode);
+	return AddMovementModeFromObject(ModeName, AddedMovementMode) ? AddedMovementMode : nullptr;
+}
+
+bool UBulletMoverComponent::AddMovementModeFromObject(FName ModeName, UBulletBaseMovementMode* MovementMode)
+{
+	if (MovementMode)
+	{
+		if (MovementMode->GetClass()->HasAnyClassFlags(CLASS_Abstract))
+		{
+			UE_LOG(LogBulletMover, Warning, TEXT("The Movement Mode class (%s) is abstract and is not a valid class to instantiate. AddMovementModeFromObject will not do anything. (%s)"), *GetNameSafe(MovementMode), *GetNameSafe(GetOwner()));
+			return false;
+		}
+		
+		if (TObjectPtr<UBulletBaseMovementMode>* FoundMovementMode = MovementModes.Find(ModeName))
+		{
+			if (FoundMovementMode->Get()->GetClass() == MovementMode->GetClass())
+			{
+				UE_LOG(LogBulletMover, Warning, TEXT("Added the same movement mode (%s) for a movement mode name (%s). AddMovementModeFromObject will add the mode but is likely unwanted/unnecessary behavior. (%s)"), *GetNameSafe(MovementMode), *ModeName.ToString(), *GetNameSafe(GetOwner()));
+			}
+
+			RemoveMovementMode(ModeName);
+		}
+		
+		if (MovementMode->GetOuter() != this)
+		{
+			UE_LOG(LogBulletMover, Verbose, TEXT("Movement modes are expected to be parented to the MoverComponent. The %s movement mode was reparented to %s! (%s)"), *GetNameSafe(MovementMode), *GetNameSafe(this), *GetNameSafe(GetOwner()));
+			MovementMode->Rename(nullptr, this, REN_DoNotDirty | REN_NonTransactional);
+		}
+		
+		MovementModes.Add(ModeName, MovementMode);
+		ModeFSM->RegisterMovementMode(ModeName, MovementMode);
+	}
+	else
+	{
+		UE_LOG(LogBulletMover, Warning, TEXT("Attempted to add %s movement mode that wasn't valid to %s. AddMovementModeFromObject did not add anything. (%s)"), *GetNameSafe(MovementMode), *GetNameSafe(this), *GetNameSafe(GetOwner()));
+		return false;
+	}
+
+	return true;
+}
+
+bool UBulletMoverComponent::RemoveMovementMode(FName ModeName)
+{
+	if (ModeFSM->GetCurrentModeName() == ModeName)
+	{
+		UE_LOG(LogBulletMover, Warning, TEXT("The mode being removed (%s Movement Mode) is the mode this actor (%s) is currently in. It was removed but may cause issues. Consider waiting to remove the mode or queueing a different valid mode to avoid issues."), *ModeName.ToString(), *GetNameSafe(GetOwner()));
+	}
+	
+	TObjectPtr<UBulletBaseMovementMode>* ModeToRemove = MovementModes.Find(ModeName);
+	const bool ModeRemoved = MovementModes.Remove(ModeName) > 0;
+	if (ModeRemoved && ModeToRemove)
+	{
+		ModeFSM->UnregisterMovementMode(ModeName);
+		ModeToRemove->Get()->ConditionalBeginDestroy();
+	}
+	
+	return ModeRemoved; 
+}
+
+
+/** Converts localspace root motion to a specific alternate worldspace location, taking the relative transform of the localspace component into account. */
+static FTransform ConvertLocalRootMotionToAltWorldSpace(const FTransform& LocalRootMotionTransform, const FTransform& AltWorldspaceTransform, const USceneComponent& RelativeComp)
+{
+	const FTransform TrueActorToWorld = RelativeComp.GetOwner()->GetTransform();
+	const FTransform RelativeCompToActor = TrueActorToWorld.GetRelativeTransform(RelativeComp.GetComponentTransform());
+
+	const FTransform AltComponentWorldTransform = RelativeCompToActor.Inverse() * AltWorldspaceTransform;
+
+	const FTransform NewComponentToWorld = LocalRootMotionTransform * AltComponentWorldTransform;
+	const FTransform NewActorTransform = RelativeCompToActor * NewComponentToWorld;
+
+	FTransform ActorDeltaTransform = NewActorTransform.GetRelativeTransform(AltWorldspaceTransform);
+	
+	return FTransform(ActorDeltaTransform.GetRotation(), NewActorTransform.GetTranslation() - AltWorldspaceTransform.GetTranslation());
+}
+
+FTransform UBulletMoverComponent::ConvertLocalRootMotionToWorld(const FTransform& LocalRootMotionTransform, float DeltaSeconds, const FTransform* AlternateActorToWorld, const FMotionWarpingUpdateContext* OptionalWarpingContext) const
+{
+	// Optionally process/warp localspace root motion
+	const FTransform ProcessedLocalRootMotion = ProcessLocalRootMotionDelegate.IsBound()
+		? ProcessLocalRootMotionDelegate.Execute(LocalRootMotionTransform, DeltaSeconds, OptionalWarpingContext)
+		: LocalRootMotionTransform;
+
+	// Convert processed localspace root motion to worldspace
+	FTransform WorldSpaceRootMotion;
+
+	if (USkeletalMeshComponent* SkeletalMesh = GetPrimaryVisualComponent<USkeletalMeshComponent>())
+	{
+		if (AlternateActorToWorld)
+		{
+			WorldSpaceRootMotion = ConvertLocalRootMotionToAltWorldSpace(ProcessedLocalRootMotion, *AlternateActorToWorld, *SkeletalMesh);
+		}
+		else
+		{
+			WorldSpaceRootMotion = SkeletalMesh->ConvertLocalRootMotionToWorld(ProcessedLocalRootMotion);
+		}
+	}
+	else
+	{
+		const FTransform PresentationActorToWorldTransform = AlternateActorToWorld ? *AlternateActorToWorld : GetOwner()->GetTransform();
+		const FVector DeltaWorldTranslation = ProcessedLocalRootMotion.GetTranslation() - PresentationActorToWorldTransform.GetTranslation();
+
+		const FQuat NewWorldRotation = PresentationActorToWorldTransform.GetRotation() * ProcessedLocalRootMotion.GetRotation();
+		const FQuat DeltaWorldRotation = NewWorldRotation * PresentationActorToWorldTransform.GetRotation().Inverse();
+
+		WorldSpaceRootMotion.SetComponents(DeltaWorldRotation, DeltaWorldTranslation, FVector::OneVector);
+	}
+
+	// Optionally process/warp worldspace root motion
+	return ProcessWorldRootMotionDelegate.IsBound()
+		? ProcessWorldRootMotionDelegate.Execute(WorldSpaceRootMotion, DeltaSeconds, OptionalWarpingContext)
+		: WorldSpaceRootMotion;
+}
+
+
+FTransform UBulletMoverComponent::GetUpdatedComponentTransform() const
+{
+	if (UpdatedComponent)
+	{
+		return UpdatedComponent->GetComponentTransform();
+	}
+	return FTransform::Identity;
+}
+
+
+void UBulletMoverComponent::SetUpdatedComponent(USceneComponent* NewUpdatedComponent)
+{
+	// Remove delegates from old component
+	if (UpdatedComponent)
+	{
+		UpdatedComponent->SetShouldUpdatePhysicsVolume(false);
+		UpdatedComponent->SetPhysicsVolume(nullptr, true);
+		UpdatedComponent->PhysicsVolumeChangedDelegate.RemoveDynamic(this, &UBulletMoverComponent::PhysicsVolumeChanged);
+
+		// remove from tick prerequisite
+		UpdatedComponent->PrimaryComponentTick.RemovePrerequisite(this, PrimaryComponentTick);
+	}
+
+	if (UpdatedCompAsPrimitive)
+	{
+		UpdatedCompAsPrimitive->OnComponentBeginOverlap.RemoveDynamic(this, &UBulletMoverComponent::OnBeginOverlap);
+	}
+
+	// Don't assign pending kill components, but allow those to null out previous UpdatedComponent.
+	UpdatedComponent = GetValid(NewUpdatedComponent);
+	UpdatedCompAsPrimitive = Cast<UPrimitiveComponent>(UpdatedComponent);
+
+	// Assign delegates
+	if (IsValid(UpdatedComponent))
+	{
+		UpdatedComponent->SetShouldUpdatePhysicsVolume(true);
+		UpdatedComponent->PhysicsVolumeChangedDelegate.AddUniqueDynamic(this, &UBulletMoverComponent::PhysicsVolumeChanged);
+
+		if (!bInOnRegister && !bInInitializeComponent)
+		{
+			// UpdateOverlaps() in component registration will take care of this.
+			UpdatedComponent->UpdatePhysicsVolume(true);
+		}
+
+		// force ticks after movement component updates
+		UpdatedComponent->PrimaryComponentTick.AddPrerequisite(this, PrimaryComponentTick);
+	}
+
+	if (IsValid(UpdatedCompAsPrimitive))
+	{
+		UpdatedCompAsPrimitive->OnComponentBeginOverlap.AddDynamic(this, &UBulletMoverComponent::OnBeginOverlap);
+	}
+
+	UpdateTickRegistration();
+}
+
+
+USceneComponent* UBulletMoverComponent::GetUpdatedComponent() const
+{
+	return UpdatedComponent.Get();
+}
+
+USceneComponent* UBulletMoverComponent::GetPrimaryVisualComponent() const
+{
+	return PrimaryVisualComponent.Get();
+}
+
+void UBulletMoverComponent::SetPrimaryVisualComponent(USceneComponent* SceneComponent)
+{
+	if (SceneComponent && 
+		ensureMsgf(SceneComponent->GetOwner() == GetOwner(), TEXT("Primary visual component must be owned by the same actor. MoverComp owner: %s  VisualComp owner: %s"), *GetNameSafe(GetOwner()), *GetNameSafe(SceneComponent->GetOwner())))
+	{
+		PrimaryVisualComponent = SceneComponent;
+		BaseVisualComponentTransform = SceneComponent->GetRelativeTransform();
+	}
+	else
+	{
+		PrimaryVisualComponent = nullptr;
+		BaseVisualComponentTransform = FTransform::Identity;
+	}
+}
+
+FVector UBulletMoverComponent::GetVelocity() const
+{ 
+	if (LastMoverDefaultSyncState)
+	{
+		return LastMoverDefaultSyncState->GetVelocity_WorldSpace();
+	}
+
+	return FVector::ZeroVector;
+}
+
+
+FVector UBulletMoverComponent::GetMovementIntent() const
+{ 
+	if (LastMoverDefaultSyncState)
+	{
+		return LastMoverDefaultSyncState->GetIntent_WorldSpace();
+	}
+
+	return FVector::ZeroVector; 
+}
+
+
+FRotator UBulletMoverComponent::GetTargetOrientation() const
+{
+	// Prefer the input's intended orientation, but if it can't be determined, assume it matches the actual orientation
+	const FBulletMoverInputCmdContext& LastInputCmd = GetLastInputCmd();
+	if (const FBulletCharacterDefaultInputs* MoverInputs = LastInputCmd.InputCollection.FindDataByType<FBulletCharacterDefaultInputs>())
+	{
+		const FVector TargetOrientationDir = MoverInputs->GetOrientationIntentDir_WorldSpace();
+
+		if (!TargetOrientationDir.IsNearlyZero())
+		{
+			return TargetOrientationDir.ToOrientationRotator();
+		}
+	}
+	
+	if (LastMoverDefaultSyncState)
+	{
+		return LastMoverDefaultSyncState->GetOrientation_WorldSpace();
+	}
+
+	return GetOwner() ? GetOwner()->GetActorRotation() : FRotator::ZeroRotator;
+}
+
+
+void UBulletMoverComponent::SetGravityOverride(bool bOverrideGravity, FVector NewGravityAcceleration)
+{
+	bHasGravityOverride = bOverrideGravity;
+	GravityAccelOverride = NewGravityAcceleration;
+	
+	WorldToGravityTransform = FQuat::FindBetweenNormals(FVector::UpVector, -GravityAccelOverride.GetSafeNormal());
+	GravityToWorldTransform = WorldToGravityTransform.Inverse();
+}
+
+
+FVector UBulletMoverComponent::GetGravityAcceleration() const
+{
+	if (bHasGravityOverride)
+	{
+		return GravityAccelOverride;
+	}
+
+	if (UpdatedComponent)
+	{
+		APhysicsVolume* CurPhysVolume = UpdatedComponent->GetPhysicsVolume();
+		if (CurPhysVolume)
+		{
+			return CurPhysVolume->GetGravityZ() * FVector::UpVector;
+		}
+	}
+
+	return BulletMoverComponentConstants::DefaultGravityAccel;
+}
+
+void UBulletMoverComponent::SetUpDirectionOverride(bool bOverrideUpDirection, FVector UpDirection)
+{
+	bHasUpDirectionOverride = bOverrideUpDirection;
+	if (bOverrideUpDirection)
+	{
+		if (UpDirection.IsNearlyZero())
+		{
+			UE_LOG(LogBulletMover, Warning, TEXT("Ignoring the provided UpDirection (%s) override because it is a zero vector. (%s)"), *UpDirection.ToString(), *GetNameSafe(GetOwner()));
+			bHasGravityOverride = false;
+			return;
+		}
+		UpDirectionOverride = UpDirection.GetSafeNormal();
+	}
+}
+
+FVector UBulletMoverComponent::GetUpDirection() const
+{
+	// Use the up direction override if enabled
+	if (bHasUpDirectionOverride)
+	{
+		return UpDirectionOverride;
+	}
+	
+	return UBulletMovementUtils::DeduceUpDirectionFromGravity(GetGravityAcceleration());
+}
+
+const FBulletPlanarConstraint& UBulletMoverComponent::GetPlanarConstraint() const
+{
+	return PlanarConstraint;
+}
+
+void UBulletMoverComponent::SetPlanarConstraint(const FBulletPlanarConstraint& InConstraint)
+{
+	PlanarConstraint = InConstraint;
+}
+
+void UBulletMoverComponent::SetBaseVisualComponentTransform(const FTransform& ComponentTransform)
+{
+	BaseVisualComponentTransform = ComponentTransform;
+}
+
+FTransform UBulletMoverComponent::GetBaseVisualComponentTransform() const
+{
+	return BaseVisualComponentTransform;
+}
+
+void UBulletMoverComponent::SetUseDeferredGroupMovement(bool bEnable)
+{
+	bUseDeferredGroupMovement = bEnable;
+
+	// TODO update any necessary dependencies as needed
+}
+
+bool UBulletMoverComponent::IsUsingDeferredGroupMovement() const
+{
+	return bUseDeferredGroupMovement && USceneComponent::IsGroupedComponentMovementEnabled();
+}
+
+TArray<FBulletTrajectorySampleInfo> UBulletMoverComponent::GetFutureTrajectory(float FutureSeconds, float SamplesPerSecond)
+{
+	FBulletMoverPredictTrajectoryParams PredictionParams;
+	PredictionParams.NumPredictionSamples = FMath::Max(1, FutureSeconds * SamplesPerSecond);
+	PredictionParams.SecondsPerSample = FutureSeconds / (float)PredictionParams.NumPredictionSamples;
+
+	return GetPredictedTrajectory(PredictionParams);
+}
+
+TArray<FBulletTrajectorySampleInfo> UBulletMoverComponent::GetPredictedTrajectory(FBulletMoverPredictTrajectoryParams PredictionParams)
+{
+	if (ModeFSM)
+	{
+		FBulletMoverTickStartData StepState;
+
+		// Use the last-known input if none are specified.
+		if (PredictionParams.OptionalInputCmds.IsEmpty())
+		{
+			StepState.InputCmd = GetLastInputCmd();
+		}
+
+		// Use preferred starting sync/aux state. Fall back to last-known state if not set.
+		if (PredictionParams.OptionalStartSyncState.IsSet())
+		{
+			StepState.SyncState = PredictionParams.OptionalStartSyncState.GetValue();
+		}
+		else
+		{
+			StepState.SyncState = MoverSyncStateDoubleBuffer.GetReadable();
+		}
+
+		if (PredictionParams.OptionalStartAuxState.IsSet())
+		{
+			StepState.AuxState = PredictionParams.OptionalStartAuxState.GetValue();
+		}
+		else
+		{
+			StepState.AuxState = CachedLastAuxState;
+		}
+
+
+		FBulletMoverTimeStep FutureTimeStep;
+		FutureTimeStep.StepMs = (PredictionParams.SecondsPerSample * 1000.f);
+		FutureTimeStep.BaseSimTimeMs = CachedLastSimTickTimeStep.BaseSimTimeMs;
+		FutureTimeStep.ServerFrame = 0;
+
+		if (const UBulletBaseMovementMode* CurrentMovementMode = GetMovementMode())
+		{
+			if (FBulletMoverDefaultSyncState* StepSyncState = StepState.SyncState.SyncStateCollection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
+			{
+				const bool bOrigHasGravityOverride = bHasGravityOverride;
+				const FVector OrigGravityAccelOverride = GravityAccelOverride;
+
+				if (PredictionParams.bDisableGravity)
+				{
+					SetGravityOverride(true, FVector::ZeroVector);
+				}
+
+				TArray<FBulletTrajectorySampleInfo> OutSamples;
+				OutSamples.SetNumUninitialized(PredictionParams.NumPredictionSamples);
+
+				FVector PriorLocation = StepSyncState->GetLocation_WorldSpace();
+				FRotator PriorOrientation = StepSyncState->GetOrientation_WorldSpace();
+				FVector PriorVelocity = StepSyncState->GetVelocity_WorldSpace();
+
+				for (int32 i = 0; i < PredictionParams.NumPredictionSamples; ++i)
+				{
+					// If no further inputs are specified, the previous input cmd will continue to be used
+					if (i < PredictionParams.OptionalInputCmds.Num())
+					{
+						StepState.InputCmd = PredictionParams.OptionalInputCmds[i];
+					}
+
+					// Capture sample from current step state
+					FBulletTrajectorySampleInfo& Sample = OutSamples[i];
+
+					Sample.Transform.SetTranslationAndScale3D(StepSyncState->GetLocation_WorldSpace(), FVector::OneVector);
+					Sample.Transform.SetRotation(StepSyncState->GetOrientation_WorldSpace().Quaternion());
+					Sample.LinearVelocity = StepSyncState->GetVelocity_WorldSpace();
+					Sample.InstantaneousAcceleration = (StepSyncState->GetVelocity_WorldSpace() - PriorVelocity) / PredictionParams.SecondsPerSample;
+					Sample.AngularVelocity = (StepSyncState->GetOrientation_WorldSpace() - PriorOrientation) * (1.f / PredictionParams.SecondsPerSample);
+
+					Sample.SimTimeMs = FutureTimeStep.BaseSimTimeMs;
+
+					// Cache prior values
+					PriorLocation = StepSyncState->GetLocation_WorldSpace();
+					PriorOrientation = StepSyncState->GetOrientation_WorldSpace();
+					PriorVelocity = StepSyncState->GetVelocity_WorldSpace();
+
+					// Generate next move from current step state
+					FBulletProposedMove StepMove;
+					CurrentMovementMode->GenerateMove(StepState, FutureTimeStep, StepMove);
+
+					// Advance state based on move
+					StepSyncState->SetTransforms_WorldSpace(StepSyncState->GetLocation_WorldSpace() + (StepMove.LinearVelocity * PredictionParams.SecondsPerSample),
+						UBulletMovementUtils::ApplyAngularVelocityToRotator(StepSyncState->GetOrientation_WorldSpace(),StepMove.AngularVelocityDegrees, PredictionParams.SecondsPerSample),
+						StepMove.LinearVelocity,
+						StepMove.AngularVelocityDegrees,
+						StepSyncState->GetMovementBase(),
+						StepSyncState->GetMovementBaseBoneName());
+
+					FutureTimeStep.BaseSimTimeMs += FutureTimeStep.StepMs;
+					++FutureTimeStep.ServerFrame;
+				}
+
+				// Put sample locations at visual root location if requested
+				if (PredictionParams.bUseVisualComponentRoot)
+				{
+					if (const USceneComponent* VisualComp = GetPrimaryVisualComponent())
+					{
+						const FVector VisualCompOffset = VisualComp->GetRelativeLocation();
+						const FTransform VisualCompRelativeTransform = VisualComp->GetRelativeTransform();
+
+						for (int32 i=0; i < PredictionParams.NumPredictionSamples; ++i)
+						{
+							OutSamples[i].Transform = VisualCompRelativeTransform * OutSamples[i].Transform;
+						}
+					}
+				}
+				
+				if (PredictionParams.bDisableGravity)
+				{
+					SetGravityOverride(bOrigHasGravityOverride, OrigGravityAccelOverride);
+				}
+
+				return OutSamples;
+			}
+		}
+	}
+
+	TArray<FBulletTrajectorySampleInfo> BlankDefaultSamples;
+	BlankDefaultSamples.AddDefaulted(PredictionParams.NumPredictionSamples);
+	return BlankDefaultSamples;
+}
+
+
+FName UBulletMoverComponent::GetMovementModeName() const
+{ 
+	return MoverSyncStateDoubleBuffer.GetReadable().MovementMode;
+}
+
+const UBulletBaseMovementMode* UBulletMoverComponent::GetMovementMode() const
+{
+	return GetActiveModeInternal(UBulletBaseMovementMode::StaticClass());
+}
+
+UPrimitiveComponent* UBulletMoverComponent::GetMovementBase() const
+{
+	if (LastMoverDefaultSyncState)
+	{
+		return LastMoverDefaultSyncState->GetMovementBase();
+	}
+
+	return nullptr;
+}
+
+FName UBulletMoverComponent::GetMovementBaseBoneName() const
+{
+	if (LastMoverDefaultSyncState)
+	{
+		return LastMoverDefaultSyncState->GetMovementBaseBoneName();
+	}
+
+	return NAME_None;
+}
+
+bool UBulletMoverComponent::HasValidCachedState() const
+{
+	return true;
+}
+
+const FBulletMoverSyncState& UBulletMoverComponent::GetSyncState() const
+{
+	return MoverSyncStateDoubleBuffer.GetReadable();
+}
+
+bool UBulletMoverComponent::TryGetFloorCheckHitResult(FHitResult& OutHitResult) const
+{
+	FBulletFloorCheckResult FloorCheck;
+	if (SimBlackboard != nullptr && SimBlackboard->TryGet(CommonBlackboard::LastFloorResult, FloorCheck))
+	{
+		OutHitResult = FloorCheck.HitResult;
+		return true;
+	}
+	return false;
+}
+
+const UBulletMoverBlackboard* UBulletMoverComponent::GetSimBlackboard() const
+{
+	return SimBlackboard;
+}
+
+UBulletMoverBlackboard* UBulletMoverComponent::GetSimBlackboard_Mutable() const
+{
+	return SimBlackboard;
+}
+
+bool UBulletMoverComponent::HasValidCachedInputCmd() const
+{
+	return true;
+}
+
+const FBulletMoverInputCmdContext& UBulletMoverComponent::GetLastInputCmd() const
+{
+	return CachedLastUsedInputCmd;
+}
+
+const FBulletMoverTimeStep& UBulletMoverComponent::GetLastTimeStep() const
+{
+	return CachedLastSimTickTimeStep;
+}
+
+IBulletMovementSettingsInterface* UBulletMoverComponent::FindSharedSettings_Mutable(const UClass* ByType) const
+{
+	check(ByType);
+
+	for (const TObjectPtr<UObject>& SettingsObj : SharedSettings)
+	{
+		if (SettingsObj && SettingsObj->IsA(ByType))
+		{
+			return Cast<IBulletMovementSettingsInterface>(SettingsObj);
+		}
+	}
+
+	return nullptr;
+}
+
+UObject* UBulletMoverComponent::FindSharedSettings_Mutable_BP(TSubclassOf<UObject> SharedSetting) const
+{
+	if (SharedSetting->ImplementsInterface(UBulletMovementSettingsInterface::StaticClass()))
+    {
+    	return Cast<UObject>(FindSharedSettings_Mutable(SharedSetting));
+    }
+    
+    return nullptr;
+}
+
+const UObject* UBulletMoverComponent::FindSharedSettings_BP(TSubclassOf<UObject> SharedSetting) const
+{
+	if (SharedSetting->ImplementsInterface(UBulletMovementSettingsInterface::StaticClass()))
+	{
+		return Cast<UObject>(FindSharedSettings(SharedSetting));
+	}
+
+	return nullptr;
+}
+
+UBulletBaseMovementMode* UBulletMoverComponent::FindMode_Mutable(TSubclassOf<UBulletBaseMovementMode> ModeType, bool bRequireExactClass) const
+{
+	if (ModeType)
+	{
+		for (const TPair<FName, TObjectPtr<UBulletBaseMovementMode>>& NameModePair : MovementModes)
+		{
+			if ( (!bRequireExactClass && NameModePair.Value->IsA(ModeType)) || 
+				 (NameModePair.Value->GetClass() == ModeType) )
+			{
+				return NameModePair.Value.Get();
+			}
+		}		
+	}
+
+	return nullptr;
+}
+
+UBulletBaseMovementMode* UBulletMoverComponent::FindMode_Mutable(TSubclassOf<UBulletBaseMovementMode> ModeType, FName ModeName, bool bRequireExactClass) const
+{
+	if (!ModeName.IsNone())
+	{
+		if (const TObjectPtr<UBulletBaseMovementMode>* FoundMode = MovementModes.Find(ModeName))
+		{
+			if ((!bRequireExactClass && FoundMode->IsA(ModeType)) || FoundMode->GetClass() == ModeType)
+			{
+				return *FoundMode;
+			} 
+		}
+	}
+	return nullptr;
+}
+
+UBulletBaseMovementMode* UBulletMoverComponent::GetActiveModeInternal(TSubclassOf<UBulletBaseMovementMode> ModeType, bool bRequireExactClass) const
+{
+	if (const TObjectPtr<UBulletBaseMovementMode>* CurrentMode = MovementModes.Find(GetMovementModeName()))
+	{
+		if ((!bRequireExactClass && CurrentMode->IsA(ModeType)) ||
+			CurrentMode->GetClass() == ModeType)
+		{
+			return CurrentMode->Get();
+		}
+	}
+
+	return nullptr;
+}
+
+bool UBulletMoverComponent::MakeAndQueueLayeredMove(const TSubclassOf<UBulletLayeredMoveLogic>& MoveLogicClass, const FBulletLayeredMoveActivationParams* ActivationParams)
+{
+	// Find registered type for class passed in
+	TObjectPtr<UBulletLayeredMoveLogic> FoundRegisteredMoveLogic = nullptr;
+	for (TObjectPtr<UBulletLayeredMoveLogic> RegisteredMoveLogic : RegisteredMoves)
+	{
+		if (RegisteredMoveLogic.GetClass()->IsChildOf(MoveLogicClass))
+		{
+			FoundRegisteredMoveLogic = RegisteredMoveLogic;
+			break;
+		}
+	}
+			
+	UBulletLayeredMoveLogic* ActiveMoveLogic;
+	TSharedPtr<FBulletLayeredMoveInstancedData> QueuedInstancedData;
+
+	if (FoundRegisteredMoveLogic)
+	{
+		ActiveMoveLogic = FoundRegisteredMoveLogic;
+
+		const UScriptStruct* InstancedDataType = FoundRegisteredMoveLogic->GetInstancedDataType();
+		if (InstancedDataType && InstancedDataType->IsChildOf(FBulletLayeredMoveInstancedData::StaticStruct()))
+		{
+			TCheckedObjPtr<UScriptStruct> DataStructType = FoundRegisteredMoveLogic->GetInstancedDataType();
+			FBulletLayeredMoveInstancedData* NewMove = (FBulletLayeredMoveInstancedData*)FMemory::Malloc(DataStructType->GetCppStructOps()->GetSize());
+			DataStructType->InitializeStruct(NewMove);
+
+			struct FAllocatedLayeredMoveDataDeleter
+			{
+				FORCEINLINE void operator()(FBulletLayeredMoveInstancedData* MoveData) const
+				{
+					check(MoveData);
+					UScriptStruct* ScriptStruct = MoveData->GetScriptStruct();
+					check(ScriptStruct);
+					ScriptStruct->DestroyStruct(MoveData);
+					FMemory::Free(MoveData);
+				}
+			};
+				
+			QueuedInstancedData = TSharedRef<FBulletLayeredMoveInstancedData>(NewMove, FAllocatedLayeredMoveDataDeleter());
+			QueuedInstancedData->ActivateFromContext(ActivationParams);
+		}
+		else
+		{
+			UE_LOG(LogBulletMover, Warning, TEXT("%s activation was queued on %s but the move was NOT queued since it did not have valid data. InstancedDataStructType on Move Logic needs to be a FBulletLayeredMoveInstancedData or child struct of."),
+				*MoveLogicClass->GetName(),
+				*GetOwner()->GetName());
+			
+			return false;
+		}
+	}
+	else
+	{
+		UE_LOG(LogBulletMover, Warning, TEXT("%s activation was queued on %s and the move was not registered. Any move activated on a MoverComponent Needs to be Registered with the MoverCompoent. The layered move will not be queued for activation."),
+			*MoveLogicClass->GetName(),
+			*GetOwner()->GetName());
+			
+		return false;
+	}
+	
+	const TSharedPtr<FBulletLayeredMoveInstance> ActiveMoveToQueue = MakeShared<FBulletLayeredMoveInstance>(QueuedInstancedData.ToSharedRef(), ActiveMoveLogic);
+	ModeFSM->QueueActiveLayeredMove(ActiveMoveToQueue);
+	
+	return true;
+}
+
+
+void UBulletMoverComponent::SetSimulationOutput(const FBulletMoverTimeStep& TimeStep, const UE::BulletMover::FBulletSimulationOutputData& OutputData)
+{
+	CachedLastSimTickTimeStep = TimeStep;
+
+	CachedLastUsedInputCmd = OutputData.LastUsedInputCmd;
+
+	FBulletMoverSyncState& BufferedSyncState = MoverSyncStateDoubleBuffer.GetWritable();
+	BufferedSyncState = OutputData.SyncState;
+	LastMoverDefaultSyncState = BufferedSyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>();
+	MoverSyncStateDoubleBuffer.Flip();
+
+	for (const TSharedPtr<FBulletMoverSimulationEventData>& EventData : OutputData.Events)
+	{
+		if (const FBulletMoverSimulationEventData* Data = EventData.Get())
+		{
+			DispatchSimulationEvent(*Data);
+		}
+	}
+
+	// This is for things like the ground info that we want to cache and interpolate but isn't part of the networked sync state.
+	// AdditionalOutputData is generic because ground info might not be useful for platforms, say, but platforms may want to store something else.
+	SetAdditionalSimulationOutput(OutputData.AdditionalOutputData);
+}
+
+void UBulletMoverComponent::DispatchSimulationEvent(const FBulletMoverSimulationEventData& EventData)
+{
+	// This gives the event a callback when it is processed on the game thread
+	FBulletMoverSimEventGameThreadContext GTContext({ this });
+	EventData.OnEventProcessed(GTContext);
+
+	// Process the simulation event at the mover component (or derived) level
+	ProcessSimulationEvent(EventData);
+
+	// Broadcast the event outside mover component
+	if (OnPostSimEventReceived.IsBound())
+	{
+		OnPostSimEventReceived.Broadcast(EventData);
+	}
+}
+
+void UBulletMoverComponent::ProcessSimulationEvent(const FBulletMoverSimulationEventData& EventData)
+{
+	// On a mode change call deactivate on the previous mode and activate on the new mode,
+	// then broadcast the mode changed event
+	if (const FBulletMovementModeChangedEventData* ModeChangedData = EventData.CastTo<FBulletMovementModeChangedEventData>())
+	{
+		if (ModeChangedData->PreviousModeName != NAME_None)
+		{
+			if (TObjectPtr<UBulletBaseMovementMode>* PrevModePtr = MovementModes.Find(ModeChangedData->PreviousModeName))
+			{
+				UBulletBaseMovementMode* PrevMode = PrevModePtr->Get();
+				if (PrevMode && PrevMode->bSupportsAsync)
+				{
+					PrevMode->Deactivate_External();
+				}
+			}
+		}
+
+		if (ModeChangedData->NewModeName != NAME_None)
+		{
+			if (TObjectPtr<UBulletBaseMovementMode>* NewModePtr = MovementModes.Find(ModeChangedData->NewModeName))
+			{
+				UBulletBaseMovementMode* NewMode = NewModePtr->Get();
+				if (NewMode && NewMode->bSupportsAsync)
+				{
+					NewMode->Activate_External();
+				}
+			}
+		}
+
+		OnMovementModeChanged.Broadcast(ModeChangedData->PreviousModeName, ModeChangedData->NewModeName);
+	}
+	else if (const FBulletTeleportSucceededEventData* TeleportSucceededEventData = EventData.CastTo<FBulletTeleportSucceededEventData>())
+	{
+		OnTeleportSucceeded.Broadcast(TeleportSucceededEventData->FromLocation, TeleportSucceededEventData->FromRotation, TeleportSucceededEventData->ToLocation, TeleportSucceededEventData->ToRotation);
+	}
+	else if (const FBulletTeleportFailedEventData* TeleportFailedEventData = EventData.CastTo<FBulletTeleportFailedEventData>())
+	{
+		OnTeleportFailed.Broadcast(TeleportFailedEventData->FromLocation, TeleportFailedEventData->FromRotation, TeleportFailedEventData->ToLocation, TeleportFailedEventData->ToRotation, TeleportFailedEventData->TeleportFailureReason);
+	}
+}
+
+void UBulletMoverComponent::SetAdditionalSimulationOutput(const FBulletMoverDataCollection& Data)
+{
+
+}
+
+
+void UBulletMoverComponent::CheckForExternalMovement(const FBulletMoverTickStartData& SimStartingData)
+{
+	if (!bWarnOnExternalMovement && !bAcceptExternalMovement)
+	{
+		return;
+	}
+
+	if (const FBulletMoverDefaultSyncState* StartingSyncState = SimStartingData.SyncState.SyncStateCollection.FindDataByType<FBulletMoverDefaultSyncState>())
+	{		
+		if (StartingSyncState->GetMovementBase())
+		{
+			return;	// TODO: need alternative handling of movement checks when based on another object
+		}
+
+		const FTransform& ComponentTransform = UpdatedComponent->GetComponentTransform();
+
+		if (!ComponentTransform.GetLocation().Equals(StartingSyncState->GetLocation_WorldSpace()))
+		{
+			if (bWarnOnExternalMovement)
+			{
+				UE_LOG(LogBulletMover, Warning, TEXT("%s %s: Simulation start location (%s) disagrees with actual mover component location (%s). This indicates movement of the component out-of-band with the simulation, and may cause poor quality motion."),
+					*GetNameSafe(GetOwner()),
+					*StaticEnum<ENetRole>()->GetValueAsString(GetOwnerRole()),
+					*StartingSyncState->GetLocation_WorldSpace().ToCompactString(),
+					*UpdatedComponent->GetComponentLocation().ToCompactString());
+			}
+
+			if (bAcceptExternalMovement)
+			{
+				FBulletMoverDefaultSyncState* MutableSyncState = const_cast<FBulletMoverDefaultSyncState*>(StartingSyncState);
+
+				MutableSyncState->SetTransforms_WorldSpace(ComponentTransform.GetLocation(), 
+				                                           ComponentTransform.GetRotation().Rotator(),
+				                                           MutableSyncState->GetVelocity_WorldSpace(),
+				                                           MutableSyncState->GetAngularVelocityDegrees_WorldSpace());
+			}
+		}
+	}
+}
+
+
+
+#pragma region BULLET PHYSICS
+
+TArray<UPrimitiveComponent*> UBulletMoverComponent::GetSecondaryCollisionShapes_Implementation() const
+{
+	return TArray<UPrimitiveComponent*>();
+}
+
+void UBulletMoverComponent::InitializeWithBullet()
+{
+	CreateShapesForRootComponent();
+	
+	if (bShouldCreateSecondaryShapes)
+	{
+		CreateSecondaryShapes();
+	}
+}
+
+void UBulletMoverComponent::CreateShapesForRootComponent()
+{
+	//TODO:@GreggoryAddison::CodeCompletion || Try and create the root shape for the character
+}
+
+void UBulletMoverComponent::CreateSecondaryShapes()
+{
+	const TArray<UPrimitiveComponent*> Comps(GetSecondaryCollisionShapes());
+	for (const UPrimitiveComponent* C : Comps)
+	{
+		//TODO:@GreggoryAddison::CodeCompletion || Try and create the root shape for the character	
+	}
+	
+}
+
+#pragma endregion 
+
+
+#undef LOCTEXT_NAMESPACE

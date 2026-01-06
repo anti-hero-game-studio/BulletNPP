@@ -25,7 +25,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{F184E7B0-52D5-39A4-A2E9-CA4FA564638E}</ProjectGuid>
+    <ProjectGuid>{44A14999-AFA6-3DB7-AB31-2336C24909D7}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <Platform>x64</Platform>
@@ -108,11 +108,11 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\CMakeLists.txt">
+    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\CMakeLists.txt">
       <UseUtf8Encoding>Always</UseUtf8Encoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/CMakeFiles/generate.stamp
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -120,12 +120,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\CMake\share\cmake-3.31\Modules\CMakeCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeRCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\FindOpenGL.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageHandleStandardArgs.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageMessage.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\BulletConfig.cmake.in;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCXXCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeRCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\CMake\share\cmake-3.31\Modules\CMakeCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeRCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\FindOpenGL.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageHandleStandardArgs.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageMessage.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\BulletConfig.cmake.in;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCXXCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeRCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/CMakeFiles/generate.stamp
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -133,12 +133,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\CMake\share\cmake-3.31\Modules\CMakeCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeRCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\FindOpenGL.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageHandleStandardArgs.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageMessage.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\BulletConfig.cmake.in;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCXXCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeRCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\CMake\share\cmake-3.31\Modules\CMakeCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeRCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\FindOpenGL.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageHandleStandardArgs.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageMessage.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\BulletConfig.cmake.in;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCXXCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeRCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/CMakeFiles/generate.stamp
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -146,12 +146,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\CMake\share\cmake-3.31\Modules\CMakeCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeRCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\FindOpenGL.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageHandleStandardArgs.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageMessage.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\BulletConfig.cmake.in;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCXXCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeRCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\CMake\share\cmake-3.31\Modules\CMakeCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeRCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\FindOpenGL.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageHandleStandardArgs.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageMessage.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\BulletConfig.cmake.in;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCXXCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeRCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletPhysicsPlugin/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/CMakeFiles/generate.stamp
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64 --check-stamp-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -159,8 +159,8 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\CMake\share\cmake-3.31\Modules\CMakeCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeRCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\FindOpenGL.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageHandleStandardArgs.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageMessage.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\BulletConfig.cmake.in;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCXXCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeRCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\CMake\share\cmake-3.31\Modules\CMakeCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCXXInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeCommonLanguageInclude.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeGenericSystem.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeInitializeConfigs.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeLanguageInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeRCInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInformation.cmake;D:\CMake\share\cmake-3.31\Modules\CMakeSystemSpecificInitialize.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Compiler\MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\FindOpenGL.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageHandleStandardArgs.cmake;D:\CMake\share\cmake-3.31\Modules\FindPackageMessage.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCXXLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Internal\CMakeCommonLinkerInformation.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Linker\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-Initialize.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-C.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC-CXX.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows-MSVC.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\Windows.cmake;D:\CMake\share\cmake-3.31\Modules\Platform\WindowsPaths.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\BulletConfig.cmake.in;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeCXXCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeRCCompiler.cmake;F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\3.31.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
@@ -168,186 +168,186 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\ZERO_CHECK.vcxproj">
-      <Project>{07735AA9-8FF1-381F-A1ED-3A6499C69B09}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\ZERO_CHECK.vcxproj">
+      <Project>{2268731E-66DB-3EC0-9DA8-868A81D65AE2}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\BasicDemo\AppBasicExampleGui.vcxproj">
-      <Project>{6AB8D131-4C10-3FC2-9884-7E855F2000F1}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\BasicDemo\AppBasicExampleGui.vcxproj">
+      <Project>{C905E956-586C-337F-9F0A-500EA5A9BAE5}</Project>
       <Name>AppBasicExampleGui</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\BasicDemo\App_BasicExample.vcxproj">
-      <Project>{1906ADC7-F5C4-30D8-8B7E-A165300B5489}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\BasicDemo\App_BasicExample.vcxproj">
+      <Project>{FDBABE09-A035-3EA3-A163-5FF4643D9A34}</Project>
       <Name>App_BasicExample</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ExampleBrowser\App_ExampleBrowser.vcxproj">
-      <Project>{8741D578-A256-3BDF-8CE8-629B89A883B4}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ExampleBrowser\App_ExampleBrowser.vcxproj">
+      <Project>{B61E2985-D8CE-3031-B8C8-F42423607331}</Project>
       <Name>App_ExampleBrowser</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\App_HelloBulletRobotics.vcxproj">
-      <Project>{5DE0E7F8-164A-34A3-A739-5A2BAADA4F1C}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\App_HelloBulletRobotics.vcxproj">
+      <Project>{9699FB0D-FFF9-3475-A3EB-B3604548508D}</Project>
       <Name>App_HelloBulletRobotics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\HelloWorld\App_HelloWorld.vcxproj">
-      <Project>{A6A25920-A5C5-32DD-9526-39BFDD6D8BB9}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\HelloWorld\App_HelloWorld.vcxproj">
+      <Project>{59C5CC2D-4D34-3747-B488-856C4C0D8D6C}</Project>
       <Name>App_HelloWorld</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\SharedMemory\App_PhysicsServer_SharedMemory.vcxproj">
-      <Project>{6932AF77-D900-3075-B016-61D0B741E11F}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\SharedMemory\App_PhysicsServer_SharedMemory.vcxproj">
+      <Project>{EC55DA9B-3841-3C76-BBA0-7B5134949AC9}</Project>
       <Name>App_PhysicsServer_SharedMemory</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\SharedMemory\App_PhysicsServer_SharedMemory_GUI.vcxproj">
-      <Project>{77CB5459-DB89-3616-A722-8CE2960BA428}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\SharedMemory\App_PhysicsServer_SharedMemory_GUI.vcxproj">
+      <Project>{63E5A582-A00B-31D4-A7FF-959296EA5C12}</Project>
       <Name>App_PhysicsServer_SharedMemory_GUI</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\App_RobotSimulator.vcxproj">
-      <Project>{40C3DF98-14CD-3306-87AC-376DD855BCF5}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\App_RobotSimulator.vcxproj">
+      <Project>{F6BA7459-1BBF-3C00-90DB-B837C16D9052}</Project>
       <Name>App_RobotSimulator</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\App_RobotSimulator_NoGUI.vcxproj">
-      <Project>{C27CD4E3-20F5-3738-9282-34E80B186C07}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\RobotSimulator\App_RobotSimulator_NoGUI.vcxproj">
+      <Project>{065F96AA-8BF2-3863-84F6-CB21F5F80F9C}</Project>
       <Name>App_RobotSimulator_NoGUI</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\TwoJoint\App_TwoJoint.vcxproj">
-      <Project>{802D7630-EB76-3C8A-AE6C-203E7FD6CD65}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\TwoJoint\App_TwoJoint.vcxproj">
+      <Project>{372EB55F-30AC-3409-8280-E9D6E352AAAC}</Project>
       <Name>App_TwoJoint</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\obj2sdf\App_obj2sdf.vcxproj">
-      <Project>{84491FE4-E973-376F-82C8-6E16CE3AF817}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\obj2sdf\App_obj2sdf.vcxproj">
+      <Project>{3575E579-32C0-3E5A-8A06-ADBBB9636199}</Project>
       <Name>App_obj2sdf</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Serialize\Bullet2FileLoader\Bullet2FileLoader.vcxproj">
-      <Project>{58C8A6F7-961F-3E7F-8545-0AC0062A6580}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Serialize\Bullet2FileLoader\Bullet2FileLoader.vcxproj">
+      <Project>{91BD53CA-B4D4-397A-B5A8-B4B46F09A4D7}</Project>
       <Name>Bullet2FileLoader</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Collision\Bullet3Collision.vcxproj">
-      <Project>{ED30D12D-E46F-3482-9544-BE52D7402B7D}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Collision\Bullet3Collision.vcxproj">
+      <Project>{14717930-F0C4-3908-9B4B-53E984255C37}</Project>
       <Name>Bullet3Collision</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Common\Bullet3Common.vcxproj">
-      <Project>{2567E3E0-E1EF-350F-A6FC-1C1D1439B45D}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Common\Bullet3Common.vcxproj">
+      <Project>{C2DDF306-4DEB-3457-B77F-92CBDFD7694F}</Project>
       <Name>Bullet3Common</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Dynamics\Bullet3Dynamics.vcxproj">
-      <Project>{A4F77269-5A7A-3C79-83AD-ACD965799A96}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Dynamics\Bullet3Dynamics.vcxproj">
+      <Project>{CB886861-7B18-3A39-BA63-1D5A53F29533}</Project>
       <Name>Bullet3Dynamics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Geometry\Bullet3Geometry.vcxproj">
-      <Project>{3D840F0E-2C52-3C70-8EB2-58ADEFDBFD30}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3Geometry\Bullet3Geometry.vcxproj">
+      <Project>{8A27E5D4-C828-3DA2-A779-5CC811EFB0CF}</Project>
       <Name>Bullet3Geometry</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3OpenCL\Bullet3OpenCL_clew.vcxproj">
-      <Project>{3747FCF8-791F-3414-978F-19A0D8EB70F8}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\Bullet3OpenCL\Bullet3OpenCL_clew.vcxproj">
+      <Project>{181AF177-A61A-3B0D-BC22-30A6047289D7}</Project>
       <Name>Bullet3OpenCL_clew</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletCollision\BulletCollision.vcxproj">
-      <Project>{4221976D-E485-3D38-8652-3872CF29E626}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletCollision\BulletCollision.vcxproj">
+      <Project>{34F37658-9D9F-3E2D-AEE2-BC186C069DED}</Project>
       <Name>BulletCollision</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletDynamics\BulletDynamics.vcxproj">
-      <Project>{C5A5314C-9A2F-3A00-918E-BE6E4F1D4EE6}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletDynamics\BulletDynamics.vcxproj">
+      <Project>{24A38B08-398D-3A6C-AC22-05834CECAFEB}</Project>
       <Name>BulletDynamics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ExampleBrowser\BulletExampleBrowserLib.vcxproj">
-      <Project>{E55F3FBE-E61A-3565-A38B-06AFC6406BCA}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ExampleBrowser\BulletExampleBrowserLib.vcxproj">
+      <Project>{5C9FC732-0CF5-3617-AAD7-9F372C03378B}</Project>
       <Name>BulletExampleBrowserLib</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletFileLoader\BulletFileLoader.vcxproj">
-      <Project>{F0F83166-94FE-317A-AE6E-D69508E6D17E}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletFileLoader\BulletFileLoader.vcxproj">
+      <Project>{D0C0BA04-AC73-3F2A-ABEF-354327DB3EC0}</Project>
       <Name>BulletFileLoader</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletInverseDynamics\BulletInverseDynamics.vcxproj">
-      <Project>{06EDD432-7E4A-3D30-9A73-90366BE7863E}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletInverseDynamics\BulletInverseDynamics.vcxproj">
+      <Project>{7B78025B-9B48-31CB-83FA-D3939056DF20}</Project>
       <Name>BulletInverseDynamics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\InverseDynamics\BulletInverseDynamicsUtils.vcxproj">
-      <Project>{A48465E5-1CAB-3FD2-AE07-381ADE547ED0}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\InverseDynamics\BulletInverseDynamicsUtils.vcxproj">
+      <Project>{0D3F130D-FA79-3E00-876F-96868A9B65EB}</Project>
       <Name>BulletInverseDynamicsUtils</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\BulletRobotics\BulletRobotics.vcxproj">
-      <Project>{018C4AB7-2249-3986-91E2-FB4C02E00924}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\BulletRobotics\BulletRobotics.vcxproj">
+      <Project>{241B5314-C076-3D33-B6CC-9A1D05C5D81B}</Project>
       <Name>BulletRobotics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\BulletRoboticsGUI\BulletRoboticsGUI.vcxproj">
-      <Project>{C5733BFC-448A-354C-A2C4-8C9A8D1A7C4C}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\BulletRoboticsGUI\BulletRoboticsGUI.vcxproj">
+      <Project>{30FD2F16-A6B3-31D6-BD6A-84659B40D715}</Project>
       <Name>BulletRoboticsGUI</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletSoftBody\BulletSoftBody.vcxproj">
-      <Project>{83379BED-2FA5-3BC5-9DDB-72270B312839}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\BulletSoftBody\BulletSoftBody.vcxproj">
+      <Project>{7B92C7EE-7F7A-3705-BDE9-90C2D5A3147F}</Project>
       <Name>BulletSoftBody</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletWorldImporter\BulletWorldImporter.vcxproj">
-      <Project>{6B739DA1-494D-3DF5-A13E-D7E454D30992}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletWorldImporter\BulletWorldImporter.vcxproj">
+      <Project>{34C28347-D174-3B5B-A686-24CD85A48B28}</Project>
       <Name>BulletWorldImporter</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletXmlWorldImporter\BulletXmlWorldImporter.vcxproj">
-      <Project>{E1D89981-AACA-3341-8E71-6BBB06417F5A}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\Serialize\BulletXmlWorldImporter\BulletXmlWorldImporter.vcxproj">
+      <Project>{08C8B136-C550-3D24-B905-93AAC0DDAD5C}</Project>
       <Name>BulletXmlWorldImporter</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ThirdPartyLibs\BussIK\BussIK.vcxproj">
-      <Project>{040C308C-71FD-3A2E-A581-EA659C5B3CE9}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ThirdPartyLibs\BussIK\BussIK.vcxproj">
+      <Project>{CA3F8384-5262-31A2-83CC-207C8F34DB8C}</Project>
       <Name>BussIK</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\ConvexDecomposition\ConvexDecomposition.vcxproj">
-      <Project>{BCC2471E-2A05-3C56-8B08-2D9444EC465B}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\ConvexDecomposition\ConvexDecomposition.vcxproj">
+      <Project>{A30256B7-DC2F-303D-B07A-A208B09271A8}</Project>
       <Name>ConvexDecomposition</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\GIMPACTUtils\GIMPACTUtils.vcxproj">
-      <Project>{1AF875D4-F376-3148-B3DE-31E97EF24AC9}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\GIMPACTUtils\GIMPACTUtils.vcxproj">
+      <Project>{9DB9A85B-F461-3DFD-B927-A19A876EF7B7}</Project>
       <Name>GIMPACTUtils</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\HACD\HACD.vcxproj">
-      <Project>{F520E04C-7D0D-3AE9-92D4-5E479E48D9F3}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\Extras\HACD\HACD.vcxproj">
+      <Project>{826E70A2-2686-3449-80EE-573B1E75BCD9}</Project>
       <Name>HACD</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\LinearMath\LinearMath.vcxproj">
-      <Project>{AE5648F6-8AA2-3647-A196-FDA92B98E1B1}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\src\LinearMath\LinearMath.vcxproj">
+      <Project>{0814D27D-A810-3EC6-AB6E-F4482B758D04}</Project>
       <Name>LinearMath</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\OpenGLWindow\OpenGLWindow.vcxproj">
-      <Project>{FBCD4940-AEB7-3F12-8ACE-D36EAE894B79}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\OpenGLWindow\OpenGLWindow.vcxproj">
+      <Project>{74B17BC7-EF27-35CF-82F4-D294ECEE8C27}</Project>
       <Name>OpenGLWindow</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\pendulum\Test_BulletDynamics.vcxproj">
-      <Project>{6DC3AC81-EE19-3B2B-93B4-CC14271D7063}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\pendulum\Test_BulletDynamics.vcxproj">
+      <Project>{5370A56C-6B07-3788-B7A8-7B695135154D}</Project>
       <Name>Test_BulletDynamics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\InverseDynamics\Test_BulletInverseDynamics.vcxproj">
-      <Project>{6D58006A-C6D3-32F1-8601-DC8655B8CC4D}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\InverseDynamics\Test_BulletInverseDynamics.vcxproj">
+      <Project>{7FA0DE31-6E2B-36A4-A0FB-81AC4D8B94B1}</Project>
       <Name>Test_BulletInverseDynamics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\InverseDynamics\Test_BulletInverseDynamicsJacobian.vcxproj">
-      <Project>{CB506819-F7D0-308B-AE39-5641C1CB004B}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\InverseDynamics\Test_BulletInverseDynamicsJacobian.vcxproj">
+      <Project>{970693A4-F170-3546-BED8-64F4F35A31C3}</Project>
       <Name>Test_BulletInverseDynamicsJacobian</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\InverseDynamics\Test_BulletInverseForwardDynamics.vcxproj">
-      <Project>{5BF4437E-6B80-330F-ADB9-8D5ACA0B2C67}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\InverseDynamics\Test_BulletInverseForwardDynamics.vcxproj">
+      <Project>{50FEE14B-525B-381F-A293-44ED7961FA63}</Project>
       <Name>Test_BulletInverseForwardDynamics</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\collision\Test_Collision.vcxproj">
-      <Project>{665B2C10-8A1F-368E-88D6-365CC0E9FCC5}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\collision\Test_Collision.vcxproj">
+      <Project>{50CE7940-E242-38BC-9B27-C824B9BC5D72}</Project>
       <Name>Test_Collision</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\SharedMemory\Test_PhysicsClientServer.vcxproj">
-      <Project>{5625BA9E-5ABE-3162-A069-A81B8D01DEA3}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\SharedMemory\Test_PhysicsClientServer.vcxproj">
+      <Project>{01A3BD1D-258B-3538-916C-81EEFDA0B046}</Project>
       <Name>Test_PhysicsClientServer</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\Test_btKinematicCharacterController.vcxproj">
-      <Project>{0ABA4323-713A-3AE3-A04C-128F254F585D}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\BulletDynamics\Test_btKinematicCharacterController.vcxproj">
+      <Project>{A18DD19A-8E96-3528-A06A-95D49AC1B920}</Project>
       <Name>Test_btKinematicCharacterController</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ThirdPartyLibs\clsocket\clsocket.vcxproj">
-      <Project>{CB8CC48E-8847-33F0-AD23-926D6A576A55}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ThirdPartyLibs\clsocket\clsocket.vcxproj">
+      <Project>{E6B25304-F3C9-3268-968F-073DA80D06EB}</Project>
       <Name>clsocket</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\gtest-1.7.0\gtest.vcxproj">
-      <Project>{118B5210-E089-37B3-8888-76816FC1C7F2}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\test\gtest-1.7.0\gtest.vcxproj">
+      <Project>{AAAC68A7-D679-3BE8-9218-53B198641B75}</Project>
       <Name>gtest</Name>
     </ProjectReference>
-    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletPhysicsPlugin\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ThirdPartyLibs\Gwen\gwen.vcxproj">
-      <Project>{CF592381-DEF2-3741-8B08-5A588D39C86C}</Project>
+    <ProjectReference Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\examples\ThirdPartyLibs\Gwen\gwen.vcxproj">
+      <Project>{DA98B6AE-48CD-3F80-8F92-2FA1F9A04B6E}</Project>
       <Name>gwen</Name>
     </ProjectReference>
   </ItemGroup>

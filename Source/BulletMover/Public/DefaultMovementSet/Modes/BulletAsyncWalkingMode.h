@@ -1,0 +1,62 @@
+// Copyright Epic Games, Inc. All Rights Reserved.
+
+#pragma once
+
+#include "BulletMovementMode.h"
+#include "MoveLibrary/BulletModularMovement.h"
+#include "BulletWalkingMode.h"
+#include "BulletAsyncWalkingMode.generated.h"
+
+#define UE_API BULLETMOVER_API
+
+class UBulletCommonLegacyMovementSettings;
+struct FBulletFloorCheckResult;
+struct FBulletRelativeBaseInfo;
+struct FBulletMovementRecord;
+
+
+/**
+ * AsyncWalkingMode: a default movement mode for traversing surfaces and movement bases (walking, running, sneaking, etc.)
+ * This mode simulates movement without actually modifying any scene component(s).
+ */
+UCLASS(MinimalAPI, Blueprintable, BlueprintType, Experimental)
+class UBulletAsyncWalkingMode : public UBulletBaseMovementMode
+{
+	GENERATED_BODY()
+
+public:
+	UE_API UBulletAsyncWalkingMode(const FObjectInitializer& ObjectInitializer);
+	
+	UE_API virtual void GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const override;
+
+	UE_API virtual void SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState) override;
+
+	// Returns the active turn generator. Note: you will need to cast the return value to the generator you expect to get, it can also be none
+	UFUNCTION(BlueprintPure, Category=Mover)
+	UE_API UObject* GetTurnGenerator();
+
+	// Sets the active turn generator to use the class provided. Note: To set it back to the default implementation pass in none
+	UFUNCTION(BlueprintCallable, Category=Mover)
+	UE_API void SetTurnGeneratorClass(UPARAM(meta=(MustImplement="/Script/BulletMover.TurnGeneratorInterface", AllowAbstract="false")) TSubclassOf<UObject> TurnGeneratorClass);
+
+protected:
+
+	/** Choice of behavior for floor checks while not moving.  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mover)
+	EBulletStaticFloorCheckPolicy FloorCheckPolicy = EBulletStaticFloorCheckPolicy::OnDynamicBaseOnly;
+
+	/** Optional modular object for generating rotation towards desired orientation. If not specified, linear interpolation will be used. */
+	UPROPERTY(EditAnywhere, Instanced, Category=Mover, meta=(ObjectMustImplement="/Script/BulletMover.TurnGeneratorInterface"))
+	TObjectPtr<UObject> TurnGenerator;
+
+	UE_API virtual void OnRegistered(const FName ModeName) override; 
+	UE_API virtual void OnUnregistered() override;
+
+	UE_API void CaptureFinalState(const FVector FinalLocation, const FRotator FinalRotation, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const;
+
+	UE_API FBulletRelativeBaseInfo UpdateFloorAndBaseInfo(const FBulletFloorCheckResult& FloorResult) const;
+
+	TWeakObjectPtr<const UBulletCommonLegacyMovementSettings> CommonLegacySettings;
+};
+
+#undef UE_API

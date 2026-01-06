@@ -298,8 +298,8 @@ INSTALL_CMAKE_FILES:BOOL=ON
 //No help, variable specified on the command line.
 INSTALL_EXTRA_LIBS:UNINITIALIZED=0
 
-//Set when you want to install libraries
-INSTALL_LIBS:BOOL=0
+//No help, variable specified on the command line.
+INSTALL_LIBS:UNINITIALIZED=0
 
 //Add MSVC postfix for executable names (_Debug)
 INTERNAL_ADD_POSTFIX_EXECUTABLE_NAMES:BOOL=OFF
@@ -313,8 +313,8 @@ INTERNAL_CREATE_MSVC_RELATIVE_PATH_PROJECTFILES:BOOL=OFF
 //Internal update serialization structures
 INTERNAL_UPDATE_SERIALIZATION_STRUCTURES:BOOL=OFF
 
-//Single output directory for building all libraries.
-LIBRARY_OUTPUT_PATH:PATH=F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/RelWithDebInfo
+//No help, variable specified on the command line.
+LIBRARY_OUTPUT_PATH:UNINITIALIZED=F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\RelWithDebInfo
 
 //OpenGL library for win32
 OPENGL_gl_LIBRARY:STRING=opengl32
@@ -322,8 +322,8 @@ OPENGL_gl_LIBRARY:STRING=opengl32
 //GLU library for win32
 OPENGL_glu_LIBRARY:STRING=glu32
 
-//Use double precision
-USE_DOUBLE_PRECISION:BOOL=1
+//No help, variable specified on the command line.
+USE_DOUBLE_PRECISION:UNINITIALIZED=1
 
 //Use Glut
 USE_GLUT:BOOL=ON
@@ -352,11 +352,11 @@ USE_MSVC_FUNCTION_LEVEL_LINKING:BOOL=ON
 //Use MSVC Incremental Linking
 USE_MSVC_INCREMENTAL_LINKING:BOOL=OFF
 
-//Use MSVC Release Runtime Library even in Debug
-USE_MSVC_RELEASE_RUNTIME_ALWAYS:BOOL=1
+//No help, variable specified on the command line.
+USE_MSVC_RELEASE_RUNTIME_ALWAYS:UNINITIALIZED=1
 
-//Use MSVC Runtime Library DLL (/MD or /MDd)
-USE_MSVC_RUNTIME_LIBRARY_DLL:BOOL=1
+//No help, variable specified on the command line.
+USE_MSVC_RUNTIME_LIBRARY_DLL:UNINITIALIZED=1
 
 //Use MSVC /GF string pooling option
 USE_MSVC_STRING_POOLING:BOOL=ON
@@ -380,11 +380,11 @@ CMAKE_AR-ADVANCED:INTERNAL=1
 //This is the directory where this CMakeCache.txt was created
 CMAKE_CACHEFILE_DIR:INTERNAL=f:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64
 //Major version of cmake used to create the current loaded cache
-CMAKE_CACHE_MAJOR_VERSION:INTERNAL=3
+CMAKE_CACHE_MAJOR_VERSION:INTERNAL=4
 //Minor version of cmake used to create the current loaded cache
-CMAKE_CACHE_MINOR_VERSION:INTERNAL=31
+CMAKE_CACHE_MINOR_VERSION:INTERNAL=2
 //Patch version of cmake used to create the current loaded cache
-CMAKE_CACHE_PATCH_VERSION:INTERNAL=3
+CMAKE_CACHE_PATCH_VERSION:INTERNAL=1
 //Path to CMake executable.
 CMAKE_COMMAND:INTERNAL=D:/CMake/bin/cmake.exe
 //Path to cpack program executable.
@@ -442,6 +442,8 @@ CMAKE_GENERATOR_TOOLSET:INTERNAL=
 CMAKE_HOME_DIRECTORY:INTERNAL=F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3
 //ADVANCED property for variable: CMAKE_LINKER
 CMAKE_LINKER-ADVANCED:INTERNAL=1
+//Name of CMakeLists files to read
+CMAKE_LIST_FILE_NAME:INTERNAL=CMakeLists.txt
 //ADVANCED property for variable: CMAKE_MODULE_LINKER_FLAGS
 CMAKE_MODULE_LINKER_FLAGS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_MODULE_LINKER_FLAGS_DEBUG
@@ -455,7 +457,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_MT
 CMAKE_MT-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=43
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=1
 //Platform information initialized
 CMAKE_PLATFORM_INFO_INITIALIZED:INTERNAL=1
 //noop for ranlib
@@ -474,7 +476,7 @@ CMAKE_RC_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_RC_FLAGS_RELWITHDEBINFO
 CMAKE_RC_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //Path to CMake installation.
-CMAKE_ROOT:INTERNAL=D:/CMake/share/cmake-3.31
+CMAKE_ROOT:INTERNAL=D:/CMake/share/cmake-4.2
 //ADVANCED property for variable: CMAKE_SHARED_LINKER_FLAGS
 CMAKE_SHARED_LINKER_FLAGS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_SHARED_LINKER_FLAGS_DEBUG
