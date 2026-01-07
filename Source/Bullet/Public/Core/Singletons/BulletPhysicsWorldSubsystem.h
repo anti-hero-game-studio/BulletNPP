@@ -12,6 +12,7 @@
 #include "Components/ShapeComponent.h"
 #include <functional>
 
+#include "Core/CollisionFilters/ConvexResultCallback_IgnoreSelf.h"
 #include "Core/DataTypes/BulletTypes.h"
 #include "GameFramework/Actor.h"
 #include "Subsystems/SubsystemCollection.h"
@@ -94,28 +95,28 @@ public:
 	
 #pragma region SCENE QUERY
 	
-	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries")
-	FHitResult LineTraceSingleByChannel(const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, int32& HitBodyId);
+	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
+	FHitResult LineTraceSingleByChannel(const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId);
 	
-	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries")
-	FHitResult SweepSphereSingleByChannel(const float Radius, const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, int32& HitBodyId);
+	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
+	FHitResult SweepSphereSingleByChannel(const float Radius, const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId);
 	
-	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries")
-	FHitResult SweepCapsuleSingleByChannel(const float Radius, const float HalfHeight, const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, int32& HitBodyId);
+	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
+	FHitResult SweepCapsuleSingleByChannel(const float Radius, const float HalfHeight, const FVector Start, const FVector End, const FRotator Rotation, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId);
 	
-	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries")
-	FHitResult SweepBoxSingleByChannel(const FVector BoxExtents, const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, int32& HitBodyId);
+	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
+	FHitResult SweepBoxSingleByChannel(const FVector BoxExtents, const FVector Start, const FVector End, const FRotator Rotation, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId);
 	
+	int32 LineTraceSingle(const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit);
 	
-	int32 LineTraceSingle(const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, FHitResult& OutHit);
-	
-	int32 SweepTraceSingle(const FCollisionShape& Shape, const FVector& Start, const FVector& End, const TEnumAsByte<ECollisionChannel>& Channel, FHitResult& OutHit);
-	
-	int32 SweepTraceSingle(const FCollisionShape& Shape, const FTransform& Start, const FTransform& End, const TEnumAsByte<ECollisionChannel>& Channel, FHitResult& OutHit);
+	int32 SweepTraceSingle(const FCollisionShape& Shape, const FVector& Start, const FVector& End, const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit);
+
 	
 private:
 	void ConstructHitResult(const btCollisionWorld::ClosestRayResultCallback& Result, FHitResult& OutHit) const;
 	void ConstructHitResult(const btCollisionWorld::ClosestConvexResultCallback& Result, FHitResult& OutHit) const;
+	
+	int32 SweepTraceInternal(const btTransform& From, const btTransform& To, const btCollisionShape* Collider, btClosestNotMeConvexResultCallback& Result, FHitResult& OutHit);
 	
 	
 #pragma endregion 
@@ -228,7 +229,7 @@ private:
 	
 protected:
 	// Holds an array of collision object id's for a specific actor.
-	TMap<const btCollisionObject*, FUnrealShapeDescriptor> GlobalShapeDescriptorDataCache; 
+	TMap<btCollisionObject*, FUnrealShapeDescriptor> GlobalShapeDescriptorDataCache; 
 	
 	FUnrealShapeDescriptor GetShapeDescriptorData(const AActor* Actor) const;
 	

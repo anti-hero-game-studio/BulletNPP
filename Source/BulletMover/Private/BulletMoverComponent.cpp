@@ -32,6 +32,7 @@
 #include "Misc/DataValidation.h"
 #endif
 
+#include "Components/CapsuleComponent.h"
 #include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletMoverComponent)
@@ -701,7 +702,11 @@ void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)
 		Subsystem->GetMotionState(Id, T, V, A, F);
 		
 		//TODO:@GreggoryAddison::CodeCompletion || The current base a player is standing on will need to be passed in... I think.
-		FRotator UnrealRotation(0, 0, 90);
+		FRotator UnrealRotation(0, 0, 0);
+		if (UpdatedComponent.IsA(UCapsuleComponent::StaticClass()))
+		{
+			UnrealRotation = FRotator(0,0,90);
+		}
 		T.SetRotation((T.GetRotation().Rotator() + UnrealRotation).Quaternion());
 		FinalState.SetTransforms_WorldSpace(T.GetLocation(), T.GetRotation().Rotator(), V, A, nullptr);
 	}

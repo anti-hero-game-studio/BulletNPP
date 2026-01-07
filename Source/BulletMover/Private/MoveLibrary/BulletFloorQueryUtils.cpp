@@ -180,7 +180,7 @@ bool UBulletFloorQueryUtils::FloorSweepTest(const FBulletMovingComponentSet& Mov
 
 		//TODO:@GreggoryAddison::BulletCollisions || Swap this out for a trace using a bullet shape.
 		
-		Subsystem->SweepTraceSingle(BoxShape, FTransform(Start), FTransform((UpDirOrientation * Rotate45LocalYaw), End), ECC_Visibility, OutHit);
+		Subsystem->SweepTraceSingle(BoxShape, Start, End, (UpDirOrientation * Rotate45LocalYaw), ECC_Visibility, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
 		bBlockingHit = OutHit.bBlockingHit;
 
 		if (!bBlockingHit)
@@ -188,13 +188,13 @@ bool UBulletFloorQueryUtils::FloorSweepTest(const FBulletMovingComponentSet& Mov
 			// Test again with the same box, not rotated.
 			
 			OutHit.Reset(1.f, false);
-			Subsystem->SweepTraceSingle(CollisionShape, FTransform(Start), FTransform((UpDirOrientation), End), ECC_Visibility, OutHit);
+			Subsystem->SweepTraceSingle(BoxShape, Start, End, (UpDirOrientation), ECC_Visibility, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
 			bBlockingHit = OutHit.bBlockingHit;
 		}
 	}
 	else
 	{
-		Subsystem->SweepTraceSingle(CollisionShape, FTransform(Start), FTransform((UpDirOrientation), End), ECC_Visibility, OutHit);
+		Subsystem->SweepTraceSingle(CollisionShape, Start, End, (UpDirOrientation), ECC_Visibility, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
 		bBlockingHit = OutHit.bBlockingHit;
 	}
 

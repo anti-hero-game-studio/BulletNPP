@@ -16,7 +16,7 @@ protected:
 		// This world origin must be in *UE dimensions*
 		FVector WorldOrigin;
 		btTransform CenterOfMassTransform;
-		btTransform FinalTransform;
+		FTransform FinalTransform;
 
 
 	public:
@@ -37,7 +37,6 @@ protected:
 		{
 			if (UpdatedComponent.IsValid())
 			{
-				const FTransform& Xform = UpdatedComponent->GetComponentTransform();
 				OutCenterOfMassWorldTrans = BulletHelpers::ToBulletTransform(UpdatedComponent->GetComponentTransform(), WorldOrigin) * CenterOfMassTransform.inverse();
 			}
 
@@ -48,16 +47,15 @@ protected:
 		{// send this to actor
 			if (UpdatedComponent.IsValid(false))
 			{
-				
-				
-				FinalTransform = CenterOfMassWorldTrans * CenterOfMassTransform;
-				UpdatedComponent->SetWorldTransform(BulletHelpers::ToUnrealTransform(FinalTransform, WorldOrigin));
+				FinalTransform = BulletHelpers::ToUnrealTransform(CenterOfMassWorldTrans * CenterOfMassTransform, WorldOrigin);
+				FinalTransform.SetScale3D(UpdatedComponent->K2_GetComponentScale());
+				UpdatedComponent->SetWorldTransform(FinalTransform);
 			}
 		}
 	
 		FTransform GetFinalTransform() const
 		{
-			return BulletHelpers::ToUnrealTransform(FinalTransform, WorldOrigin);
+			return FinalTransform;
 		}
 };
 
