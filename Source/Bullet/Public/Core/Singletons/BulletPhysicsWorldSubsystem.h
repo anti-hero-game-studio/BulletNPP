@@ -91,6 +91,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void AddForce(AActor* Target, FVector Force, FVector Location);
+	
+	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
+	void UpdateActorVelocity(AActor* Target, const FVector LinearVelocity, const FVector AngularVelocity);
 
 	
 #pragma region SCENE QUERY

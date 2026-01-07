@@ -42,14 +42,14 @@ struct FBulletCharacterDefaultInputs : public FBulletMoverDataStructBase
 	EBulletMoveInputType GetMoveInputType() const { return MoveInputType; }
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mover)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mover)
 	EBulletMoveInputType MoveInputType;
 
 	/**
 	 * Representing the directional move input for this frame. Must be interpreted according to MoveInputType. Relative to MovementBase if set, world space otherwise. Will be truncated to match network serialization precision.
 	 * Note: Use SetDirectionalInput or SetVelocityInput to set MoveInput and MoveInputType
 	 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mover)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mover)
 	FVector MoveInput;
 
 public:

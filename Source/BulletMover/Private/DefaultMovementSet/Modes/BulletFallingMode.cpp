@@ -342,7 +342,11 @@ void UBulletFallingMode::CaptureFinalState(const FBulletMoverTimeStep& TimeStep,
 	ProcessLanded(FloorResult, EffectiveVelocity, MovementBaseInfo, TickEndData);
 	
 	//TODO:@GreggoryAddison::CodeCompletion || Send out velocity results to bullet.
+	OutputSyncState.SetTransforms_WorldSpace( StartSyncState.GetLocation_WorldSpace(),
+												  StartSyncState.GetOrientation_WorldSpace(),
+												  EffectiveVelocity,
+												  AngularVelocityDegrees,
+												  nullptr); // no movement base
 
-	UpdatedComponent->SendFinalVelocityToBullet(TimeStep, EffectiveVelocity, AngularVelocityDegrees);
 	
 }

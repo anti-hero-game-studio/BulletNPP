@@ -688,6 +688,14 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 		}
 	}
 	
+	// Get our rigid body and apply central impulse
+	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+	{
+		const FBulletMoverDefaultSyncState* OutState = SimOutput.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+		if (!OutState) return;
+		Subsystem->UpdateActorVelocity(GetOwner(), OutState->GetVelocity_WorldSpace(), OutState->GetAngularVelocityDegrees_WorldSpace());
+	}
+	
 }
 
 void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)

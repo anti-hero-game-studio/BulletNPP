@@ -561,6 +561,21 @@ void UBulletPhysicsWorldSubsystem::AddForce(AActor* Target, FVector Force, FVect
 	Rb->setAngularVelocity(btVector3(0, 0, 0));
 }
 
+void UBulletPhysicsWorldSubsystem::UpdateActorVelocity(AActor* Target, const FVector LinearVelocity, const FVector AngularVelocity)
+{
+	int32 Id = INDEX_NONE;
+	const FUnrealShapeDescriptor& Descriptor = GetShapeDescriptorData(Target);
+	Id = Descriptor.WorldArrayIndex;
+	
+	if (Id == INDEX_NONE) return;
+	
+	btCollisionObject* C = GetBulletWorld()->getCollisionObjectArray()[Id];
+	btRigidBody* Rb = btRigidBody::upcast(C);
+	if (!Rb) return;
+	Rb->applyCentralForce(BulletHelpers::ToBulletDirection(LinearVelocity, true));
+	Rb->setAngularVelocity(BulletHelpers::ToBulletVector3(AngularVelocity));
+}
+
 void UBulletPhysicsWorldSubsystem::StartDebugDrawer()
 {
 	if (BtDebugDraw != nullptr) return;
