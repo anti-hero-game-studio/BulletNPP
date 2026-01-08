@@ -76,22 +76,25 @@ public:
 	void RegisterStaticRigidBody(AActor* Target, float Friction, float Restitution, bool bUsePhysicsMaterial, UPARAM(DisplayName="RigidBodyId") int32&Id );
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
-	void SetPhysicsState(int ID, FTransform transforms, FVector Velocity, FVector AngularVelocity,FVector& Force);
+	void SetPhysicsState(int ID, FTransform Transforms, FVector Velocity, FVector AngularVelocity,FVector& Force);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
-	void GetPhysicsState(int ID, FTransform& transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force);
+	void GetPhysicsState(int ID, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void GetMotionState(int Id, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
-	void StepPhysics(float deltaSeconds, int maxSubSteps = 1, float fixedTimeStep = 0.016666667f);
+	void StepPhysics(float DeltaSeconds, int MaxSubSteps = 1, float FixedTimeStep = 0.016666667f);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
-	void AddImpulse(AActor* Target, FVector Impulse, FVector Location);
+	void AddImpulse(AActor* Target, const FVector Impulse);
 
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
-	void AddForce(AActor* Target, FVector Force, FVector Location);
+	void AddForce(AActor* Target, const FVector Force);
+	
+	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
+	void SetAngularVelocity(AActor* Target, const FVector AngularVelocity);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void UpdateActorVelocity(AActor* Target, const FVector LinearVelocity, const FVector AngularVelocity);
@@ -126,9 +129,10 @@ private:
 #pragma endregion 
 	
 	
+#pragma region DEBUGGER
 	void StartDebugDrawer();
 	void StopDebugDrawer();
-	
+#pragma endregion
 	
 	
 	
@@ -139,19 +143,19 @@ private:
 	btConstraintSolver* BtConstraintSolver;
 	btDiscreteDynamicsWorld* BtWorld;
 	BulletHelpers* BulletHelpers;
-	//BulletDebugDraw* btdebugdraw; TODO:@GreggoryAddison::CodeCompletion || Add debug
-	btStaticPlaneShape* plane;
+	btStaticPlaneShape* Plane;
 	// Custom debug interface
 	btIDebugDraw* BtDebugDraw;
 	// Dynamic bodies
 	// Static colliders
 	TArray<btCollisionObject*> BtStaticObjects;
-	btCollisionObject* procbody;
+	btCollisionObject* ProceduralBody;
 	// Re-usable collision shapes
 	TArray<btBoxShape*> BtBoxCollisionShapes;
 	TArray<btSphereShape*> BtSphereCollisionShapes;
 	TArray<btCapsuleShape*> BtCapsuleCollisionShapes;
 	btSequentialImpulseConstraintSolver* mt;
+	
 	// Structure to hold re-usable ConvexHull shapes based on origin BodySetup / subindex / scale
 	struct ConvexHullShapeHolder
 	{
@@ -160,6 +164,7 @@ private:
 		FVector Scale;
 		btConvexHullShape* Shape;
 	};
+	
 	TArray<ConvexHullShapeHolder> BtConvexHullCollisionShapes;
 	// These shapes are for *potentially* compound rigid body shapes
 	struct CachedDynamicShapeData
@@ -174,10 +179,6 @@ private:
 
 	TArray<btRigidBody*> BtRigidBodies;
 	TArray<btBvhTriangleMeshShape*> ComplexShapes;
-
-	float Accumulator = 0.0f;
-
-	
 	
 		
 #pragma region BULLET SHAPE CREATION
@@ -213,7 +214,7 @@ private:
 
 	void SetupStaticGeometryPhysics(TArray<AActor*> Actors, float Friction, float Restitution);
 
-	void ExtractPhysicsGeometry(AActor* Actor, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
+	void ExtractPhysicsGeometry(const AActor* Actor, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
 
 	btCollisionObject* AddStaticCollision(btCollisionShape* Shape, const FTransform& Transform, float Friction, float Restitution, AActor* Actor);
 	
@@ -228,8 +229,7 @@ private:
 	const UBulletPhysicsWorldSubsystem::CachedDynamicShapeData& GetCachedDynamicShapeData(AActor* Actor, float Mass);
 #pragma endregion
 	
-	
-	
+
 #pragma region DATA CACHE
 	
 protected:

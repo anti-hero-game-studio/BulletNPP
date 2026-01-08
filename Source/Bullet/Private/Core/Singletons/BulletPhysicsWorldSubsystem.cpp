@@ -123,6 +123,7 @@ void UBulletPhysicsWorldSubsystem::RegisterStaticRigidBody(AActor* Target, float
 	FUnrealShapeDescriptor Descriptor;
 	ExtractPhysicsGeometry(Target,[Target, this, Friction, Restitution, &Descriptor](btCollisionShape* Shape, const FTransform& RelTransform)
 	{
+		//TODO:@GreggoryAddison::CodeCompletion || If a shape has a collision profile of overlap we need to create a ghost object... I think.
 		// Every sub-collider in the actor is passed to this callback function
 		// We're baking this in world space, so apply actor transform to relative
 		const FTransform FinalXform = RelTransform /** Target->GetActorTransform()*/;
@@ -461,11 +462,11 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBody(USkeletalMeshComponent* 
 	return body;
 }
 
-void UBulletPhysicsWorldSubsystem::SetPhysicsState(int ID, FTransform transforms, FVector Velocity, FVector AngularVelocity, FVector& Force)
+void UBulletPhysicsWorldSubsystem::SetPhysicsState(int ID, FTransform Transforms, FVector Velocity, FVector AngularVelocity, FVector& Force)
 {
 
 	if (BtRigidBodies[ID]) {
-		BtRigidBodies[ID]->setWorldTransform(BulletHelpers::ToBulletTransform(transforms, UE_WORLD_ORIGIN));
+		BtRigidBodies[ID]->setWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
 		BtRigidBodies[ID]->setLinearVelocity(BulletHelpers::ToBulletPosition(Velocity, UE_WORLD_ORIGIN));
 		BtRigidBodies[ID]->setAngularVelocity(BulletHelpers::ToBulletPosition(AngularVelocity, FVector(0)));
 	}
@@ -473,7 +474,7 @@ void UBulletPhysicsWorldSubsystem::SetPhysicsState(int ID, FTransform transforms
 
 }
 
-void UBulletPhysicsWorldSubsystem::GetPhysicsState(int ID, FTransform& transforms, FVector& Velocity, FVector& AngularVelocity,FVector& Force)
+void UBulletPhysicsWorldSubsystem::GetPhysicsState(int ID, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity,FVector& Force)
 {
 	btCollisionObjectArray& CollisionObjects = GetBulletWorld()->getCollisionObjectArray();
 	
@@ -489,7 +490,7 @@ void UBulletPhysicsWorldSubsystem::GetPhysicsState(int ID, FTransform& transform
 
 	if (btRigidBody* Rb = btRigidBody::upcast(CollisionObjects[ID]))
 	{
-		transforms= BulletHelpers::ToUnrealTransform( Rb->getWorldTransform(),UE_WORLD_ORIGIN) ;
+		Transforms= BulletHelpers::ToUnrealTransform( Rb->getWorldTransform(),UE_WORLD_ORIGIN) ;
 		Velocity = BulletHelpers::ToUnrealPosition(Rb->getLinearVelocity(), UE_WORLD_ORIGIN);
 		AngularVelocity = BulletHelpers::ToUnrealPosition(Rb->getAngularVelocity(), FVector(0));
 		Force = BulletHelpers::ToUnrealPosition(Rb->getTotalForce(), UE_WORLD_ORIGIN);
@@ -539,10 +540,10 @@ void UBulletPhysicsWorldSubsystem::GetMotionState(int Id, FTransform& Transforms
 	}
 }
 
-void UBulletPhysicsWorldSubsystem::StepPhysics(float deltaSeconds, int maxSubSteps, float fixedTimeStep)
+void UBulletPhysicsWorldSubsystem::StepPhysics(float DeltaSeconds, int MaxSubSteps, float FixedTimeStep)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(StepPhysics);
-	BtWorld->stepSimulation(deltaSeconds,maxSubSteps,fixedTimeStep);
+	BtWorld->stepSimulation(DeltaSeconds,MaxSubSteps,FixedTimeStep);
 
 #if WITH_EDITOR
 	if (DrawDebugShapes == 1) 
@@ -557,7 +558,7 @@ void UBulletPhysicsWorldSubsystem::StepPhysics(float deltaSeconds, int maxSubSte
 #endif
 }
 
-void UBulletPhysicsWorldSubsystem::AddImpulse(AActor* Target, FVector Impulse, FVector Location)
+void UBulletPhysicsWorldSubsystem::AddImpulse(AActor* Target, const FVector Impulse)
 {
 	int32 Id = INDEX_NONE;
 	const FUnrealShapeDescriptor& Descriptor = GetShapeDescriptorData(Target);
@@ -571,7 +572,7 @@ void UBulletPhysicsWorldSubsystem::AddImpulse(AActor* Target, FVector Impulse, F
 	Rb->applyCentralImpulse(BulletHelpers::ToBulletDirection(Impulse, true));
 }
 
-void UBulletPhysicsWorldSubsystem::AddForce(AActor* Target, FVector Force, FVector Location)
+void UBulletPhysicsWorldSubsystem::AddForce(AActor* Target, const FVector Force)
 {
 	int32 Id = INDEX_NONE;
 	const FUnrealShapeDescriptor& Descriptor = GetShapeDescriptorData(Target);
@@ -583,7 +584,20 @@ void UBulletPhysicsWorldSubsystem::AddForce(AActor* Target, FVector Force, FVect
 	btRigidBody* Rb = btRigidBody::upcast(C);
 	if (!Rb) return;
 	Rb->applyCentralForce(BulletHelpers::ToBulletDirection(Force, true));
-	Rb->setAngularVelocity(btVector3(0, 0, 0));
+}
+
+void UBulletPhysicsWorldSubsystem::SetAngularVelocity(AActor* Target, const FVector AngularVelocity)
+{
+	int32 Id = INDEX_NONE;
+	const FUnrealShapeDescriptor& Descriptor = GetShapeDescriptorData(Target);
+	Id = Descriptor.WorldArrayIndex;
+	
+	if (Id == INDEX_NONE) return;
+	
+	btCollisionObject* C = GetBulletWorld()->getCollisionObjectArray()[Id];
+	btRigidBody* Rb = btRigidBody::upcast(C);
+	if (!Rb) return;
+	Rb->setAngularVelocity(BulletHelpers::ToBulletVector3(AngularVelocity));
 }
 
 void UBulletPhysicsWorldSubsystem::UpdateActorVelocity(AActor* Target, const FVector LinearVelocity, const FVector AngularVelocity)
@@ -901,7 +915,7 @@ void UBulletPhysicsWorldSubsystem::SetupStaticGeometryPhysics(TArray<AActor*> Ac
 	}
 }
 
-void UBulletPhysicsWorldSubsystem::ExtractPhysicsGeometry(AActor* Actor, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor)
+void UBulletPhysicsWorldSubsystem::ExtractPhysicsGeometry(const AActor* Actor, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor)
 {
 	TInlineComponentArray<UPrimitiveComponent*, 20> Components;
 	// Used to easily get a component's transform relative to actor, not parent component
