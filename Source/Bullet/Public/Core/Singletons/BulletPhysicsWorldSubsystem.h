@@ -12,7 +12,7 @@
 #include "Components/ShapeComponent.h"
 #include <functional>
 
-#include "Core/CollisionFilters/ConvexResultCallback_IgnoreSelf.h"
+#include "Core/CollisionFilters/ConvexResultCallback_IgnoreActors.h"
 #include "Core/DataTypes/BulletTypes.h"
 #include "GameFramework/Actor.h"
 #include "Subsystems/SubsystemCollection.h"
@@ -52,19 +52,20 @@ protected:
 	
 public:
 	/**
-	 * Creates a bullet physics compatible rigid body shape
+	 * Creates a bullet physics compatible rigid body shape. Actors tagged "dynamic" will automatically register themselves. Set "bSimulatePhysics" to true if you want the body to start in an active state.
 	 * @param Target	The actor with primitive components that will be converted to rigid shapes. ACTOR SCALE MUST BE {1,1,1}
 	 * @param Friction	Manually override the surface friction of the collision shape
 	 * @param Restitution	Manually override the bounciness of the collision shape
 	 * @param Mass	Manually override the weight (in kg) of the collision shape
 	 * @param bUsePhysicsMaterial	If true the friction and restitution params will be ignored and instead pulled from the physics material
+	 * @param bIsActiveRigidBody	If true this rigid body will be set to active. For performance reasons all registered bodies are sleep when created.
 	 * @param Id	Returns the id to use in collision lookups
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Register Dynamic Rigid Body")
-	void RegisterDynamicRigidBody(AActor* Target, float Friction, float Restitution, float Mass, bool bUsePhysicsMaterial, UPARAM(DisplayName="RigidBodyId") int32&Id );
+	void RegisterDynamicRigidBody(AActor* Target, float Friction, float Restitution, float Mass, bool bUsePhysicsMaterial, bool bIsActiveRigidBody, UPARAM(DisplayName="RigidBodyId") int32&Id );
 	
 	/**
-	 * Creates a bullet physics compatible rigid body shape
+	 * Creates a bullet physics compatible rigid body shape. Actors tagged "static" will automatically register themselves.
 	 * @param Target	The actor with primitive components that will be converted to rigid shapes. ACTOR SCALE MUST BE {1,1,1}
 	 * @param Friction	Manually override the surface friction of the collision shape
 	 * @param Restitution	Manually override the bounciness of the collision shape
@@ -110,7 +111,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
 	FHitResult SweepBoxSingleByChannel(const FVector BoxExtents, const FVector Start, const FVector End, const FRotator Rotation, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId);
 	
-	int32 LineTraceSingle(const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit);
+	int32 LineTraceSingle(const FVector& Start, const FVector& End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit);
 	
 	int32 SweepTraceSingle(const FCollisionShape& Shape, const FVector& Start, const FVector& End, const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit);
 
@@ -196,7 +197,8 @@ public:
 
 	btCollisionShape* GetConvexHullCollisionShape(UBodySetup* BodySetup, int ConvexIndex, const FVector& Scale);
 
-	btRigidBody* AddRigidBody(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, btVector3 Inertia, float Mass, float Friction, float Restitution);
+	btRigidBody* AddRigidBody(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, 
+		const btVector3& Inertia, const float& Mass, const float& Friction, const float& Restitution);
 
 	btRigidBody* AddRigidBody(USkeletalMeshComponent* skel, const FTransform& localTransform, btCollisionShape* collisionShape, float Mass, float Friction, float Restitution);
 	
