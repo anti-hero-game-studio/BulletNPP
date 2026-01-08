@@ -322,8 +322,7 @@ void UCharacterBulletMoverComponent::InitializeBulletCharacter()
 	
 	if (UBulletPhysicsWorldSubsystem* B = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
-		int32 DummyId;
-		B->RegisterDynamicRigidBody(GetOwner(), 0.5, 1, 1.f, false, true, DummyId);
+		B->RegisterDynamicRigidBody(GetOwner(), 0.5, 1, 1.f, false, true);
 	}
 	
 }

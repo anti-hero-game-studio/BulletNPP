@@ -34,6 +34,7 @@ class btConstraintSolver;
 class btDynamicsWorld;
 class btCollisionShape;
 class btBoxShape;
+class btGhostObject;
 class btCapsuleShape;
 class btConvexHullShape;
 class btCompoundShape;

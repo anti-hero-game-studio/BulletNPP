@@ -19,6 +19,9 @@
 #include "Templates/Function.h"
 #include "BulletPhysicsWorldSubsystem.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhysicsStep, const float&, DeltaTime);
+
 /**
  * 
  */
@@ -50,6 +53,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bullet Physics|Objects")
 	int SubSteps=1;
 	
+	
+#pragma region DELEGATES
+	UPROPERTY(BlueprintAssignable, Category="Bullet Physics|Delegates")
+	FOnPhysicsStep OnPrePhysicsStep;
+	
+	UPROPERTY(BlueprintAssignable, Category="Bullet Physics|Delegates")
+	FOnPhysicsStep OnPostPhysicsStep;
+#pragma endregion
+	
 public:
 	/**
 	 * Creates a bullet physics compatible rigid body shape. Actors tagged "dynamic" will automatically register themselves. Set "bSimulatePhysics" to true if you want the body to start in an active state.
@@ -59,10 +71,10 @@ public:
 	 * @param Mass	Manually override the weight (in kg) of the collision shape
 	 * @param bUsePhysicsMaterial	If true the friction and restitution params will be ignored and instead pulled from the physics material
 	 * @param bIsActiveRigidBody	If true this rigid body will be set to active. For performance reasons all registered bodies are sleep when created.
-	 * @param Id	Returns the id to use in collision lookups
+	 * @return	Returns the id to use in collision lookups
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Register Dynamic Rigid Body")
-	void RegisterDynamicRigidBody(AActor* Target, float Friction, float Restitution, float Mass, bool bUsePhysicsMaterial, bool bIsActiveRigidBody, UPARAM(DisplayName="RigidBodyId") int32&Id );
+	FUnrealShapeId RegisterDynamicRigidBody(AActor* Target, float Friction, float Restitution, float Mass, bool bUsePhysicsMaterial, bool bIsActiveRigidBody);
 	
 	/**
 	 * Creates a bullet physics compatible rigid body shape. Actors tagged "static" will automatically register themselves.
@@ -70,10 +82,10 @@ public:
 	 * @param Friction	Manually override the surface friction of the collision shape
 	 * @param Restitution	Manually override the bounciness of the collision shape
 	 * @param bUsePhysicsMaterial	If true the friction and restitution params will be ignored and instead pulled from the physics material
-	 * @param Id	Returns the id to use in collision lookups
+	 * @return Returns the id to use in collision lookups
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Register Static Rigid Body")
-	void RegisterStaticRigidBody(AActor* Target, float Friction, float Restitution, bool bUsePhysicsMaterial, UPARAM(DisplayName="RigidBodyId") int32&Id );
+	FUnrealShapeId RegisterStaticRigidBody(AActor* Target, float Friction, float Restitution, bool bUsePhysicsMaterial);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void SetPhysicsState(int ID, FTransform Transforms, FVector Velocity, FVector AngularVelocity,FVector& Force);
@@ -98,6 +110,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void UpdateActorVelocity(AActor* Target, const FVector LinearVelocity, const FVector AngularVelocity);
+	
+	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Get All Overlapping Actors", meta=(DevelopementOnly))
+	TArray<AActor*> GetOverlappingActors(AActor* Target) const;
 
 	
 #pragma region SCENE QUERY
@@ -149,6 +164,7 @@ private:
 	// Dynamic bodies
 	// Static colliders
 	TArray<btCollisionObject*> BtStaticObjects;
+	TArray<btGhostObject*> BtGhostObjects;
 	btCollisionObject* ProceduralBody;
 	// Re-usable collision shapes
 	TArray<btBoxShape*> BtBoxCollisionShapes;
@@ -198,25 +214,24 @@ public:
 
 	btCollisionShape* GetConvexHullCollisionShape(UBodySetup* BodySetup, int ConvexIndex, const FVector& Scale);
 
-	btRigidBody* AddRigidBody(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, 
+	btRigidBody* AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, 
 		const btVector3& Inertia, const float& Mass, const float& Friction, const float& Restitution);
 
-	btRigidBody* AddRigidBody(USkeletalMeshComponent* skel, const FTransform& localTransform, btCollisionShape* collisionShape, float Mass, float Friction, float Restitution);
+	btRigidBody* AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& localTransform, btCollisionShape* CollisionShape, float Mass, float Friction, float Restitution);
+	
+	btCollisionObject* AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, float Friction, float Restitution, AActor* Actor);
+	
+	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, AActor* Actor);
 	
 	
-	
-
 	btCollisionObject* GetStaticObject(int ID);
 	
 	
 private:
 	typedef const std::function<void(btCollisionShape* /*SingleShape*/, const FTransform& /*RelativeXform*/)>& PhysicsGeometryCallback;
 
-	void SetupStaticGeometryPhysics(TArray<AActor*> Actors, float Friction, float Restitution);
 
 	void ExtractPhysicsGeometry(const AActor* Actor, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
-
-	btCollisionObject* AddStaticCollision(btCollisionShape* Shape, const FTransform& Transform, float Friction, float Restitution, AActor* Actor);
 	
 	void ExtractComplexPhysicsGeometry(const FTransform& XformSoFar, UStaticMesh* Mesh, PhysicsGeometryCallback Callback, FUnrealShapeDescriptor& ShapeDescriptor);
 
@@ -234,7 +249,7 @@ private:
 	
 protected:
 	// Holds an array of collision object id's for a specific actor.
-	TMap<btCollisionObject*, FUnrealShapeDescriptor> GlobalShapeDescriptorDataCache; 
+	TMap<TWeakObjectPtr<AActor>, FUnrealShapeDescriptor> GlobalShapeDescriptorDataCache; 
 	
 	FUnrealShapeDescriptor GetShapeDescriptorData(const AActor* Actor) const;
 	

@@ -3,15 +3,45 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Object.h"
+#include "BulletMain.h"
 #include "BulletTypes.generated.h"
+
+
+USTRUCT(BlueprintType)
+struct FUnrealShapeId
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 BlockingShapeWorldArrayIndex = -1;
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 OverlappingShapeWorldArrayIndex = -1;
+};
 
 USTRUCT()
 struct FUnrealShape
 {
 	GENERATED_BODY()
 	
+	FUnrealShape()
+	{
+		
+	}
+	
+	FUnrealShape(UPrimitiveComponent* NewPrimitive)
+	{
+		bIsRootComponent = false;
+		Shape = NewPrimitive;
+		BlockingCollider = nullptr;
+		OverlappingCollider = nullptr;
+	}
+	
+	uint8 bIsRootComponent : 1 = false;
+	FUnrealShapeId Id;
 	TWeakObjectPtr<UPrimitiveComponent> Shape = nullptr;
+	btCollisionObject* BlockingCollider = nullptr;
+	btGhostObject* OverlappingCollider = nullptr;
 };
 
 
@@ -29,11 +59,71 @@ struct FUnrealShapeDescriptor
 	
 	TArray<FUnrealShape> Shapes;
 	
-	int WorldArrayIndex = -1;
 	
-	void Add(UPrimitiveComponent* C)
+	
+	void Add(UPrimitiveComponent* C, const bool& bIsRoot)
 	{
 		Shapes.Add(FUnrealShape(C));
+		Shapes.Last().bIsRootComponent = bIsRoot;
+	}
+	
+	UPrimitiveComponent* GetRootComponent() const
+	{
+		for (const FUnrealShape& Shape : Shapes)
+		{
+			if (!Shape.bIsRootComponent) continue;
+			
+			return Shape.Shape.Get();
+		}
+		
+		return nullptr;
+	}
+	
+	btCollisionObject* GetRootBlockingCollider() const
+	{
+		for (const FUnrealShape& Shape : Shapes)
+		{
+			if (!Shape.bIsRootComponent) continue;
+			
+			return Shape.BlockingCollider;
+		}
+		
+		return nullptr;
+	}
+	
+	btGhostObject* GetRootOverlappingCollider() const
+	{
+		for (const FUnrealShape& Shape : Shapes)
+		{
+			if (!Shape.bIsRootComponent) continue;
+			
+			return Shape.OverlappingCollider;
+		}
+		
+		return nullptr;
+	}
+	
+	TArray<btGhostObject*> GetAllOverlappingColliders() const
+	{
+		TArray<btGhostObject*> OverlappingColliders;
+		for (const FUnrealShape& Shape : Shapes)
+		{
+			OverlappingColliders.Add(Shape.OverlappingCollider);
+		}
+		
+		return OverlappingColliders;
+	}
+	
+	int GetRootColliderId() const
+	{
+		for (const FUnrealShape& Shape : Shapes)
+		{
+			if (!Shape.bIsRootComponent) continue;
+			
+			return Shape.Id.BlockingShapeWorldArrayIndex;
+		}
+		
+		return INDEX_NONE;
 	}
 	
 	UPrimitiveComponent* FindClosestPrimitive(const FVector& Location) const
