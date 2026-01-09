@@ -43,7 +43,8 @@ public class Bullet : ModuleRules
 				"Slate",
 				"SlateCore",
 				"BulletNativeTags",
-				"GameplayTags"
+				"GameplayTags",
+				"BulletPhysicsEngineLibrary",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

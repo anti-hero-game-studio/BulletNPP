@@ -13,10 +13,10 @@ struct FUnrealShapeId
 	GENERATED_BODY()
 	
 	UPROPERTY(BlueprintReadOnly)
-	int32 BlockingShapeWorldArrayIndex = -1;
+	int32 BlockingShapeWorldArrayIndex = INDEX_NONE;
 	
 	UPROPERTY(BlueprintReadOnly)
-	int32 OverlappingShapeWorldArrayIndex = -1;
+	int32 OverlappingShapeWorldArrayIndex = INDEX_NONE;
 };
 
 USTRUCT()

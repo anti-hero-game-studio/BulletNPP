@@ -5,7 +5,7 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Core/Libraries/BulletMathLibrary.h"
+#include "Core/Libraries/BulletLibrary.h"
 #include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 #include "DefaultMovementSet/InstantMovementEffects/BulletBasicInstantMovementEffects.h"
 #include "DefaultMovementSet/Modes/BulletFallingMode.h"

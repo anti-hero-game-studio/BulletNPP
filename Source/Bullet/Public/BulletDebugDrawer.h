@@ -4,7 +4,7 @@
 #include "CoreMinimal.h"
 #include "BulletMain.h"
 #include "DrawDebugHelpers.h"
-#include "Core/Libraries/BulletMathLibrary.h"
+#include "Core/Libraries/BulletLibrary.h"
 
 class BulletDebugDraw : public btIDebugDraw
 {

@@ -6,13 +6,15 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "CoreMinimal.h"
 #include "PhysicsEngine/BodySetup.h"
-#include "Core/Libraries/BulletMathLibrary.h"
+#include "Core/Libraries/BulletLibrary.h"
 #include "Core/Simulation/BulletMotionState.h"
 #include "BulletMain.h"
 #include "Components/ShapeComponent.h"
 #include <functional>
 
 #include "Core/CollisionFilters/ConvexResultCallback_IgnoreActors.h"
+#include "Core/CollisionFilters/OverlapFilterCallback.h"
+#include "Core/CollisionFilters/RaycastResultCallback_IgnoreActors.h"
 #include "Core/DataTypes/BulletTypes.h"
 #include "GameFramework/Actor.h"
 #include "Subsystems/SubsystemCollection.h"
@@ -20,6 +22,7 @@
 #include "BulletPhysicsWorldSubsystem.generated.h"
 
 
+class FUnrealCollisionDispatcher;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhysicsStep, const float&, DeltaTime);
 
 /**
@@ -31,6 +34,7 @@ class BULLET_API UBulletPhysicsWorldSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void OnWorldEndPlay(UWorld& InWorld) override;
 	
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 	
@@ -121,24 +125,46 @@ public:
 	FHitResult LineTraceSingleByChannel(const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId);
 	
 	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
+	UPARAM(DisplayName=Hits) TArray<FHitResult> LineTraceMultiByChannel(const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, 
+		const TArray<AActor*>& ActorsToIgnore, TArray<int32>& HitBodyIds);
+	
+	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
 	FHitResult SweepSphereSingleByChannel(const float Radius, const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId);
+	
+	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
+	UPARAM(DisplayName=Hits) TArray<FHitResult> SweepSphereMultiByChannel(const float Radius, const FVector Start, const FVector End, 
+		const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, TArray<int32>& HitBodyIds);
 	
 	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
 	FHitResult SweepCapsuleSingleByChannel(const float Radius, const float HalfHeight, const FVector Start, const FVector End, const FRotator Rotation, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId);
 	
 	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
+	UPARAM(DisplayName=Hits) TArray<FHitResult> SweepCapsuleMultiByChannel(const float Radius, const float HalfHeight, const FVector Start, const FVector End, 
+		const FRotator Rotation, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, TArray<int32>& HitBodyIds);
+	
+	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
 	FHitResult SweepBoxSingleByChannel(const FVector BoxExtents, const FVector Start, const FVector End, const FRotator Rotation, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId);
 	
+	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
+	UPARAM(DisplayName=Hits) TArray<FHitResult> SweepBoxMultiByChannel(const FVector BoxExtents, const FVector Start, const FVector End, 
+		const FRotator Rotation, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, TArray<int32>& HitBodyIds);
+	
 	int32 LineTraceSingle(const FVector& Start, const FVector& End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit);
+	TArray<int32> LineTraceMulti(const FVector& Start, const FVector& End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& OutHits);
 	
 	int32 SweepTraceSingle(const FCollisionShape& Shape, const FVector& Start, const FVector& End, const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit);
+	TArray<int32> SweepTraceMulti(const FCollisionShape& Shape, const FVector& Start, const FVector& End, const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel, const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& OutHits);
 
 	
 private:
 	void ConstructHitResult(const btCollisionWorld::ClosestRayResultCallback& Result, FHitResult& OutHit) const;
 	void ConstructHitResult(const btCollisionWorld::ClosestConvexResultCallback& Result, FHitResult& OutHit) const;
 	
-	int32 SweepTraceInternal(const btTransform& From, const btTransform& To, const btCollisionShape* Collider, btClosestNotMeConvexResultCallback& Result, FHitResult& OutHit);
+	void ConstructHitResult(const btAllNotMeRaycastResultCallback& Result, TArray<FHitResult>& OutHits) const;
+	void ConstructHitResult(const btAllNotMeConvexResultCallback& Result, TArray<FHitResult>& OutHits) const;
+	
+	int32 SweepTraceInternal(const btTransform& From, const btTransform& To, const btCollisionShape* Collider, btClosestNotMeConvexResultCallback& Result, FHitResult& OutHit) const;
+	TArray<int32> SweepTraceInternal(const btTransform& From, const btTransform& To, const btCollisionShape* Collider, btAllNotMeConvexResultCallback& Result, TArray<FHitResult>& OutHits) const;
 	
 	
 #pragma endregion 
@@ -152,8 +178,10 @@ private:
 	
 	
 private:
+	
+	FBulletOverlapFilterCallback OverlapFilterCallback;
 	btCollisionConfiguration* BtCollisionConfig;
-	btCollisionDispatcher* BtCollisionDispatcher;
+	FUnrealCollisionDispatcher* BtCollisionDispatcher;
 	btBroadphaseInterface* BtBroadphase;
 	btConstraintSolver* BtConstraintSolver;
 	btDiscreteDynamicsWorld* BtWorld;
@@ -163,8 +191,6 @@ private:
 	btIDebugDraw* BtDebugDraw;
 	// Dynamic bodies
 	// Static colliders
-	TArray<btCollisionObject*> BtStaticObjects;
-	TArray<btGhostObject*> BtGhostObjects;
 	btCollisionObject* ProceduralBody;
 	// Re-usable collision shapes
 	TArray<btBoxShape*> BtBoxCollisionShapes;
@@ -224,7 +250,7 @@ public:
 	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, AActor* Actor);
 	
 	
-	btCollisionObject* GetStaticObject(int ID);
+	btCollisionObject* GetStaticObject(int ID) const;
 	
 	
 private:
