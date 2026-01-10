@@ -93,6 +93,12 @@ void UBulletMoverNetworkPredictionLiaisonComponent::RestoreFrame(const FBulletMo
 	MoverComp->RestoreFrame(SyncState, AuxState, MoverTimeStep);
 }
 
+void UBulletMoverNetworkPredictionLiaisonComponent::RestorePhysicsFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
+{
+	// I believe this only needs to happen once on the first rollback frame.
+	//TODO:@GreggoryAddison::CodeCompletion || This should set the physics state of all mover bodies back to their authoritative state. Static colliders don't need to be reset
+}
+
 void UBulletMoverNetworkPredictionLiaisonComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
 {
 	check(MoverComp);

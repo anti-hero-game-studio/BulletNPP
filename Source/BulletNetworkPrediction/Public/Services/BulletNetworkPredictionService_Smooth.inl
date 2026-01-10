@@ -10,7 +10,7 @@
 
 namespace NetworkPredictionCVars
 {
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(DisableSmoothing, 0, "jnp.Smoothing.Disable", "Disables smoothing and just finalizes using the latest simulation state");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(DisableSmoothing, 0, "b.np.Smoothing.Disable", "Disables smoothing and just finalizes using the latest simulation state");
 }
 
 

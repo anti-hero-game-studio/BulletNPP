@@ -21,31 +21,33 @@ enum class EBulletNetworkPredictionService : uint32
 	// Services exclusive to fix tick mode
 	FixedServerRPC				= 1 << 0,
 	FixedRollback				= 1 << 1,
-	FixedExtrapolate			= 1 << 2,	// TODO
-	FixedInterpolate			= 1 << 3,
-	FixedInputLocal				= 1 << 4,
-	FixedInputRemote			= 1 << 5,
-	FixedTick					= 1 << 6,
-    FixedPhysics			    = 1 << 7,
-	FixedSmoothing				= 1 << 8,
-	FixedFinalize				= 1 << 9,
+	FixedPhysicsRollback		= 1 << 2,
+	FixedExtrapolate			= 1 << 3,	// TODO
+	FixedInterpolate			= 1 << 4,
+	FixedInputLocal				= 1 << 5,
+	FixedInputRemote			= 1 << 6,
+	FixedTick					= 1 << 7,
+    FixedPhysics			    = 1 << 8,
+	FixedSmoothing				= 1 << 9,
+	FixedFinalize				= 1 << 10,
 	MAX_FIXED					= FixedFinalize,
 
 	// Services exclusive to independent tick mode
-	ServerRPC               =  1 << 10,
-	IndependentRollback		= 1 << 11,
-	IndependentExtrapolate	= 1 << 12,	// TODO
-	IndependentInterpolate	= 1 << 13,
+	ServerRPC               =  1 << 11,
+	IndependentRollback		= 1 << 12,
+	IndependentPhysicsRollback		= 1 << 13,
+	IndependentExtrapolate	= 1 << 14,	// TODO
+	IndependentInterpolate	= 1 << 15,
 
-	IndependentLocalInput	= 1 << 14,
-	IndependentLocalTick	= 1 << 15,
-	IndependentLocalPhysics	= 1 << 16,
-	IndependentRemoteTick	= 1 << 17,
-	IndependentRemotePhysics	= 1 << 18,
+	IndependentLocalInput	= 1 << 16,
+	IndependentLocalTick	= 1 << 17,
+	IndependentLocalPhysics	= 1 << 18,
+	IndependentRemoteTick	= 1 << 19,
+	IndependentRemotePhysics	= 1 << 20,
 	
-	IndependentSmoothingFinalize	= 1 << 19,	// TODO
-	IndependentLocalFinalize		= 1 << 20,
-	IndependentRemoteFinalize		= 1 << 21,
+	IndependentSmoothingFinalize	= 1 << 21,	// TODO
+	IndependentLocalFinalize		= 1 << 22,
+	IndependentRemoteFinalize		= 1 << 23,
 	MAX_INDEPENDENT					= IndependentRemoteFinalize,
 
 	// Helper masks

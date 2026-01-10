@@ -31,10 +31,10 @@
 namespace NetworkPredictionCVars
 {
 	// These are pretty bare bones. Will move to Insights tracing in the future for interpolation debugging
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(PrintSyncInterpolation, 0, "jnp.Interpolation.PrintSync", "Print Sync State buffer during interpolation");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(DrawInterpolation, 0, "jnp.Interpolation.Draw", "Draw interpolation debug state in world");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(PrintSyncInterpolation, 0, "b.np.Interpolation.PrintSync", "Print Sync State buffer during interpolation");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(DrawInterpolation, 0, "b.np.Interpolation.Draw", "Draw interpolation debug state in world");
 
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(DisableInterpolation, 0, "jnp.Interpolation.Disable", "Disables smooth interpolation and just Finalizes the last received frame");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(DisableInterpolation, 0, "b.np.Interpolation.Disable", "Disables smooth interpolation and just Finalizes the last received frame");
 }
 
 

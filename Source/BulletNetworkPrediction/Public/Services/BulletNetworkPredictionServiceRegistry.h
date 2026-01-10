@@ -8,7 +8,8 @@
 #include "BulletNetworkPredictionService_Interpolate.inl"
 #include "BulletNetworkPredictionService_Input.inl"
 #include "BulletNetworkPredictionService_Finalize.inl"
-#include "BulletNetworkPredictionService_Physics.inl"
+#include "BulletNetworkPredictionService_PhysicsRollback.inl"
+#include "BulletNetworkPredictionService_PhysicsTick.inl"
 #include "BulletNetworkPredictionService_ServerRPC.inl"
 #include "BulletNetworkPredictionService_Smooth.inl"
 
@@ -174,6 +175,7 @@ public:
 	
 	JNP_DECLARE_SERVICE(FixedServerRPC,			    IBulletFixedServerRPCService);
 	JNP_DECLARE_SERVICE(FixedRollback,				IBulletFixedRollbackService);
+	JNP_DECLARE_SERVICE(FixedPhysicsRollback,				IBulletFixedPhysicsRollbackService);
 	JNP_DECLARE_SERVICE(FixedInterpolate,			IBulletFixedInterpolateService);
 	JNP_DECLARE_SERVICE(FixedInputLocal,				IBulletInputService);
 	JNP_DECLARE_SERVICE(FixedInputRemote,			IBulletInputService);
@@ -184,6 +186,7 @@ public:
 
 	JNP_DECLARE_SERVICE(ServerRPC,			        IBulletServerRPCService);
 	JNP_DECLARE_SERVICE(IndependentRollback,			IBulletIndependentRollbackService);
+	JNP_DECLARE_SERVICE(IndependentPhysicsRollback,			IBulletIndependentPhysicsRollbackService);
 	JNP_DECLARE_SERVICE(IndependentInterpolate,		IBulletIndependentInterpolateService);
 	JNP_DECLARE_SERVICE(IndependentLocalInput,		IBulletInputService);
 	JNP_DECLARE_SERVICE(IndependentLocalTick,		IBulletLocalTickService);
@@ -205,6 +208,7 @@ private:
 		{
 			JNP_DEFINE_SERVICE_CALL(FixedServerRPC,			        TBulletFixedServerRPCService);
 			JNP_DEFINE_SERVICE_CALL(FixedRollback,				TBulletFixedRollbackService);
+			JNP_DEFINE_SERVICE_CALL(FixedPhysicsRollback,				TBulletFixedPhysicsRollbackService);
 			JNP_DEFINE_SERVICE_CALL(FixedInterpolate,			TBulletFixedInterpolateService);
 			JNP_DEFINE_SERVICE_CALL(FixedInputLocal,				TBulletLocalInputService);
 			JNP_DEFINE_SERVICE_CALL(FixedInputRemote,			TBulletRemoteInputService);
@@ -218,6 +222,7 @@ private:
 
 			JNP_DEFINE_SERVICE_CALL(ServerRPC,			        TBulletServerRPCService);
 			JNP_DEFINE_SERVICE_CALL(IndependentRollback,			TBulletIndependentRollbackService);
+			JNP_DEFINE_SERVICE_CALL(IndependentPhysicsRollback,			TBulletIndependentPhysicsRollbackService);
 			JNP_DEFINE_SERVICE_CALL(IndependentInterpolate,		TBulletIndependentInterpolateService);
 			JNP_DEFINE_SERVICE_CALL(IndependentLocalInput,		TBulletLocalInputService);
 			JNP_DEFINE_SERVICE_CALL(IndependentLocalTick,		TBulletLocalTickService);

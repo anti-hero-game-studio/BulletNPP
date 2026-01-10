@@ -11,13 +11,13 @@
 namespace NetworkPredictionCVars
 {
 	// *** Modified By Kai Time Dilation Support *** //
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(DisableTimeDilation, 0, "jnp.TimeDilation.Disable", "Time Dilation Effects Autonomous Proxy Client, Suggested by Server to slow down or speed us To Make Input Buffer healthy (Healthy input Buffer Always has Input And Is buffering as low as possible)");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationAmount, 0.01f, "jnp.TimeDilation.Amount", "Server-side CVar, Disable TimeDilation by setting to 0 | Default: 0.01 | Value is in percent where 0.01 = 1% dilation. Example: 1.0/0.01 = 100, meaning that over the time it usually takes to tick 100 Fixed steps we will tick 99 or 101 depending on if we dilate up or down.");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(TimeDilationEscalation, 1, "jnp.TimeDilation.Escalation", "Server-side CVar, Dilate the time more depending on how many ticks we need to adjust. When set to false we use the set TimeDilationAmount and wait the amount of time it takes to perform correct the offset. When set to true we multiply the TimeDilationAmount with the buffer offset count which will correct the offset in one TimeDilationAmount cycle.");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationEscalationDecay, 0.05f, "jnp.TimeDilation.EscalationDecay", "Value is a multiplier, Default: 0.05. For each escalated TimeDilation amount, also decay by this much. Disable by setting to 0");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationEscalationDecayMax, 0.5f, "jnp.TimeDilation.EscalationDecayMax", "Value is a multiplier, Default: 0.5. The max decay value for escalated time dilation. Lower value means higher decay.");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationMax, 1.1f, "jnp.TimeDilation.Max", "Max value of the time dilation multiplier.");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationMin, 0.9f, "jnp.TimeDilation.Min", "Min value of the time dilation multiplier.");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(DisableTimeDilation, 0, "b.np.TimeDilation.Disable", "Time Dilation Effects Autonomous Proxy Client, Suggested by Server to slow down or speed us To Make Input Buffer healthy (Healthy input Buffer Always has Input And Is buffering as low as possible)");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationAmount, 0.01f, "b.np.TimeDilation.Amount", "Server-side CVar, Disable TimeDilation by setting to 0 | Default: 0.01 | Value is in percent where 0.01 = 1% dilation. Example: 1.0/0.01 = 100, meaning that over the time it usually takes to tick 100 Fixed steps we will tick 99 or 101 depending on if we dilate up or down.");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(TimeDilationEscalation, 1, "b.np.TimeDilation.Escalation", "Server-side CVar, Dilate the time more depending on how many ticks we need to adjust. When set to false we use the set TimeDilationAmount and wait the amount of time it takes to perform correct the offset. When set to true we multiply the TimeDilationAmount with the buffer offset count which will correct the offset in one TimeDilationAmount cycle.");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationEscalationDecay, 0.05f, "b.np.TimeDilation.EscalationDecay", "Value is a multiplier, Default: 0.05. For each escalated TimeDilation amount, also decay by this much. Disable by setting to 0");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationEscalationDecayMax, 0.5f, "b.np.TimeDilation.EscalationDecayMax", "Value is a multiplier, Default: 0.5. The max decay value for escalated time dilation. Lower value means higher decay.");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationMax, 1.1f, "b.np.TimeDilation.Max", "Max value of the time dilation multiplier.");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_FLOAT(TimeDilationMin, 0.9f, "b.np.TimeDilation.Min", "Min value of the time dilation multiplier.");
 	// *** END Modified By Kai Smoothing Support *** //
 }
 // InputService's job is to write InputCmds to a subscribed instance's FrameBuffer[PendingFrame].InputCmd.

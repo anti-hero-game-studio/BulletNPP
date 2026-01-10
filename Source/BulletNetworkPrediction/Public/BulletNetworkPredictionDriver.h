@@ -509,6 +509,11 @@ struct FBulletNetworkPredictionDriverBase
 	//	
 	//	
 	// -----------------------------------------------------------------------------------------------------------------------------------
+	
+	static void RestorePhysicsFrame(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
+	{
+		FBulletNetworkPredictionDriver<ModelDef>::CallRestorePhysicsFrameMemberFunc(Driver, SyncState, AuxState);
+	}
 
 	static void RestoreFrame(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
 	{
@@ -534,6 +539,30 @@ struct FBulletNetworkPredictionDriverBase
 	static typename TEnableIf<!HasFunc>::Type CallRestoreFrameMemberFunc(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
 	{
 		// This isn't a problem but we should probably do something if there is no RestoreFrame function:
+		//	-Warn/complain (but user may not care in all cases. So may need a trait to opt out?)
+		//	-Call FinalizeFrame: less boiler plate to add (but causes confusion and could lead to slow FinalizeFrames being called too often)
+		//	-Force both Restore/Finalize Frame to be implemented but always implicitly call RestoreFrame before FinalizeFrame? (nah)
+	}
+	
+	struct CRestorePhysicsFrameMemberFuncable
+	{
+		template <typename InDriverType, typename...>
+		auto Requires(InDriverType* Driver, const SyncType* S, const AuxType* A) -> decltype(Driver->RestorePhysicsFrame(S, A));
+	};
+	
+	static constexpr bool HasRestorePhysicsFrame = TModels_V<CRestorePhysicsFrameMemberFuncable, DriverType, SyncType, AuxType>;
+	
+	template<bool HasFunc=HasRestorePhysicsFrame>
+	static typename TEnableIf<HasFunc>::Type CallRestorePhysicsFrameMemberFunc(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
+	{
+		jnpCheckSlow(Driver);
+		Driver->RestorePhysicsFrame(SyncState, AuxState);
+	}
+	
+	template<bool HasFunc=HasRestorePhysicsFrame>
+	static typename TEnableIf<!HasFunc>::Type CallRestorePhysicsFrameMemberFunc(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
+	{
+		// This isn't a problem but we should probably do something if there is no RestorePhysicsFrame function:
 		//	-Warn/complain (but user may not care in all cases. So may need a trait to opt out?)
 		//	-Call FinalizeFrame: less boiler plate to add (but causes confusion and could lead to slow FinalizeFrames being called too often)
 		//	-Force both Restore/Finalize Frame to be implemented but always implicitly call RestoreFrame before FinalizeFrame? (nah)

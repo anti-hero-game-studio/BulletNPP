@@ -36,6 +36,9 @@ public:
 
 	// Restore a previous frame prior to resimulating. Called by Network Prediction system.
 	UE_API void RestoreFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState);
+	
+	// Restore a previous frame prior to resimulating. Called by Network Prediction system.
+	UE_API void RestorePhysicsFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState);
 
 	// Take output for simulation. Called by Network Prediction system.
 	UE_API void FinalizeFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState);

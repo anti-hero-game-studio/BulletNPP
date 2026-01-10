@@ -94,7 +94,7 @@ namespace BulletNetworkPredictionDebug
 
 // -------------------------------------------------------------------------------------------------------
 
-FAutoConsoleCommandWithWorldAndArgs DrawServerPrimitivesCmd(TEXT("jnp.Debug.DrawServerPrimitives"), TEXT(""),
+FAutoConsoleCommandWithWorldAndArgs DrawServerPrimitivesCmd(TEXT("b.np.Debug.DrawServerPrimitives"), TEXT(""),
 	FConsoleCommandWithWorldAndArgsDelegate::CreateLambda([](const TArray< FString >& Args, UWorld* World) 
 {
 	static FDelegateHandle BoundHandle;

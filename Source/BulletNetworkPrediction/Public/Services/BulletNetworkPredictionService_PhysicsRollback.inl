@@ -6,22 +6,22 @@
 
 #include "BulletNetworkPredictionCVars.h"
 #include "BulletNetworkPredictionLog.h"
+#include "BulletNetworkPredictionService_PhysicsTick.inl"
 #include "Services/BulletNetworkPredictionInstanceData.h"
-#include "Services/BulletNetworkPredictionService_Ticking.inl"
 
 namespace NetworkPredictionCVars
 {
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ForceReconcile,			0, "b.np.ForceReconcile",				"Force a single reconcile back to the last server-acknoledged frame. When used with np.ForceReconcileExtraFrames, additional frames can be rolled back. No effect on server. Resets after use.");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ForceReconcileExtraFrames, 0, "b.np.ForceReconcileExtraFrames",	"Roll back this extra number of frames during the next targeted reconcile. Must be positive and reasonable given the buffer sizes.");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(SkipReconcile,				0, "b.np.SkipReconcile",				"Skip all reconciles");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(PrintReconciles,			0, "b.np.PrintReconciles",			"Print reconciles to log");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ForcePhysicsReconcile,			0, "b.np.ForcePhysicsReconcile",				"Force a single reconcile back to the last server-acknoledged frame. When used with np.ForceReconcileExtraFrames, additional frames can be rolled back. No effect on server. Resets after use.");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ForcePhysicsReconcileExtraFrames, 0, "b.np.ForcePhysicsReconcileExtraFrames",	"Roll back this extra number of frames during the next targeted reconcile. Must be positive and reasonable given the buffer sizes.");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(SkipPhysicsReconcile,				0, "b.np.SkipPhysicsReconcile",				"Skip all reconciles");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(PrintPhysicsReconciles,			0, "b.np.PrintPhysicsReconciles",			"Print reconciles to log");
 }
 
-class IBulletFixedRollbackService
+class IBulletFixedPhysicsRollbackService
 {
 public:
 
-	virtual ~IBulletFixedRollbackService() = default;
+	virtual ~IBulletFixedPhysicsRollbackService() = default;
 	virtual int32 QueryRollback(FBulletFixedTickState* TickState) = 0;
 
 	virtual void PreStepRollback(const FBulletNetSimTimeStep& Step, const FBulletServiceTimeStep& ServiceStep, const int32 Offset, const bool bFirstStepInResim) = 0;
@@ -29,7 +29,7 @@ public:
 };
 
 template<typename InModelDef>
-class TBulletFixedRollbackService : public IBulletFixedRollbackService
+class TBulletFixedPhysicsRollbackService : public IBulletFixedPhysicsRollbackService
 {
 public:
 
@@ -39,7 +39,7 @@ public:
 
 	static constexpr bool bNeedsTickService = FBulletNetworkPredictionDriver<ModelDef>::HasSimulation();
 
-	TBulletFixedRollbackService(TBulletModelDataStore<ModelDef>* InDataStore)
+	TBulletFixedPhysicsRollbackService(TBulletModelDataStore<ModelDef>* InDataStore)
 		: DataStore(InDataStore), InternalTickService(InDataStore) { }
 
 	void RegisterInstance(FBulletNetworkPredictionID ID)
@@ -157,8 +157,8 @@ public:
 			// Everyone we are managing needs to rollback to this frame, even if they don't have a correction 
 			// (this frame or this rollback - they will need to restore their collision data since we are about to retick everyone in step)
 
-			QUICK_SCOPE_CYCLE_COUNTER(JNP_Rollback_RestoreFrame);
-			TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::RestoreFrame);
+			QUICK_SCOPE_CYCLE_COUNTER(JNP_Rollback_RestorePhysicsFrame);
+			TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::RestorePhysicsFrame);
 
 			for (TConstSetBitIterator<> BitIt(InstanceBitArray); BitIt; ++BitIt)
 			{
@@ -167,7 +167,7 @@ public:
 				TBulletInstanceFrameState<ModelDef>& Frames = DataStore->Frames.GetByIndexChecked(ClientRecvData.FramesIdx);
 				typename TBulletInstanceFrameState<ModelDef>::FFrame& LocalFrameData = Frames.Buffer[ServiceStep.LocalInputFrame];
 
-				FBulletNetworkPredictionDriver<ModelDef>::RestoreFrame(InstanceData.Info.Driver, LocalFrameData.SyncState.Get(), LocalFrameData.AuxState.Get());
+				FBulletNetworkPredictionDriver<ModelDef>::RestorePhysicsFrame(InstanceData.Info.Driver, LocalFrameData.SyncState.Get(), LocalFrameData.AuxState.Get());
 			}
 		}
 		else
@@ -218,7 +218,7 @@ private:
 				if (FlushCorrection)
 				{
 					// Push to component/collision scene immediately (we aren't garunteed to tick next, so get our collision right)
-					FBulletNetworkPredictionDriver<ModelDef>::RestoreFrame(InstanceData.Info.Driver, LocalFrameData.SyncState.Get(), LocalFrameData.AuxState.Get());
+					FBulletNetworkPredictionDriver<ModelDef>::RestorePhysicsFrame(InstanceData.Info.Driver, LocalFrameData.SyncState.Get(), LocalFrameData.AuxState.Get());
 				}
 			}
 		}
@@ -229,21 +229,21 @@ private:
 
 	TBulletModelDataStore<ModelDef>* DataStore;
 
-	TBulletLocalTickService<ModelDef>	InternalTickService;
+	TBulletLocalPhysicsService<ModelDef>	InternalTickService;
 };
 
 // ------------------------------------------------------------------------------------------------
 
-class IBulletIndependentRollbackService
+class IBulletIndependentPhysicsRollbackService
 {
 public:
 
-	virtual ~IBulletIndependentRollbackService() = default;
+	virtual ~IBulletIndependentPhysicsRollbackService() = default;
 	virtual void Reconcile(const FBulletVariableTickState* TickState) = 0;
 };
 
 template<typename InModelDef>
-class TBulletIndependentRollbackService : public IBulletIndependentRollbackService
+class TBulletIndependentPhysicsRollbackService : public IBulletIndependentPhysicsRollbackService
 {
 public:
 
@@ -251,7 +251,7 @@ public:
 	using StateTypes = typename ModelDef::StateTypes;
 	using SyncAuxType = TBulletSyncAuxPair<StateTypes>;
 
-	TBulletIndependentRollbackService(TBulletModelDataStore<ModelDef>* InDataStore)
+	TBulletIndependentPhysicsRollbackService(TBulletModelDataStore<ModelDef>* InDataStore)
 		: DataStore(InDataStore) { }
 
 	void RegisterInstance(FBulletNetworkPredictionID ID)
@@ -302,7 +302,7 @@ public:
 
 				TInstanceData<ModelDef>& Instance = DataStore->Instances.GetByIndexChecked(ClientRecvData.InstanceIdx);
 
-				FBulletNetworkPredictionDriver<ModelDef>::RestoreFrame(Instance.Info.Driver, LocalFrameData.SyncState.Get(), LocalFrameData.AuxState.Get());
+				FBulletNetworkPredictionDriver<ModelDef>::RestorePhysicsFrame(Instance.Info.Driver, LocalFrameData.SyncState.Get(), LocalFrameData.AuxState.Get());
 
 				// Do rollback
 				const int32 EndFrame = TickState->PendingFrame;

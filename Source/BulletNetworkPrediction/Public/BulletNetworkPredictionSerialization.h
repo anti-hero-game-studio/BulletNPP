@@ -25,8 +25,8 @@
 
 namespace NetworkPredictionCVars
 {
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ForceSendDefaultInputCommands, 0, "jnp.ForceSendDefaultInputCommands", "While enabled on a client, it will send default input cmds to the server, rather than the locally-produced input. This is a way to introduce de-syncs/rollbacks for debugging.");
-	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ToggleDeltaSerialize, 1, "jnp.ToggleDeltaSerialize", "Toggle Delta Serialization , 1 : Enabled , 0 : Disabled");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ForceSendDefaultInputCommands, 0, "b.np.ForceSendDefaultInputCommands", "While enabled on a client, it will send default input cmds to the server, rather than the locally-produced input. This is a way to introduce de-syncs/rollbacks for debugging.");
+	BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ToggleDeltaSerialize, 1, "b.np.ToggleDeltaSerialize", "Toggle Delta Serialization , 1 : Enabled , 0 : Disabled");
 }
 
 struct FBulletNetworkPredictionSerialization

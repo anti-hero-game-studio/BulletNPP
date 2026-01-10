@@ -15,7 +15,7 @@
 #include "Services/BulletNetworkPredictionService_ServerRPC.inl"
 
 
-BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ToggleLagCompensationDebug, 0, "jnp.DrawLagCompensationDebug", "Toggle Lag Compensation Debug , 1 : Enabled , 0 : Disabled");
+BULLETNETSIM_DEVCVAR_SHIPCONST_INT(ToggleLagCompensationDebug, 0, "b.np.DrawLagCompensationDebug", "Toggle Lag Compensation Debug , 1 : Enabled , 0 : Disabled");
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletNetworkPredictionWorldManager)
 
@@ -319,10 +319,34 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 				{
 					Ptr->PreStepRollback(Step, ServiceStep, FixedTickState.Offset, bFirstStep);
 				}
+				for (TUniquePtr<IBulletFixedPhysicsRollbackService>& Ptr : Services.FixedPhysicsRollback.Array)
+				{
+					Ptr->PreStepRollback(Step, ServiceStep, FixedTickState.Offset, bFirstStep);
+				}
 				// Run Sim ticks
 				for (TUniquePtr<IBulletFixedRollbackService>& Ptr : Services.FixedRollback.Array)
 				{
 					Ptr->StepRollback(Step, ServiceStep);
+				}
+				
+				
+				{
+					TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::BulletPhysicsTick_Rollback);
+					if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+					{
+						const double FixedTimeStep = Step.StepMS * 0.001;
+						Subsystem->StepPhysics(FixedTimeStep, 1, FixedTimeStep);
+					}
+				
+				}
+				
+				// TODO:@GreggoryAddison::CodeModularity || This will need to be wrapped in a boolean in order to support a Kinematic body using bullet.
+				{
+					TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::PostBulletPhysicsTick_Rollback);
+					for (TUniquePtr<IBulletLocalPhysicsService>& Ptr : Services.FixedPhysics.Array)
+					{
+						Ptr->Tick(Step, ServiceStep);
+					}
 				}
 				
 				bFirstStep = false;
@@ -451,7 +475,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 				
 			}
 			
-			
+			// TODO:@GreggoryAddison::CodeModularity || This will need to be wrapped in a boolean in order to support a Kinematic body using bullet.
 			{
 				TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::PostBulletPhysicsTick);
 				for (TUniquePtr<IBulletLocalPhysicsService>& Ptr : Services.FixedPhysics.Array)
