@@ -185,11 +185,9 @@ protected:
 	
 	virtual void InitializeBulletCharacter();
 	virtual void InitializeWithBullet() override;
-	virtual void CreateShapesForRootComponent() override;
 	
 public:
 	
-	virtual void SendFinalVelocityToBullet(const FBulletMoverTimeStep& InTimeStep, const FVector& LinearVelocity, const FVector& AngularVelocity) override;
 	
 };
 

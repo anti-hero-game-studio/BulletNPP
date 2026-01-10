@@ -12,6 +12,7 @@
 #include "Components/ShapeComponent.h"
 #include <functional>
 
+#include "Core/CollisionFilters/BulletOverlappingPairCache.h"
 #include "Core/CollisionFilters/ConvexResultCallback_IgnoreActors.h"
 #include "Core/CollisionFilters/OverlapFilterCallback.h"
 #include "Core/CollisionFilters/RaycastResultCallback_IgnoreActors.h"
@@ -70,26 +71,11 @@ public:
 	/**
 	 * Creates a bullet physics compatible rigid body shape. Actors tagged "dynamic" will automatically register themselves. Set "bSimulatePhysics" to true if you want the body to start in an active state.
 	 * @param Target	The actor with primitive components that will be converted to rigid shapes. ACTOR SCALE MUST BE {1,1,1}
-	 * @param Friction	Manually override the surface friction of the collision shape
-	 * @param Restitution	Manually override the bounciness of the collision shape
-	 * @param Mass	Manually override the weight (in kg) of the collision shape
-	 * @param bUsePhysicsMaterial	If true the friction and restitution params will be ignored and instead pulled from the physics material
-	 * @param bIsActiveRigidBody	If true this rigid body will be set to active. For performance reasons all registered bodies are sleep when created.
+	 * @param Options Configurable struct that determines the final output of the Bullet Physics body
 	 * @return	Returns the id to use in collision lookups
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Register Dynamic Rigid Body")
-	FUnrealShapeId RegisterDynamicRigidBody(AActor* Target, float Friction, float Restitution, float Mass, bool bUsePhysicsMaterial, bool bIsActiveRigidBody);
-	
-	/**
-	 * Creates a bullet physics compatible rigid body shape. Actors tagged "static" will automatically register themselves.
-	 * @param Target	The actor with primitive components that will be converted to rigid shapes. ACTOR SCALE MUST BE {1,1,1}
-	 * @param Friction	Manually override the surface friction of the collision shape
-	 * @param Restitution	Manually override the bounciness of the collision shape
-	 * @param bUsePhysicsMaterial	If true the friction and restitution params will be ignored and instead pulled from the physics material
-	 * @return Returns the id to use in collision lookups
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Register Static Rigid Body")
-	FUnrealShapeId RegisterStaticRigidBody(AActor* Target, float Friction, float Restitution, bool bUsePhysicsMaterial);
+	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Register Dynamic Rigid Body", meta=(AutoCreateRefTerm = "Options"))
+	FUnrealShapeId RegisterBulletRigidBody(AActor* Target, const FBulletShapeOptions& Options);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void SetPhysicsState(int ID, FTransform Transforms, FVector Velocity, FVector AngularVelocity,FVector& Force);
@@ -180,6 +166,7 @@ private:
 private:
 	
 	FBulletOverlapFilterCallback OverlapFilterCallback;
+	FBulletOverlappingPairCache* OverlappingPairCache;
 	btCollisionConfiguration* BtCollisionConfig;
 	FUnrealCollisionDispatcher* BtCollisionDispatcher;
 	btBroadphaseInterface* BtBroadphase;
@@ -240,8 +227,7 @@ public:
 
 	btCollisionShape* GetConvexHullCollisionShape(UBodySetup* BodySetup, int ConvexIndex, const FVector& Scale);
 
-	btRigidBody* AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, 
-		const btVector3& Inertia, const float& Mass, const float& Friction, const float& Restitution);
+	btRigidBody* AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, const FBulletShapeOptions& Options);
 
 	btRigidBody* AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& localTransform, btCollisionShape* CollisionShape, float Mass, float Friction, float Restitution);
 	
@@ -256,6 +242,7 @@ public:
 private:
 	typedef const std::function<void(btCollisionShape* /*SingleShape*/, const FTransform& /*RelativeXform*/)>& PhysicsGeometryCallback;
 
+	bool MyContactAddedCallback(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1);
 
 	void ExtractPhysicsGeometry(const AActor* Actor, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
 	

@@ -151,3 +151,63 @@ struct FUnrealShapeDescriptor
 	}
 	
 };
+
+
+UENUM(BlueprintType)
+enum class EBulletShapeType : uint8
+{
+	STATIC = 0,
+	DYNAMIC = 1,
+	KINEMATIC = 2,
+};
+
+
+USTRUCT(BlueprintType)
+struct FBulletShapeOptions
+{
+	GENERATED_BODY()
+	
+	FBulletShapeOptions()
+	{
+		
+	}
+	
+	FBulletShapeOptions(const EBulletShapeType& InShapeType)
+		:ShapeType(InShapeType)
+	{
+		switch (InShapeType) 
+		{
+		case EBulletShapeType::STATIC:
+			Mass = 0.f;
+			break;
+		case EBulletShapeType::DYNAMIC:
+			break;
+		case EBulletShapeType::KINEMATIC:
+			Mass = 0.f;
+			break;
+		}
+	}	
+	
+	UPROPERTY(BlueprintReadWrite)
+	EBulletShapeType ShapeType = EBulletShapeType::STATIC;
+	
+	UPROPERTY(BlueprintReadWrite)
+	bool bAutomaticallyActivate = false;
+	
+	UPROPERTY(BlueprintReadWrite)
+	bool bUsePhysicsMaterial = false;
+	
+	UPROPERTY(BlueprintReadWrite)
+	bool bKeepShapeVertical = false;
+	
+	UPROPERTY(BlueprintReadWrite)
+	float Restitution = 1.f;
+	
+	UPROPERTY(BlueprintReadWrite)
+	float Friction = 1.f;
+	
+	UPROPERTY(BlueprintReadWrite)
+	float Mass = 10.f;
+	
+	
+};

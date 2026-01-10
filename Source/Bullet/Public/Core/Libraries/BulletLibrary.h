@@ -142,13 +142,13 @@ public:
 	
 	static bool IsBlockingCollisionAllowed(const btCollisionObject* A, const btCollisionObject* B)
 	{
-		if (!A || !B) return true;
+		if (!A || !B) return false;
 
 		// Prefer storing USceneComponent* directly, or a stable handle.
 		const USceneComponent* CompA = static_cast<const USceneComponent*>(A->getUserPointer());
 		const USceneComponent* CompB = static_cast<const USceneComponent*>(B->getUserPointer());
 
-		if (!CompA || !CompB) return true;
+		if (!CompA || !CompB) return false;
 
 		const ECollisionResponse Response = CompA->GetCollisionResponseToComponent(const_cast<USceneComponent*>(CompB));
 		// Your policy (example)

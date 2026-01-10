@@ -322,7 +322,13 @@ void UCharacterBulletMoverComponent::InitializeBulletCharacter()
 	
 	if (UBulletPhysicsWorldSubsystem* B = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
-		B->RegisterDynamicRigidBody(GetOwner(), 0.5, 1, 1.f, false, true);
+		// TODO:@GreggoryAddison::CodeCompletion || Add support for kinematic mover
+		FBulletShapeOptions ShapeOptions(EBulletShapeType::DYNAMIC);
+		ShapeOptions.Friction = 0.5f,
+		ShapeOptions.Restitution = 1.f,
+		ShapeOptions.bAutomaticallyActivate = true;
+		ShapeOptions.bKeepShapeVertical = true;
+		B->RegisterBulletRigidBody(GetOwner(), ShapeOptions);
 	}
 	
 }
@@ -331,25 +337,6 @@ void UCharacterBulletMoverComponent::InitializeWithBullet()
 {
 	Super::InitializeWithBullet();
 	InitializeBulletCharacter();
-}
-
-void UCharacterBulletMoverComponent::CreateShapesForRootComponent()
-{
-	Super::CreateShapesForRootComponent();
-
-	if (bNeedsBulletRigidBodyShape)
-	{
-		
-	}
-}
-
-void UCharacterBulletMoverComponent::SendFinalVelocityToBullet(const FBulletMoverTimeStep& InTimeStep, const FVector& LinearVelocity,
-	const FVector& AngularVelocity)
-{
-	float DeltaTime = InTimeStep.StepMs * 0.001;
-	UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>();
-	if (!Subsystem) return;
-	
 }
 
 #pragma endregion
