@@ -3,18 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Core/DataTypes/BulletTypes.h"
-#include "GameFramework/Actor.h"
-#include "BulletPhysicsActor.generated.h"
+#include "Engine/StaticMeshActor.h"
+#include "BulletStaticMeshActor.generated.h"
 
 UCLASS()
-class BULLET_API ABulletPhysicsActor : public AActor
+class BULLET_API ABulletStaticMeshActor : public AStaticMeshActor
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this actor's properties
-	ABulletPhysicsActor();
+	ABulletStaticMeshActor(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	// Called when the game starts or when spawned
@@ -23,5 +22,4 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	
 };

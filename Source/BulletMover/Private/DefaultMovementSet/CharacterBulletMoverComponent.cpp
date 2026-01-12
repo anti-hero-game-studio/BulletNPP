@@ -323,12 +323,7 @@ void UCharacterBulletMoverComponent::InitializeBulletCharacter()
 	if (UBulletPhysicsWorldSubsystem* B = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
 		// TODO:@GreggoryAddison::CodeCompletion || Add support for kinematic mover
-		FBulletShapeOptions ShapeOptions(EBulletShapeType::DYNAMIC);
-		ShapeOptions.Friction = 0.5f,
-		ShapeOptions.Restitution = 1.f,
-		ShapeOptions.bAutomaticallyActivate = true;
-		ShapeOptions.bKeepShapeVertical = true;
-		B->RegisterBulletRigidBody(GetOwner(), ShapeOptions);
+		B->RegisterBulletRigidBody(GetOwner());
 	}
 	
 }

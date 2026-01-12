@@ -137,7 +137,7 @@ public:
 		if (!CompB) return true;
 
 		// Your policy (example)
-		return CompB->GetCollisionResponseToChannel(Channel) != ECR_Block;
+		return CompB->GetCollisionResponseToChannel(Channel) == ECR_Block;
 	}
 	
 	static bool IsBlockingCollisionAllowed(const btCollisionObject* A, const btCollisionObject* B)

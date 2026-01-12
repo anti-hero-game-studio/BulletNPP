@@ -19,11 +19,25 @@ class BULLET_API UBulletStaticMeshComponent : public UStaticMeshComponent, publi
 	
 	
 public:
+
+	UBulletStaticMeshComponent(const FObjectInitializer& ObjectInitializer);
+	virtual void InitializeComponent() override;
+	
+	virtual void SetSimulatePhysics(bool bSimulate) override;
+	virtual bool IsSimulatingPhysics(FName BoneName = NAME_None) const override;
+	virtual bool IsAnySimulatingPhysics() const override;
+	virtual bool IsAnyRigidBodyAwake() override;
+	
+	virtual ECollisionEnabled::Type GetCollisionEnabled() const override;
+	virtual ECollisionResponse GetCollisionResponseToChannel(ECollisionChannel Channel) const override;
+	virtual const FCollisionResponseContainer& GetCollisionResponseToChannels() const override;
+	
+	
 	virtual FBulletShapeOptions& GetShapeOptions() override {return ShapeOptions;};
 	virtual const FBulletShapeOptions& GetShapeOptions() const override { return ShapeOptions; };
 	
 protected:
 	
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Shape Options")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Shape Options")
 	FBulletShapeOptions ShapeOptions;
 };

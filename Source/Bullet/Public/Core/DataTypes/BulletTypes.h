@@ -42,6 +42,7 @@ struct FUnrealShape
 	TWeakObjectPtr<UPrimitiveComponent> Shape = nullptr;
 	btCollisionObject* BlockingCollider = nullptr;
 	btGhostObject* OverlappingCollider = nullptr;
+	FCollisionResponseContainer CollisionResponses;
 };
 
 
@@ -58,6 +59,9 @@ struct FUnrealShapeDescriptor
 	TWeakObjectPtr<AActor> ShapeOwner = nullptr;
 	
 	TArray<FUnrealShape> Shapes;
+	
+	FCollisionResponseContainer CollisionResponseContainer = FCollisionResponseContainer();
+	
 	
 	
 	
@@ -150,6 +154,30 @@ struct FUnrealShapeDescriptor
 		return NearestComponent;
 	}
 	
+	int32 Find(const UPrimitiveComponent* T, const bool bFindBlockingShape = true) const
+	{
+		for (const FUnrealShape& S : Shapes)
+		{
+			if (!S.Shape.Get()) continue;
+			if (S.Shape.Get() != T) continue;
+			return bFindBlockingShape ? S.Id.BlockingShapeWorldArrayIndex : S.Id.OverlappingShapeWorldArrayIndex;
+		}
+		
+		return INDEX_NONE;
+	}
+	
+	const FCollisionResponseContainer& GetCollisionResponseContainer(const UPrimitiveComponent* Target) const
+	{
+		for (const FUnrealShape& S : Shapes)
+		{
+			if (!S.Shape.Get()) continue;
+			if (S.Shape.Get() != Target) continue;
+			return S.CollisionResponses;
+		}
+		
+		return CollisionResponseContainer;
+	}
+	
 };
 
 
@@ -188,25 +216,37 @@ struct FBulletShapeOptions
 		}
 	}	
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	EBulletShapeType ShapeType = EBulletShapeType::STATIC;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bAutomaticallyActivate = false;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bUsePhysicsMaterial = false;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bGenerateOverlapEventsInBullet = true;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bGenerateOverlapEventsInChaos = false;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bGenerateCollisionEventsInBullet = true;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bGenerateCollisionEventsInChaos = false;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bKeepShapeVertical = false;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float Restitution = 1.f;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float Friction = 1.f;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float Mass = 10.f;
 	
 	

@@ -33,6 +33,11 @@
 			"Name": "BulletNetworkPrediction",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "BulletEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
 		}
 	],
 	"Plugins": [
@@ -53,5 +58,4 @@
 			"Enabled": true
 		}
 	]
-
 }

@@ -71,11 +71,10 @@ public:
 	/**
 	 * Creates a bullet physics compatible rigid body shape. Actors tagged "dynamic" will automatically register themselves. Set "bSimulatePhysics" to true if you want the body to start in an active state.
 	 * @param Target	The actor with primitive components that will be converted to rigid shapes. ACTOR SCALE MUST BE {1,1,1}
-	 * @param Options Configurable struct that determines the final output of the Bullet Physics body
 	 * @return	Returns the id to use in collision lookups
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Register Dynamic Rigid Body", meta=(AutoCreateRefTerm = "Options"))
-	FUnrealShapeId RegisterBulletRigidBody(AActor* Target, const FBulletShapeOptions& Options);
+	FUnrealShapeId RegisterBulletRigidBody(AActor* Target);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void SetPhysicsState(int ID, FTransform Transforms, FVector Velocity, FVector AngularVelocity,FVector& Force);
@@ -233,26 +232,24 @@ public:
 	
 	btCollisionObject* AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, float Friction, float Restitution, AActor* Actor);
 	
-	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, AActor* Actor);
+	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, AActor* Actor, const bool bIsBlockingAnyTraceChannel);
 	
 	
 	btCollisionObject* GetStaticObject(int ID) const;
 	
 	
 private:
-	typedef const std::function<void(btCollisionShape* /*SingleShape*/, const FTransform& /*RelativeXform*/)>& PhysicsGeometryCallback;
-
-	bool MyContactAddedCallback(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1);
+	typedef const std::function<void(btCollisionShape* /*SingleShape*/, const FTransform& /*RelativeXform*/, const FBulletShapeOptions& /*ShapeOptions*/)>& PhysicsGeometryCallback;
 
 	void ExtractPhysicsGeometry(const AActor* Actor, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
 	
-	void ExtractComplexPhysicsGeometry(const FTransform& XformSoFar, UStaticMesh* Mesh, PhysicsGeometryCallback Callback, FUnrealShapeDescriptor& ShapeDescriptor);
+	void ExtractComplexPhysicsGeometry(const FTransform& XformSoFar, UStaticMeshComponent* Mesh, PhysicsGeometryCallback Callback, FUnrealShapeDescriptor& ShapeDescriptor);
 
 	void ExtractPhysicsGeometry(UStaticMeshComponent* SMC, const FTransform& InvActorXform, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
 
 	void ExtractPhysicsGeometry(UShapeComponent* Sc, const FTransform& InvActorXform, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
 
-	void ExtractPhysicsGeometry(const FTransform& XformSoFar, UBodySetup* BodySetup, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
+	void ExtractPhysicsGeometry(UPrimitiveComponent* PrimitiveComponent, const FTransform& XformSoFar, UBodySetup* BodySetup, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
 
 	const UBulletPhysicsWorldSubsystem::CachedDynamicShapeData& GetCachedDynamicShapeData(AActor* Actor, float Mass);
 #pragma endregion
@@ -272,4 +269,20 @@ public:
 	int32 GetActorRootShapeId(const AActor* Actor) const;
 	
 #pragma endregion
+	
+#pragma region HELPERS
+	
+	bool IsBodyValid(const UPrimitiveComponent* Target) const;
+	bool HasRigidBodyBeenCreated(const UPrimitiveComponent* Target) const;
+	bool IsCollisionBodyActive(const UPrimitiveComponent* Target) const;
+	bool IsGhostBodyActive(const UPrimitiveComponent* Target) const;
+	void SetRigidBodyActiveState(const UPrimitiveComponent* Target, bool Active) const;
+	const FCollisionResponseContainer& GetCollisionResponseContainer(const UPrimitiveComponent* Target) const;
+	
+	
+private:
+	
+	FCollisionResponseContainer DefaultCollisionResponseContainer;
+	
+#pragma endregion 
 };
