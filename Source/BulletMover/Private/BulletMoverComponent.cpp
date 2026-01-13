@@ -5,9 +5,9 @@
 #include "BulletMoverSimulationTypes.h"
 #include "BulletMovementModeStateMachine.h"
 #include "MotionWarpingBulletMoverAdapter.h"
-#include "DefaultMovementSet/Modes/BulletWalkingMode.h"
-#include "DefaultMovementSet/Modes/BulletFallingMode.h"
-#include "DefaultMovementSet/Modes/BulletFlyingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicWalkingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicFallingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicFlyingMode.h"
 #include "MoveLibrary/BulletMovementMixer.h"
 #include "MoveLibrary/BulletMovementUtils.h"
 #include "MoveLibrary/BulletFloorQueryUtils.h"
@@ -372,11 +372,19 @@ void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState
 
 	// TODO: Revisit this location check -- it seems simplistic now that we have composable state. Consider supporting a version that allows each sync state data struct a chance to react.
 	// The component will often be in the "right place" already on FinalizeFrame, so a comparison check makes sense before setting it.
-	if (MoverState &&
-			(UpdatedComponent->GetComponentLocation().Equals(MoverState->GetLocation_WorldSpace()) == false ||
-			 UpdatedComponent->GetComponentQuat().Rotator().Equals(MoverState->GetOrientation_WorldSpace(), ROTATOR_TOLERANCE) == false))
+	
+	if (MoverState)
 	{
-		SetFrameStateFromContext(SyncState, AuxState, /* rebase? */ false);
+		const FRotator ComponentRot =  UpdatedComponent->GetComponentQuat().Rotator();
+		const FRotator StateRot = MoverState->GetOrientation_WorldSpace();
+		const FVector ComponentLoc = UpdatedComponent->GetComponentLocation();	
+		const FVector StateLoc = MoverState->GetLocation_WorldSpace();
+
+		if ((ComponentLoc.Equals(StateLoc) == false ||
+			 ComponentRot.Equals(StateRot, ROTATOR_TOLERANCE) == false))
+		{
+			SetFrameStateFromContext(SyncState, AuxState, /* rebase? */ false);
+		}
 	}
 	else
 	{
@@ -710,12 +718,6 @@ void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)
 		Subsystem->GetMotionState(Id, T, V, A, F);
 		
 		//TODO:@GreggoryAddison::CodeCompletion || The current base a player is standing on will need to be passed in... I think.
-		FRotator UnrealRotation(0, 0, 0);
-		if (UpdatedComponent.IsA(UCapsuleComponent::StaticClass()))
-		{
-			UnrealRotation = FRotator(0,0,90);
-		}
-		T.SetRotation((T.GetRotation().Rotator() + UnrealRotation).Quaternion());
 		FinalState.SetTransforms_WorldSpace(T.GetLocation(), T.GetRotation().Rotator(), V, A, nullptr);
 	}
 }

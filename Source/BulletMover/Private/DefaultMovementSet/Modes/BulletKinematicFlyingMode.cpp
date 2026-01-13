@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "DefaultMovementSet/Modes/BulletFlyingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicFlyingMode.h"
 #include "MoveLibrary/BulletAirMovementUtils.h"
 #include "MoveLibrary/BulletFloorQueryUtils.h"
 #include "MoveLibrary/BulletGroundMovementUtils.h"
@@ -8,10 +8,10 @@
 #include "BulletMoverComponent.h"
 #include "DefaultMovementSet/Settings/BulletCommonLegacyMovementSettings.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletFlyingMode)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletKinematicFlyingMode)
 
 
-UBulletFlyingMode::UBulletFlyingMode(const FObjectInitializer& ObjectInitializer)
+UBulletKinematicFlyingMode::UBulletKinematicFlyingMode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	SharedSettingsClasses.Add(UBulletCommonLegacyMovementSettings::StaticClass());
@@ -20,7 +20,7 @@ UBulletFlyingMode::UBulletFlyingMode(const FObjectInitializer& ObjectInitializer
 	GameplayTags.AddTag(BulletMover_IsFlying);
 }
 
-void UBulletFlyingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
+void UBulletKinematicFlyingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
@@ -70,7 +70,7 @@ void UBulletFlyingMode::GenerateMove_Implementation(const FBulletMoverTickStartD
 	OutProposedMove = UBulletAirMovementUtils::ComputeControlledFreeMove(Params);
 }
 
-void UBulletFlyingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
+void UBulletKinematicFlyingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
 {
 	UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletMoverTickStartData& StartState = Params.StartState;
@@ -146,7 +146,7 @@ void UBulletFlyingMode::SimulationTick_Implementation(const FBulletSimulationTic
 }
 
 // TODO: replace this function with simply looking at/collapsing the MovementRecord
-void UBulletFlyingMode::CaptureFinalState(USceneComponent* UpdatedComponent, FBulletMovementRecord& Record, const FBulletMoverDefaultSyncState& StartSyncState, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, const float DeltaSeconds) const
+void UBulletKinematicFlyingMode::CaptureFinalState(USceneComponent* UpdatedComponent, FBulletMovementRecord& Record, const FBulletMoverDefaultSyncState& StartSyncState, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, const float DeltaSeconds) const
 {
 	const FVector FinalLocation = UpdatedComponent->GetComponentLocation();
 	const FVector FinalVelocity = Record.GetRelevantVelocity();
@@ -162,7 +162,7 @@ void UBulletFlyingMode::CaptureFinalState(USceneComponent* UpdatedComponent, FBu
 	UpdatedComponent->ComponentVelocity = FinalVelocity;
 }
 
-void UBulletFlyingMode::OnRegistered(const FName ModeName)
+void UBulletKinematicFlyingMode::OnRegistered(const FName ModeName)
 {
 	Super::OnRegistered(ModeName);
 
@@ -171,7 +171,7 @@ void UBulletFlyingMode::OnRegistered(const FName ModeName)
 }
 
 
-void UBulletFlyingMode::OnUnregistered()
+void UBulletKinematicFlyingMode::OnUnregistered()
 {
 	CommonLegacySettings = nullptr;
 

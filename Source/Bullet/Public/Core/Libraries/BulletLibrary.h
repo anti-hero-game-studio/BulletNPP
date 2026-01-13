@@ -73,6 +73,7 @@ public:
 	{
 		return FQuat(Q.x(), Q.y(), Q.z(), Q.w());
 	}
+	
 	static btQuaternion ToBulletQuat(const FQuat& Q)
 	{
 		return btQuaternion(Q.X, Q.Y, Q.Z, Q.W);

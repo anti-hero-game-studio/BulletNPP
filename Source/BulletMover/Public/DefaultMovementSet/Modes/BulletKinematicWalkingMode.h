@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "BulletMovementMode.h"
 #include "MoveLibrary/BulletModularMovement.h"
-#include "BulletWalkingMode.generated.h"
+#include "BulletKinematicWalkingMode.generated.h"
 
 #define UE_API BULLETMOVER_API
 
@@ -31,7 +31,7 @@ enum class EBulletStaticFloorCheckPolicy : uint8
  * WalkingMode: a default movement mode for traversing surfaces and movement bases (walking, running, sneaking, etc.)
  */
 UCLASS(MinimalAPI, Blueprintable, BlueprintType)
-class UBulletWalkingMode : public UBulletBaseMovementMode
+class UBulletKinematicWalkingMode : public UBulletBaseMovementMode
 {
 	GENERATED_UCLASS_BODY()
 

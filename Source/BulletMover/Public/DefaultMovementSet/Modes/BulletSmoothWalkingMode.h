@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BulletSimpleWalkingMode.h"
-#include "DefaultMovementSet/Modes/BulletWalkingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicWalkingMode.h"
 #include "BulletSmoothWalkingMode.generated.h"
 
 #define UE_API BULLETMOVER_API

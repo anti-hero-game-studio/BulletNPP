@@ -1,11 +1,11 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
+#include "CoreMinimal.h"
 #include "BulletMovementMode.h"
-#include "MoveLibrary/BulletModularMovement.h"
-#include "BulletKinematicWalkingMode.h"
-#include "BulletAsyncWalkingMode.generated.h"
+#include "DefaultMovementSet/Modes/BulletKinematicWalkingMode.h"
+#include "BulletPhysicsWalkingMode.generated.h"
 
 #define UE_API BULLETMOVER_API
 
@@ -14,18 +14,16 @@ struct FBulletFloorCheckResult;
 struct FBulletRelativeBaseInfo;
 struct FBulletMovementRecord;
 
-
 /**
- * AsyncWalkingMode: a default movement mode for traversing surfaces and movement bases (walking, running, sneaking, etc.)
- * This mode simulates movement without actually modifying any scene component(s).
+ * 
  */
 UCLASS(MinimalAPI, Blueprintable, BlueprintType, Experimental)
-class UBulletAsyncWalkingMode : public UBulletBaseMovementMode
+class UBulletPhysicsWalkingMode : public UBulletBaseMovementMode
 {
 	GENERATED_BODY()
-
+	
 public:
-	UE_API UBulletAsyncWalkingMode(const FObjectInitializer& ObjectInitializer);
+	UE_API UBulletPhysicsWalkingMode(const FObjectInitializer& ObjectInitializer);
 	
 	UE_API virtual void GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const override;
 
@@ -52,7 +50,7 @@ protected:
 	UE_API virtual void OnRegistered(const FName ModeName) override; 
 	UE_API virtual void OnUnregistered() override;
 
-	UE_API void CaptureFinalState(const FVector FinalLocation, const FRotator FinalRotation, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const;
+	UE_API void CaptureFinalState(const FVector& FinalLocation, const FRotator& FinalRotation, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const;
 
 	UE_API FBulletRelativeBaseInfo UpdateFloorAndBaseInfo(const FBulletFloorCheckResult& FloorResult) const;
 

@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "BulletMovementMode.h"
-#include "BulletFallingMode.generated.h"
+#include "MoveLibrary/BulletBasedMovementUtils.h"
+#include "BulletKinematicFallingMode.generated.h"
 
 #define UE_API BULLETMOVER_API
 
@@ -18,7 +19,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBulletMover_OnLanded, const FName&
  * FallingMode: a default movement mode for moving through the air and jumping, typically influenced by gravity and air control
  */
 UCLASS(MinimalAPI, Blueprintable, BlueprintType)
-class UBulletFallingMode : public UBulletBaseMovementMode
+class UBulletKinematicFallingMode : public UBulletBaseMovementMode
 {
 	GENERATED_UCLASS_BODY()
 
@@ -102,9 +103,7 @@ protected:
 	UE_API virtual void OnRegistered(const FName ModeName) override;
 	UE_API virtual void OnUnregistered() override;
 
-	UE_API void CaptureFinalState(const FBulletMoverTimeStep& TimeStep, UBulletMoverComponent* UpdatedComponent, const FBulletMoverDefaultSyncState& StartSyncState, 
-		const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, 
-		FBulletMoverDefaultSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const;
+	UE_API void CaptureFinalState(USceneComponent* UpdatedComponent, const FBulletMoverDefaultSyncState& StartSyncState, const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const;
 
 	TObjectPtr<const UBulletCommonLegacyMovementSettings> CommonLegacySettings;
 };

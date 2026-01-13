@@ -5,7 +5,7 @@
 #include "BulletMovementMode.h"
 #include "MoveLibrary/BulletBasedMovementUtils.h"
 #include "AI/Navigation/NavigationTypes.h"
-#include "BulletNavWalkingMode.h"
+#include "BulletKinematicNavWalkingMode.h"
 #include "BulletAsyncNavWalkingMode.generated.h"
 
 #define UE_API BULLETMOVER_API

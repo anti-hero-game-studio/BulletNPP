@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "DefaultMovementSet/Modes/BulletWalkingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicWalkingMode.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Pawn.h"
 #include "MoveLibrary/BulletMovementUtils.h"
@@ -13,10 +13,10 @@
 #include "BulletMoverLog.h"
 #include "DefaultMovementSet/InstantMovementEffects/BulletBasicInstantMovementEffects.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletWalkingMode)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletKinematicWalkingMode)
 
 
-UBulletWalkingMode::UBulletWalkingMode(const FObjectInitializer& ObjectInitializer)
+UBulletKinematicWalkingMode::UBulletKinematicWalkingMode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	SharedSettingsClasses.Add(UBulletCommonLegacyMovementSettings::StaticClass());
@@ -24,7 +24,7 @@ UBulletWalkingMode::UBulletWalkingMode(const FObjectInitializer& ObjectInitializ
 	GameplayTags.AddTag(BulletMover_IsOnGround);
 }
 
-void UBulletWalkingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
+void UBulletKinematicWalkingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
@@ -109,7 +109,7 @@ void UBulletWalkingMode::GenerateMove_Implementation(const FBulletMoverTickStart
 	}
 }
 
-void UBulletWalkingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
+void UBulletKinematicWalkingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
 {
 	UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletMoverTickStartData& StartState = Params.StartState;
@@ -288,12 +288,12 @@ void UBulletWalkingMode::SimulationTick_Implementation(const FBulletSimulationTi
 
 }
 
-UObject* UBulletWalkingMode::GetTurnGenerator()
+UObject* UBulletKinematicWalkingMode::GetTurnGenerator()
 {
 	return TurnGenerator;
 }
 
-void UBulletWalkingMode::SetTurnGeneratorClass(TSubclassOf<UObject> TurnGeneratorClass)
+void UBulletKinematicWalkingMode::SetTurnGeneratorClass(TSubclassOf<UObject> TurnGeneratorClass)
 {
 	if (TurnGeneratorClass)
 	{
@@ -306,7 +306,7 @@ void UBulletWalkingMode::SetTurnGeneratorClass(TSubclassOf<UObject> TurnGenerato
 }
 
 
-void UBulletWalkingMode::OnRegistered(const FName ModeName)
+void UBulletKinematicWalkingMode::OnRegistered(const FName ModeName)
 {
 	Super::OnRegistered(ModeName);
 
@@ -314,14 +314,14 @@ void UBulletWalkingMode::OnRegistered(const FName ModeName)
 	ensureMsgf(CommonLegacySettings, TEXT("Failed to find instance of CommonLegacyMovementSettings on %s. Movement may not function properly."), *GetPathNameSafe(this));
 }
 
-void UBulletWalkingMode::OnUnregistered()
+void UBulletKinematicWalkingMode::OnUnregistered()
 {
 	CommonLegacySettings = nullptr;
 
 	Super::OnUnregistered();
 }
 
-void UBulletWalkingMode::CaptureFinalState(USceneComponent* UpdatedComponent, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const
+void UBulletKinematicWalkingMode::CaptureFinalState(USceneComponent* UpdatedComponent, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const
 {
 	FBulletRelativeBaseInfo PriorBaseInfo;
 
@@ -369,7 +369,7 @@ void UBulletWalkingMode::CaptureFinalState(USceneComponent* UpdatedComponent, bo
 }
 
 
-FBulletRelativeBaseInfo UBulletWalkingMode::UpdateFloorAndBaseInfo(const FBulletFloorCheckResult& FloorResult) const
+FBulletRelativeBaseInfo UBulletKinematicWalkingMode::UpdateFloorAndBaseInfo(const FBulletFloorCheckResult& FloorResult) const
 {
 	FBulletRelativeBaseInfo ReturnBaseInfo;
 

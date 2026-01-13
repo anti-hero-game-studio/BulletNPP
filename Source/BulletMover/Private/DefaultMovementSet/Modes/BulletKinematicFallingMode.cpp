@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "DefaultMovementSet/Modes/BulletFallingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicFallingMode.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "BulletMoverComponent.h"
 #include "MoveLibrary/BulletMovementUtils.h"
@@ -11,9 +11,9 @@
 #include "MoveLibrary/BulletAirMovementUtils.h"
 
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletFallingMode)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletKinematicFallingMode)
 
-UBulletFallingMode::UBulletFallingMode(const FObjectInitializer& ObjectInitializer)
+UBulletKinematicFallingMode::UBulletKinematicFallingMode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	, bCancelVerticalSpeedOnLanding(true)
 	, AirControlPercentage(0.4f)
@@ -33,7 +33,7 @@ UBulletFallingMode::UBulletFallingMode(const FObjectInitializer& ObjectInitializ
 }
 
 
-void UBulletFallingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
+void UBulletKinematicFallingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
@@ -142,7 +142,7 @@ void UBulletFallingMode::GenerateMove_Implementation(const FBulletMoverTickStart
 	}
 }
 
-void UBulletFallingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
+void UBulletKinematicFallingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
 {
 	UBulletMoverComponent* MoverComponent = GetMoverComponent();
 	const FBulletMoverTickStartData& StartState = Params.StartState;
@@ -191,7 +191,8 @@ void UBulletFallingMode::SimulationTick_Implementation(const FBulletSimulationTi
 
 		if (FloorUnderActor.IsWalkableFloor())
 		{
-			CaptureFinalState(Params.TimeStep, MoverComponent, *StartingSyncState, FloorUnderActor, DeltaSeconds, DeltaSeconds * PctTimeApplied, ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, MoveRecord);
+			UBulletGroundMovementUtils::TryMoveToKeepMinHeightAboveFloor(MoverComponent, FloorUnderActor, CommonLegacySettings->MaxWalkSlopeCosine, MoveRecord);
+			CaptureFinalState(UpdatedComponent, *StartingSyncState, FloorUnderActor, DeltaSeconds, DeltaSeconds * PctTimeApplied, ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, MoveRecord);
 			return;
 		}
 	}
@@ -223,7 +224,8 @@ void UBulletFallingMode::SimulationTick_Implementation(const FBulletSimulationTi
 		if (UBulletAirMovementUtils::IsValidLandingSpot(Params.MovingComps, UpdatedComponent->GetComponentLocation(),
 			Hit, CommonLegacySettings->FloorSweepDistance, CommonLegacySettings->MaxWalkSlopeCosine, CommonLegacySettings->bUseFlatBaseForFloorChecks, OUT LandingFloor))
 		{
-			CaptureFinalState(Params.TimeStep, MoverComponent, *StartingSyncState, LandingFloor, DeltaSeconds, DeltaSeconds * PctTimeApplied, ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, MoveRecord);
+			UBulletGroundMovementUtils::TryMoveToKeepMinHeightAboveFloor(MoverComponent, LandingFloor, CommonLegacySettings->MaxWalkSlopeCosine, MoveRecord); // make sure we maintain a small gap over walking surfaces
+			CaptureFinalState(UpdatedComponent, *StartingSyncState, LandingFloor, DeltaSeconds, DeltaSeconds * PctTimeApplied, ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, MoveRecord);
 			return;
 		}
 		
@@ -242,7 +244,8 @@ void UBulletFallingMode::SimulationTick_Implementation(const FBulletSimulationTi
 
 		if (LandingFloor.IsWalkableFloor())
 		{
-			CaptureFinalState(Params.TimeStep, MoverComponent, *StartingSyncState, LandingFloor, DeltaSeconds, DeltaSeconds * PctTimeApplied, ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, MoveRecord);
+			UBulletGroundMovementUtils::TryMoveToKeepMinHeightAboveFloor(MoverComponent, LandingFloor, CommonLegacySettings->MaxWalkSlopeCosine, MoveRecord); // make sure we maintain a small gap over walking surfaces
+			CaptureFinalState(UpdatedComponent, *StartingSyncState, LandingFloor, DeltaSeconds, DeltaSeconds * PctTimeApplied, ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, MoveRecord);
 			return;
 		}
 	}
@@ -252,11 +255,11 @@ void UBulletFallingMode::SimulationTick_Implementation(const FBulletSimulationTi
 		PctTimeApplied = 1.f;
 	}
 	
-	CaptureFinalState(Params.TimeStep, MoverComponent, *StartingSyncState, LandingFloor, DeltaSeconds, DeltaSeconds* PctTimeApplied, ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, MoveRecord);
+	CaptureFinalState(UpdatedComponent, *StartingSyncState, LandingFloor, DeltaSeconds, DeltaSeconds* PctTimeApplied, ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, MoveRecord);
 }
 
 
-void UBulletFallingMode::OnRegistered(const FName ModeName)
+void UBulletKinematicFallingMode::OnRegistered(const FName ModeName)
 {
 	Super::OnRegistered(ModeName);
 
@@ -265,14 +268,14 @@ void UBulletFallingMode::OnRegistered(const FName ModeName)
 }
 
 
-void UBulletFallingMode::OnUnregistered()
+void UBulletKinematicFallingMode::OnUnregistered()
 {
 	CommonLegacySettings = nullptr;
 
 	Super::OnUnregistered();
 }
 
-void UBulletFallingMode::ProcessLanded(const FBulletFloorCheckResult& FloorResult, FVector& Velocity, FBulletRelativeBaseInfo& BaseInfo, FBulletMoverTickEndData& TickEndData) const
+void UBulletKinematicFallingMode::ProcessLanded(const FBulletFloorCheckResult& FloorResult, FVector& Velocity, FBulletRelativeBaseInfo& BaseInfo, FBulletMoverTickEndData& TickEndData) const
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	UBulletMoverBlackboard* SimBlackboard = MoverComp->GetSimBlackboard_Mutable();
@@ -313,11 +316,11 @@ void UBulletFallingMode::ProcessLanded(const FBulletFloorCheckResult& FloorResul
 	}
 }
 
-void UBulletFallingMode::CaptureFinalState(const FBulletMoverTimeStep& TimeStep, UBulletMoverComponent* UpdatedComponent, const FBulletMoverDefaultSyncState& StartSyncState, 
-	const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, 
-	FBulletMoverDefaultSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const
+void UBulletKinematicFallingMode::CaptureFinalState(USceneComponent* UpdatedComponent, const FBulletMoverDefaultSyncState& StartSyncState, const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const
 {
 	UBulletMoverBlackboard* SimBlackboard = GetMoverComponent()->GetSimBlackboard_Mutable();
+
+	const FVector FinalLocation = UpdatedComponent->GetComponentLocation();
 
 	// Check for time refunds
 	constexpr float MinRemainingSecondsToRefund = 0.0001f;	// If we have this amount of time (or more) remaining, give it to the next simulation step.
@@ -340,13 +343,25 @@ void UBulletFallingMode::CaptureFinalState(const FBulletMoverTimeStep& TimeStep,
 
 	FBulletRelativeBaseInfo MovementBaseInfo;
 	ProcessLanded(FloorResult, EffectiveVelocity, MovementBaseInfo, TickEndData);
-	
-	//TODO:@GreggoryAddison::CodeCompletion || Send out velocity results to bullet.
-	OutputSyncState.SetTransforms_WorldSpace( StartSyncState.GetLocation_WorldSpace(),
-												  StartSyncState.GetOrientation_WorldSpace(),
+
+	if (MovementBaseInfo.HasRelativeInfo())
+	{
+		SimBlackboard->Set(CommonBlackboard::LastFoundDynamicMovementBase, MovementBaseInfo);
+
+		OutputSyncState.SetTransforms_WorldSpace( FinalLocation,
+												  UpdatedComponent->GetComponentRotation(),
+												  EffectiveVelocity,
+												  AngularVelocityDegrees,
+												  MovementBaseInfo.MovementBase.Get(), MovementBaseInfo.BoneName);
+	}
+	else
+	{
+		OutputSyncState.SetTransforms_WorldSpace( FinalLocation,
+												  UpdatedComponent->GetComponentRotation(),
 												  EffectiveVelocity,
 												  AngularVelocityDegrees,
 												  nullptr); // no movement base
+	}
 
-	
+	UpdatedComponent->ComponentVelocity = EffectiveVelocity;
 }

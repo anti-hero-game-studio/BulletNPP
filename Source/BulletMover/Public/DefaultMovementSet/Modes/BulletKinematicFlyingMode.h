@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BulletMovementMode.h"
-#include "BulletFlyingMode.generated.h"
+#include "BulletKinematicFlyingMode.generated.h"
 
 #define UE_API BULLETMOVER_API
 
@@ -16,7 +16,7 @@ class UBulletCommonLegacyMovementSettings;
  * moving actor will remain upright vs the movement plane.
  */
 UCLASS(MinimalAPI, Blueprintable, BlueprintType)
-class UBulletFlyingMode : public UBulletBaseMovementMode
+class UBulletKinematicFlyingMode : public UBulletBaseMovementMode
 {
 	GENERATED_UCLASS_BODY()
 

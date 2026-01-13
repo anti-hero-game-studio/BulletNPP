@@ -1,10 +1,10 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "BulletMovementMode.h"
-#include "BulletKinematicFallingMode.h"
-#include "BulletAsyncFallingMode.generated.h"
+#include "DefaultMovementSet/Modes/BulletKinematicFallingMode.h"
+#include "BulletPhysicsFallingMode.generated.h"
 
 #define UE_API BULLETMOVER_API
 
@@ -16,13 +16,13 @@ struct FBulletFloorCheckResult;
  * This mode simulates movement without actually modifying any scene component(s).
  */
 UCLASS(MinimalAPI, Blueprintable, BlueprintType, Experimental)
-class UBulletAsyncFallingMode : public UBulletBaseMovementMode
+class UBulletPhysicsFallingMode : public UBulletBaseMovementMode
 {
-	GENERATED_BODY()
+GENERATED_BODY()
 
 
 public:
-	UE_API UBulletAsyncFallingMode(const FObjectInitializer& ObjectInitializer);
+	UE_API UBulletPhysicsFallingMode(const FObjectInitializer& ObjectInitializer);
 
 	UE_API virtual void OnRegistered(const FName ModeName) override;
     UE_API virtual void OnUnregistered() override;

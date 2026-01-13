@@ -1,7 +1,7 @@
 ﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 
-#include "DefaultMovementSet/Modes/BulletNavWalkingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicNavWalkingMode.h"
 #include "BulletMoverComponent.h"
 #include "NavigationSystem.h"
 #include "AI/NavigationSystemBase.h"
@@ -15,10 +15,10 @@
 #include "MoveLibrary/BulletModularMovement.h"
 #include "MoveLibrary/BulletMovementUtils.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletNavWalkingMode)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletKinematicNavWalkingMode)
 
 
-UNavWalkingMode::UNavWalkingMode()
+UBulletKinematicNavWalkingMode::UBulletKinematicNavWalkingMode()
 	: bSweepWhileNavWalking(true)
 	, bProjectNavMeshWalking(false)
 	, NavMeshProjectionHeightScaleUp(0.67f)
@@ -36,7 +36,7 @@ UNavWalkingMode::UNavWalkingMode()
 	GameplayTags.AddTag(BulletMover_IsNavWalking);
 }
 
-void UNavWalkingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
+void UBulletKinematicNavWalkingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
@@ -118,7 +118,7 @@ void UNavWalkingMode::GenerateMove_Implementation(const FBulletMoverTickStartDat
 	}
 }
 
-void UNavWalkingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
+void UBulletKinematicNavWalkingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
 {
 	const UBulletMoverComponent* MoverComp = Cast<UBulletMoverComponent>(GetMoverComponent());
 	if (!ensureMsgf(MoverComp, TEXT("Nav Walking Mode couldn't find a valid MoverComponent!")))
@@ -341,7 +341,7 @@ void UNavWalkingMode::SimulationTick_Implementation(const FBulletSimulationTickP
 	CaptureFinalState(UpdatedComponent, MoveRecord, ProposedMove.AngularVelocityDegrees, OutputSyncState);
 }
 
-bool UNavWalkingMode::FindNavFloor(const FVector& TestLocation, FNavLocation& OutNavFloorLocation, const INavigationDataInterface* NavData) const
+bool UBulletKinematicNavWalkingMode::FindNavFloor(const FVector& TestLocation, FNavLocation& OutNavFloorLocation, const INavigationDataInterface* NavData) const
 {
 	if (NavData == nullptr || NavMoverComponent == nullptr)
 	{
@@ -355,12 +355,12 @@ bool UNavWalkingMode::FindNavFloor(const FVector& TestLocation, FNavLocation& Ou
 	return NavData->ProjectPoint(TestLocation, OutNavFloorLocation, FVector(SearchRadius, SearchRadius, SearchHeight));
 }
 
-UObject* UNavWalkingMode::GetTurnGenerator()
+UObject* UBulletKinematicNavWalkingMode::GetTurnGenerator()
 {
 	return TurnGenerator;
 }
 
-void UNavWalkingMode::SetTurnGeneratorClass(TSubclassOf<UObject> TurnGeneratorClass)
+void UBulletKinematicNavWalkingMode::SetTurnGeneratorClass(TSubclassOf<UObject> TurnGeneratorClass)
 {
 	if (TurnGeneratorClass)
 	{
@@ -372,7 +372,7 @@ void UNavWalkingMode::SetTurnGeneratorClass(TSubclassOf<UObject> TurnGeneratorCl
 	}
 }
 
-void UNavWalkingMode::SetCollisionForNavWalking(bool bEnable)
+void UBulletKinematicNavWalkingMode::SetCollisionForNavWalking(bool bEnable)
 {
 	if (const UBulletMoverComponent* MoverComponent = GetMoverComponent())
 	{
@@ -387,7 +387,7 @@ void UNavWalkingMode::SetCollisionForNavWalking(bool bEnable)
 				UpdatedCompAsPrimitive->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
 				UpdatedCompAsPrimitive->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore);
 
-				if (UNavWalkingMode* NavWalkingMode = Cast<UNavWalkingMode>(MoverComponent->FindMovementMode(UNavWalkingMode::StaticClass())))
+				if (UBulletKinematicNavWalkingMode* NavWalkingMode = Cast<UBulletKinematicNavWalkingMode>(MoverComponent->FindMovementMode(UBulletKinematicNavWalkingMode::StaticClass())))
 				{
 					if (UBulletMoverBlackboard* SimBlackboard = MoverComponent->GetSimBlackboard_Mutable())
 					{
@@ -416,7 +416,7 @@ void UNavWalkingMode::SetCollisionForNavWalking(bool bEnable)
 	}
 }
 
-void UNavWalkingMode::Activate()
+void UBulletKinematicNavWalkingMode::Activate()
 {
 	Super::Activate();
 	SetCollisionForNavWalking(true);
@@ -424,13 +424,13 @@ void UNavWalkingMode::Activate()
 	NavDataInterface = GetNavData();
 }
 
-void UNavWalkingMode::Deactivate()
+void UBulletKinematicNavWalkingMode::Deactivate()
 {
 	SetCollisionForNavWalking(false);
 	Super::Deactivate();
 }
 
-const INavigationDataInterface* UNavWalkingMode::GetNavData() const
+const INavigationDataInterface* UBulletKinematicNavWalkingMode::GetNavData() const
 {
 	ANavigationData* NavData = nullptr;
 	
@@ -447,7 +447,7 @@ const INavigationDataInterface* UNavWalkingMode::GetNavData() const
 	return NavData;
 }
 
-void UNavWalkingMode::FindBestNavMeshLocation(const FVector& TraceStart, const FVector& TraceEnd, const FVector& CurrentFeetLocation, const FVector& TargetNavLocation, FHitResult& OutHitResult) const
+void UBulletKinematicNavWalkingMode::FindBestNavMeshLocation(const FVector& TraceStart, const FVector& TraceEnd, const FVector& CurrentFeetLocation, const FVector& TargetNavLocation, FHitResult& OutHitResult) const
 {
 	// raycast to underlying mesh to allow us to more closely follow geometry
 	// we use static objects here as a best approximation to accept only objects that
@@ -507,7 +507,7 @@ void UNavWalkingMode::FindBestNavMeshLocation(const FVector& TraceStart, const F
 	}
 }
 
-FVector UNavWalkingMode::ProjectLocationFromNavMesh(float DeltaSeconds, const FVector& CurrentFeetLocation, const FVector& TargetNavLocation, float UpOffset, float DownOffset)
+FVector UBulletKinematicNavWalkingMode::ProjectLocationFromNavMesh(float DeltaSeconds, const FVector& CurrentFeetLocation, const FVector& TargetNavLocation, float UpOffset, float DownOffset)
 {
 	FVector NewLocation = TargetNavLocation;
 
@@ -614,7 +614,7 @@ FVector UNavWalkingMode::ProjectLocationFromNavMesh(float DeltaSeconds, const FV
 	return NewLocation;
 }
 
-void UNavWalkingMode::OnRegistered(const FName ModeName)
+void UBulletKinematicNavWalkingMode::OnRegistered(const FName ModeName)
 {
 	Super::OnRegistered(ModeName);
 
@@ -633,7 +633,7 @@ void UNavWalkingMode::OnRegistered(const FName ModeName)
 	}
 }
 
-void UNavWalkingMode::OnUnregistered()
+void UBulletKinematicNavWalkingMode::OnUnregistered()
 {
 	CommonLegacySettings = nullptr;
 	NavDataInterface = nullptr;
@@ -641,7 +641,7 @@ void UNavWalkingMode::OnUnregistered()
 	Super::OnUnregistered();
 }
 
-void UNavWalkingMode::CaptureFinalState(USceneComponent* UpdatedComponent, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const
+void UBulletKinematicNavWalkingMode::CaptureFinalState(USceneComponent* UpdatedComponent, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const
 {
 	UBulletMoverBlackboard* SimBlackboard = GetMoverComponent()->GetSimBlackboard_Mutable();
 

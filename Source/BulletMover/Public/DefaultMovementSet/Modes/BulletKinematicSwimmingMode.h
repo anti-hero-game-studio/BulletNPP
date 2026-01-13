@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "BulletMovementMode.h"
 
-#include "BulletSwimmingMode.generated.h"
+#include "BulletKinematicSwimmingMode.generated.h"
 
 #define UE_API BULLETMOVER_API
 
@@ -192,7 +192,7 @@ struct FBulletSwimmingControlSettings
  * SwimmingMode: a default movement mode for traversing water volumes
  */
 UCLASS(MinimalAPI, Blueprintable, BlueprintType)
-class USwimmingMode : public UBulletBaseMovementMode
+class UBulletKinematicSwimmingMode : public UBulletBaseMovementMode
 {
 	GENERATED_UCLASS_BODY()
 

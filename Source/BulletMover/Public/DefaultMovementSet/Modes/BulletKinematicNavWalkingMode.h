@@ -7,7 +7,7 @@
 #include "BulletMovementMode.h"
 #include "MoveLibrary/BulletBasedMovementUtils.h"
 #include "AI/Navigation/NavigationTypes.h"
-#include "BulletNavWalkingMode.generated.h"
+#include "BulletKinematicNavWalkingMode.generated.h"
 
 #define UE_API BULLETMOVER_API
 
@@ -42,12 +42,12 @@ enum class EBulletOffNavMeshBehavior : uint8
  *	happening at the same time (which is fine for AI characters running on the server) but may cause issues if used on autonomous proxies.
  */
 UCLASS(MinimalAPI, Blueprintable, BlueprintType)
-class UNavWalkingMode : public UBulletBaseMovementMode
+class UBulletKinematicNavWalkingMode : public UBulletBaseMovementMode
 {
 	GENERATED_BODY()
 
 public:
-	UE_API UNavWalkingMode();
+	UE_API UBulletKinematicNavWalkingMode();
 	
 	UE_API virtual void Activate() override;
 	UE_API virtual void Deactivate() override;

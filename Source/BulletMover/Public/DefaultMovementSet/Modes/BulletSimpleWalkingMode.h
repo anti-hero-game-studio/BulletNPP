@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DefaultMovementSet/Modes/BulletWalkingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicWalkingMode.h"
 #include "BulletSimpleWalkingMode.generated.h"
 
 #define UE_API BULLETMOVER_API
@@ -12,7 +12,7 @@
  * Basic walking mode that implements the ground based walking
  */
 UCLASS(BlueprintType, Abstract)
-class UBulletSimpleWalkingMode : public UBulletWalkingMode
+class UBulletSimpleWalkingMode : public UBulletKinematicWalkingMode
 {
 	GENERATED_BODY()
 

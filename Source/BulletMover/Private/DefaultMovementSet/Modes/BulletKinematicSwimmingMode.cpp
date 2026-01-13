@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "DefaultMovementSet/Modes/BulletSwimmingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicSwimmingMode.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Pawn.h"
 #include "MoveLibrary/BulletWaterMovementUtils.h"
@@ -10,10 +10,10 @@
 #include "BulletMoverLog.h"
 #include "MoveLibrary/BulletMovementUtils.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletSwimmingMode)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(BulletKinematicSwimmingMode)
 
 
-USwimmingMode::USwimmingMode(const FObjectInitializer& ObjectInitializer)
+UBulletKinematicSwimmingMode::UBulletKinematicSwimmingMode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	SharedSettingsClasses.Add(UBulletCommonLegacyMovementSettings::StaticClass());
@@ -21,7 +21,7 @@ USwimmingMode::USwimmingMode(const FObjectInitializer& ObjectInitializer)
 	GameplayTags.AddTag(BulletMover_IsSwimming);
 }
 
-void USwimmingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
+void UBulletKinematicSwimmingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
@@ -162,11 +162,11 @@ void USwimmingMode::GenerateMove_Implementation(const FBulletMoverTickStartData&
 	}
 }
 
-void USwimmingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
+void UBulletKinematicSwimmingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
 {
 }
 
-void USwimmingMode::OnRegistered(const FName ModeName)
+void UBulletKinematicSwimmingMode::OnRegistered(const FName ModeName)
 {
 	Super::OnRegistered(ModeName);
 
@@ -178,14 +178,14 @@ void USwimmingMode::OnRegistered(const FName ModeName)
 	ensureMsgf(CommonLegacySettings, TEXT("Failed to find instance of CommonLegacyMovementSettings on %s. Movement may not function properly."), *GetPathNameSafe(this));
 }
 
-void USwimmingMode::OnUnregistered()
+void UBulletKinematicSwimmingMode::OnUnregistered()
 {
 	CommonLegacySettings = nullptr;
 
 	Super::OnUnregistered();
 }
 
-bool USwimmingMode::AttemptJump(const FBulletSimulationTickParams& Params, float UpwardsSpeed, FBulletMoverTickEndData& OutputState)
+bool UBulletKinematicSwimmingMode::AttemptJump(const FBulletSimulationTickParams& Params, float UpwardsSpeed, FBulletMoverTickEndData& OutputState)
 {
 	// TODO: This should check if a jump is even allowed
 	TSharedPtr<FJumpImpulseEffect> JumpMove = MakeShared<FJumpImpulseEffect>();

@@ -258,7 +258,7 @@ btCollisionShape* UBulletPhysicsWorldSubsystem::GetCapsuleCollisionShape(float R
 	}
 
 	// Not found, create
-	auto S = new btCapsuleShape(R, H);
+	auto S = new btCapsuleShapeZ(R, H);
 	BtCapsuleCollisionShapes.Add(S);
 
 	return S;
@@ -1723,7 +1723,7 @@ void UBulletPhysicsWorldSubsystem::ExtractPhysicsGeometry(UPrimitiveComponent* P
 		// X scales radius, Z scales height
 		Shape = GetCapsuleCollisionShape(Capsule.Radius * Scale.X, Capsule.Length * Scale.Z);
 		// Capsules are in Z in UE, in Y in Bullet, so roll -90
-		FRotator Rot(0, 0, -90);
+		FRotator Rot(0, 0, 0);
 		// Also apply any local rotation
 		Rot += Capsule.Rotation;
 		FTransform ShapeXform(Rot, Capsule.Center);

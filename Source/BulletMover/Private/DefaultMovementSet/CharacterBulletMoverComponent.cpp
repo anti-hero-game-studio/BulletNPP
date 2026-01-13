@@ -8,9 +8,9 @@
 #include "Core/Libraries/BulletLibrary.h"
 #include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 #include "DefaultMovementSet/InstantMovementEffects/BulletBasicInstantMovementEffects.h"
-#include "DefaultMovementSet/Modes/BulletFallingMode.h"
-#include "DefaultMovementSet/Modes/BulletFlyingMode.h"
-#include "DefaultMovementSet/Modes/BulletWalkingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicFallingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicFlyingMode.h"
+#include "DefaultMovementSet/Modes/BulletKinematicWalkingMode.h"
 #include "DefaultMovementSet/Settings/BulletCommonLegacyMovementSettings.h"
 #include "EnvironmentQuery/EnvQueryTest.h"
 #include "MoveLibrary/BulletFloorQueryUtils.h"
@@ -30,9 +30,9 @@ FAutoConsoleVariable CVarLogSimProxyMontageReplication(
 UCharacterBulletMoverComponent::UCharacterBulletMoverComponent()
 {
 	// Default movement modes
-	MovementModes.Add(DefaultModeNames::Walking, CreateDefaultSubobject<UBulletWalkingMode>(TEXT("DefaultWalkingMode")));
-	MovementModes.Add(DefaultModeNames::Falling, CreateDefaultSubobject<UBulletFallingMode>(TEXT("DefaultFallingMode")));
-	MovementModes.Add(DefaultModeNames::Flying,  CreateDefaultSubobject<UBulletFlyingMode>(TEXT("DefaultFlyingMode")));
+	MovementModes.Add(DefaultModeNames::Walking, CreateDefaultSubobject<UBulletKinematicWalkingMode>(TEXT("DefaultWalkingMode")));
+	MovementModes.Add(DefaultModeNames::Falling, CreateDefaultSubobject<UBulletKinematicFallingMode>(TEXT("DefaultFallingMode")));
+	MovementModes.Add(DefaultModeNames::Flying,  CreateDefaultSubobject<UBulletKinematicFlyingMode>(TEXT("DefaultFlyingMode")));
 
 	StartingMovementMode = DefaultModeNames::Falling;
 }
