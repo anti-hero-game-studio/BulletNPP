@@ -11,13 +11,12 @@
 /**
  * 
  */
-UCLASS(ClassGroup=(Bullet), meta=(BlueprintSpawnableComponent), PrioritizeCategories="Shape Options")
+UCLASS(ClassGroup=(Bullet), meta=(BlueprintSpawnableComponent), PrioritizeCategories="Bullet Physics", 
+	HideCategories=(Mobility, VirtualTexture, Physics))
 class BULLET_API UBulletStaticMeshComponent : public UStaticMeshComponent, public IBulletPrimitiveComponentInterface
 {
 	GENERATED_BODY()
-	
-	
-	
+
 public:
 
 	UBulletStaticMeshComponent(const FObjectInitializer& ObjectInitializer);
@@ -35,9 +34,11 @@ public:
 	
 	virtual FBulletShapeOptions& GetShapeOptions() override {return ShapeOptions;};
 	virtual const FBulletShapeOptions& GetShapeOptions() const override { return ShapeOptions; };
+	virtual const FCollisionResponseContainer& GetDefaultResponseContainer() const override { return BodyInstance.GetResponseToChannels();}
+	
 	
 protected:
 	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Shape Options")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Bullet Physics")
 	FBulletShapeOptions ShapeOptions;
 };

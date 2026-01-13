@@ -16,6 +16,7 @@
 #include "Core/CollisionFilters/ConvexResultCallback_IgnoreActors.h"
 #include "Core/CollisionFilters/OverlapFilterCallback.h"
 #include "Core/CollisionFilters/RaycastResultCallback_IgnoreActors.h"
+#include "Core/ContactHandling/BulletContactGatherer.h"
 #include "Core/DataTypes/BulletTypes.h"
 #include "GameFramework/Actor.h"
 #include "Subsystems/SubsystemCollection.h"
@@ -273,6 +274,7 @@ public:
 #pragma region HELPERS
 	
 	bool IsBodyValid(const UPrimitiveComponent* Target) const;
+	bool HasGhostBodyBeenCreated(const UPrimitiveComponent* Target) const;
 	bool HasRigidBodyBeenCreated(const UPrimitiveComponent* Target) const;
 	bool IsCollisionBodyActive(const UPrimitiveComponent* Target) const;
 	bool IsGhostBodyActive(const UPrimitiveComponent* Target) const;
@@ -283,6 +285,11 @@ public:
 private:
 	
 	FCollisionResponseContainer DefaultCollisionResponseContainer;
+	
+	FBulletContactGatherer Gatherer;
+	static void BroadcastSymmetricHits(const FBulletHitEvent& Base);
+	static void BroadcastComponentHit(const FBulletHitEvent& E);
+	
 	
 #pragma endregion 
 };

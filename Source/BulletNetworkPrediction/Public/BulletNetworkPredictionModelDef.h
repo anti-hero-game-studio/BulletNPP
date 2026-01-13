@@ -18,12 +18,12 @@ enum class EBulletNetworkPredictionSortPriority : uint8
 };
 
 using FModelDefId = int32;
-#define JNP_MODEL_BODY() static FModelDefId ID
+#define BNP_MODEL_BODY() static FModelDefId ID
 
 struct FBulletNetworkPredictionModelDef
 {
 	// Actual defs should have:
-	// JNP_MODEL_BODY(); 
+	// BNP_MODEL_BODY(); 
 
 	// TBulletNetworkPredictionStateTypes: User State Types (Input, Sync, Aux)
 	// Enables: Reconcile, Ticking, Input, Finalize

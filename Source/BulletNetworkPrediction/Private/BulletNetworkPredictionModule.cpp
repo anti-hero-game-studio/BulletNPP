@@ -61,13 +61,13 @@ void FBulletNetworkPredictionModule::StartupModule()
 	
 	this->WorldPreInitHandle = FWorldDelegates::OnPreWorldInitialization.AddLambda([this](UWorld* World, const UWorld::InitializationValues IVS)
 	{
-		UE_JNP_TRACE_WORLD_PREINIT();
+		UE_BNP_TRACE_WORLD_PREINIT();
 	});
 
 #if WITH_EDITOR
 	PieHandle = FEditorDelegates::PreBeginPIE.AddLambda([](const bool bBegan)
 	{
-		UE_JNP_TRACE_PIE_START();
+		UE_BNP_TRACE_PIE_START();
 	});
 
 	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");

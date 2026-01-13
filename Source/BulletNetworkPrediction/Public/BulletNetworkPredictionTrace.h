@@ -9,111 +9,111 @@ enum ENetRole : int;
 struct FBulletNetworkPredictionInstanceArchetype;
 struct FBulletNetworkPredictionInstanceConfig;
 
-#ifndef UE_JNP_TRACE_ENABLED
-#define UE_JNP_TRACE_ENABLED (WITH_EDITOR || UE_BUILD_TEST)
+#ifndef UE_BNP_TRACE_ENABLED
+#define UE_BNP_TRACE_ENABLED (WITH_EDITOR || UE_BUILD_TEST)
 #endif
 
 // Tracing user state (content) can generate a lot of data. So this can be turned off here
-#ifndef UE_JNP_TRACE_USER_STATES_ENABLED
-#define UE_JNP_TRACE_USER_STATES_ENABLED 1
+#ifndef UE_BNP_TRACE_USER_STATES_ENABLED
+#define UE_BNP_TRACE_USER_STATES_ENABLED 1
 #endif
 
 
-#if UE_JNP_TRACE_ENABLED
+#if UE_BNP_TRACE_ENABLED
 
 // Traces what caused a reconcile (added in user ShouldReconcile function)
 // Note this actually adds the 'return true' logic for reconciliation
-#define UE_JNP_TRACE_RECONCILE(Condition, Str) if (Condition) { FBulletNetworkPredictionTrace::TraceReconcile(Str); return true; }
+#define UE_BNP_TRACE_RECONCILE(Condition, Str) if (Condition) { FBulletNetworkPredictionTrace::TraceReconcile(Str); return true; }
 
 // General trace to push the active simulation's trace ID
-#define UE_JNP_TRACE_SIM(TraceID) FBulletNetworkPredictionTrace::TraceSimulationScope(TraceID)
+#define UE_BNP_TRACE_SIM(TraceID) FBulletNetworkPredictionTrace::TraceSimulationScope(TraceID)
 
 // Called when simulation is created. (Note this also sets a Scope for tracing the initial user states next)
-#define UE_JNP_TRACE_SIM_CREATED(ID, Driver, ModelDef) FBulletNetworkPredictionTrace::TraceSimulationCreated<ModelDef>(ID, Driver)
+#define UE_BNP_TRACE_SIM_CREATED(ID, Driver, ModelDef) FBulletNetworkPredictionTrace::TraceSimulationCreated<ModelDef>(ID, Driver)
 
 // Trace config of sim changing
-#define UE_JNP_TRACE_SIM_CONFIG(TraceID, NetRole, bHasNetConnection, Archetype, Config, ServiceMask) FBulletNetworkPredictionTrace::TraceSimulationConfig(TraceID, NetRole, bHasNetConnection, Archetype, Config, (int32)ServiceMask);
+#define UE_BNP_TRACE_SIM_CONFIG(TraceID, NetRole, bHasNetConnection, Archetype, Config, ServiceMask) FBulletNetworkPredictionTrace::TraceSimulationConfig(TraceID, NetRole, bHasNetConnection, Archetype, Config, (int32)ServiceMask);
 
 // Called when a PIE session is started. This is so we can keep our sets of worlds/simulations separate in between runs.
-#define UE_JNP_TRACE_PIE_START() FBulletNetworkPredictionTrace::TracePIEStart()
+#define UE_BNP_TRACE_PIE_START() FBulletNetworkPredictionTrace::TracePIEStart()
 
 // Called during WorldPreInit. This mainly just ensure we have a valid trace context so that actors loaded with the map can trace their \initialization
-#define UE_JNP_TRACE_WORLD_PREINIT() FBulletNetworkPredictionTrace::TraceWorldPreInit()
+#define UE_BNP_TRACE_WORLD_PREINIT() FBulletNetworkPredictionTrace::TraceWorldPreInit()
 
 // Generic fault/error message that gets bubbled up in the NP Insights UI
-#define UE_JNP_TRACE_SYSTEM_FAULT(Format, ...) FBulletNetworkPredictionTrace::TraceSystemFault(TEXT(Format), ##__VA_ARGS__)
+#define UE_BNP_TRACE_SYSTEM_FAULT(Format, ...) FBulletNetworkPredictionTrace::TraceSystemFault(TEXT(Format), ##__VA_ARGS__)
 
 // Trace engine frame starting for GameInstance
-#define UE_JNP_TRACE_WORLD_FRAME_START(GameInstance, DeltaSeconds) FBulletNetworkPredictionTrace::TraceWorldFrameStart(GameInstance, DeltaSeconds)
+#define UE_BNP_TRACE_WORLD_FRAME_START(GameInstance, DeltaSeconds) FBulletNetworkPredictionTrace::TraceWorldFrameStart(GameInstance, DeltaSeconds)
 
 // Called to set the general tick state
-#define UE_JNP_TRACE_PUSH_TICK(StartMS, DeltaMS, OutputFrame) FBulletNetworkPredictionTrace::TraceTick(StartMS, DeltaMS, OutputFrame)
+#define UE_BNP_TRACE_PUSH_TICK(StartMS, DeltaMS, OutputFrame) FBulletNetworkPredictionTrace::TraceTick(StartMS, DeltaMS, OutputFrame)
 
-// Called when an actual instance ticks (after calling UE_JNP_TRACE_PUSH_TICK)
-#define UE_JNP_TRACE_SIM_TICK(TraceID) FBulletNetworkPredictionTrace::TraceSimTick(TraceID)
+// Called when an actual instance ticks (after calling UE_BNP_TRACE_PUSH_TICK)
+#define UE_BNP_TRACE_SIM_TICK(TraceID) FBulletNetworkPredictionTrace::TraceSimTick(TraceID)
 
 // General trace to push the active simulation's trace ID and setup for updating the traced state for an already ticked frame (Used to update async data after completion)
-#define UE_JNP_TRACE_SIM_STATE(TraceID) FBulletNetworkPredictionTrace::TraceSimState(TraceID)
+#define UE_BNP_TRACE_SIM_STATE(TraceID) FBulletNetworkPredictionTrace::TraceSimState(TraceID)
 
 // Called when we receive networked data (regardless of what we end up doing with it)
-#define UE_JNP_TRACE_NET_RECV(Frame, TimeMS) FBulletNetworkPredictionTrace::TraceNetRecv(Frame, TimeMS)
+#define UE_BNP_TRACE_NET_RECV(Frame, TimeMS) FBulletNetworkPredictionTrace::TraceNetRecv(Frame, TimeMS)
 
 // Called when ShouldReconcile returns true, signaling a rollback/correction is required
-#define UE_JNP_TRACE_SHOULD_RECONCILE(TraceID) FBulletNetworkPredictionTrace::TraceShouldReconcile(TraceID)
+#define UE_BNP_TRACE_SHOULD_RECONCILE(TraceID) FBulletNetworkPredictionTrace::TraceShouldReconcile(TraceID)
 
 // Called when received data is injected back into the local frame buffer (Note that the sim itself may not have been in error, we may be rolling "everything" back)
-#define UE_JNP_TRACE_ROLLBACK_INJECT(TraceID) FBulletNetworkPredictionTrace::TraceRollbackInject(TraceID)
+#define UE_BNP_TRACE_ROLLBACK_INJECT(TraceID) FBulletNetworkPredictionTrace::TraceRollbackInject(TraceID)
 
 // Called before running input producing services
-#define UE_JNP_TRACE_PUSH_INPUT_FRAME(Frame) FBulletNetworkPredictionTrace::TracePushInputFrame(Frame)
+#define UE_BNP_TRACE_PUSH_INPUT_FRAME(Frame) FBulletNetworkPredictionTrace::TracePushInputFrame(Frame)
 
 // Traces current local frame # -> server frame # offset
-#define UE_JNP_TRACE_FIXED_TICK_OFFSET(Offset, bChanged) FBulletNetworkPredictionTrace::TraceFixedTickOffset(Offset, bChanged)
+#define UE_BNP_TRACE_FIXED_TICK_OFFSET(Offset, bChanged) FBulletNetworkPredictionTrace::TraceFixedTickOffset(Offset, bChanged)
 
 // Called to trace buffered input state
-#define UE_JNP_TRACE_BUFFERED_INPUT(NumBufferedFrames, bFault) FBulletNetworkPredictionTrace::TraceBufferedInput(NumBufferedFrames, bFault)
+#define UE_BNP_TRACE_BUFFERED_INPUT(NumBufferedFrames, bFault) FBulletNetworkPredictionTrace::TraceBufferedInput(NumBufferedFrames, bFault)
 
 // Trace call to Driver's ProduceInput function
-#define UE_JNP_TRACE_PRODUCE_INPUT(TraceID) FBulletNetworkPredictionTrace::TraceProduceInput(TraceID)
+#define UE_BNP_TRACE_PRODUCE_INPUT(TraceID) FBulletNetworkPredictionTrace::TraceProduceInput(TraceID)
 
 // Called to indicate we are about to write state to the buffers outside of the normal simulation tick/netrecive. TODO: add char* identifier to debug where the mod came from
-#define UE_JNP_TRACE_OOB_STATE_MOD(TraceID, Frame, StrView) FBulletNetworkPredictionTrace::TraceOOBStateMod(TraceID, Frame, StrView)
+#define UE_BNP_TRACE_OOB_STATE_MOD(TraceID, Frame, StrView) FBulletNetworkPredictionTrace::TraceOOBStateMod(TraceID, Frame, StrView)
 
 // Called whenever a new user state has been inserted into the buffers. Analysis will determine "how" it got there from previous trace events
-#define UE_JNP_TRACE_USER_STATE_INPUT(ModelDef, UserState) FBulletNetworkPredictionTrace::TraceUserState<ModelDef>(UserState, FBulletNetworkPredictionTrace::ETraceUserState::Input)
-#define UE_JNP_TRACE_USER_STATE_SYNC(ModelDef, UserState) FBulletNetworkPredictionTrace::TraceUserState<ModelDef>(UserState, FBulletNetworkPredictionTrace::ETraceUserState::Sync)
-#define UE_JNP_TRACE_USER_STATE_AUX(ModelDef, UserState) FBulletNetworkPredictionTrace::TraceUserState<ModelDef>(UserState, FBulletNetworkPredictionTrace::ETraceUserState::Aux)
+#define UE_BNP_TRACE_USER_STATE_INPUT(ModelDef, UserState) FBulletNetworkPredictionTrace::TraceUserState<ModelDef>(UserState, FBulletNetworkPredictionTrace::ETraceUserState::Input)
+#define UE_BNP_TRACE_USER_STATE_SYNC(ModelDef, UserState) FBulletNetworkPredictionTrace::TraceUserState<ModelDef>(UserState, FBulletNetworkPredictionTrace::ETraceUserState::Sync)
+#define UE_BNP_TRACE_USER_STATE_AUX(ModelDef, UserState) FBulletNetworkPredictionTrace::TraceUserState<ModelDef>(UserState, FBulletNetworkPredictionTrace::ETraceUserState::Aux)
 
 
 #else
 
 // Compiled out
-#define UE_JNP_TRACE_RECONCILE(Condition, Str) if (Condition) { return true; }
-#define UE_JNP_TRACE_SIM(...)
-#define UE_JNP_TRACE_SIM_CREATED(...)
-#define UE_JNP_TRACE_SIM_CONFIG(...)
+#define UE_BNP_TRACE_RECONCILE(Condition, Str) if (Condition) { return true; }
+#define UE_BNP_TRACE_SIM(...)
+#define UE_BNP_TRACE_SIM_CREATED(...)
+#define UE_BNP_TRACE_SIM_CONFIG(...)
 
-#define UE_JNP_TRACE_PIE_START(...)
-#define UE_JNP_TRACE_WORLD_PREINIT(...)
-#define UE_JNP_TRACE_SYSTEM_FAULT(Format, ...) UE_LOG(LogBulletNetworkPrediction, Warning, TEXT(Format), ##__VA_ARGS__);
-#define UE_JNP_TRACE_WORLD_FRAME_START(...)
-#define UE_JNP_TRACE_PUSH_TICK(...)
-#define UE_JNP_TRACE_SIM_TICK(...)
-#define UE_JNP_TRACE_SIM_STATE(...)
-#define UE_JNP_TRACE_NET_RECV(...)
-#define UE_JNP_TRACE_SHOULD_RECONCILE(...)
-#define UE_JNP_TRACE_ROLLBACK_INJECT(...)
-#define UE_JNP_TRACE_PUSH_INPUT_FRAME(...)
-#define UE_JNP_TRACE_FIXED_TICK_OFFSET(...)
-#define UE_JNP_TRACE_PRODUCE_INPUT(...)
-#define UE_JNP_TRACE_BUFFERED_INPUT(...)
-#define UE_JNP_TRACE_OOB_STATE_MOD(...)
+#define UE_BNP_TRACE_PIE_START(...)
+#define UE_BNP_TRACE_WORLD_PREINIT(...)
+#define UE_BNP_TRACE_SYSTEM_FAULT(Format, ...) UE_LOG(LogBulletNetworkPrediction, Warning, TEXT(Format), ##__VA_ARGS__);
+#define UE_BNP_TRACE_WORLD_FRAME_START(...)
+#define UE_BNP_TRACE_PUSH_TICK(...)
+#define UE_BNP_TRACE_SIM_TICK(...)
+#define UE_BNP_TRACE_SIM_STATE(...)
+#define UE_BNP_TRACE_NET_RECV(...)
+#define UE_BNP_TRACE_SHOULD_RECONCILE(...)
+#define UE_BNP_TRACE_ROLLBACK_INJECT(...)
+#define UE_BNP_TRACE_PUSH_INPUT_FRAME(...)
+#define UE_BNP_TRACE_FIXED_TICK_OFFSET(...)
+#define UE_BNP_TRACE_PRODUCE_INPUT(...)
+#define UE_BNP_TRACE_BUFFERED_INPUT(...)
+#define UE_BNP_TRACE_OOB_STATE_MOD(...)
 
-#define UE_JNP_TRACE_USER_STATE_INPUT(...)
-#define UE_JNP_TRACE_USER_STATE_SYNC(...)
-#define UE_JNP_TRACE_USER_STATE_AUX(...)
+#define UE_BNP_TRACE_USER_STATE_INPUT(...)
+#define UE_BNP_TRACE_USER_STATE_SYNC(...)
+#define UE_BNP_TRACE_USER_STATE_AUX(...)
 
-#endif // UE_JNP_TRACE_ENABLED
+#endif // UE_BNP_TRACE_ENABLED
 
 UE_TRACE_CHANNEL_EXTERN(NetworkPredictionChannel, BULLETNETWORKPREDICTION_API);
 
@@ -173,7 +173,7 @@ public:
 	template<typename ModelDef, typename StateType>
 	static void TraceUserState(const StateType* State, ETraceUserState StateTypeEnum)
 	{
-#if UE_JNP_TRACE_USER_STATES_ENABLED
+#if UE_BNP_TRACE_USER_STATES_ENABLED
 		if (std::is_void_v<StateType>)
 		{
 			return;
@@ -181,7 +181,7 @@ public:
 
 		if (UE_TRACE_CHANNELEXPR_IS_ENABLED(NetworkPredictionChannel))
 		{
-			jnpCheckSlow(State);
+			bnpCheckSlow(State);
 
 			TAnsiStringBuilder<512> Builder;
 			FBulletNetworkPredictionDriver<ModelDef>::TraceUserStateString(State, Builder);

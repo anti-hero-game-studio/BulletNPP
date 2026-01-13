@@ -24,7 +24,7 @@ class FBulletMoverActorModelDef : public FBulletNetworkPredictionModelDef
 {
 public:
 
-	JNP_MODEL_BODY();
+	BNP_MODEL_BODY();
 
 	using Simulation = UBulletMoverNetworkPredictionLiaisonComponent;
 	using StateTypes = KinematicMoverStateTypes;
@@ -34,7 +34,7 @@ public:
 	static constexpr int32 GetSortPriority() { return (int32)EBulletNetworkPredictionSortPriority::PreKinematicMovers; }
 };
 
-JNP_MODEL_REGISTER(FBulletMoverActorModelDef);
+BNP_MODEL_REGISTER(FBulletMoverActorModelDef);
 
 
 

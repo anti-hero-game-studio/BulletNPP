@@ -30,7 +30,7 @@ void ABulletNetworkPredictionReplicatedManager::BeginPlay()
 	else
 	{
 		UBulletNetworkPredictionWorldManager* NetworkPredictionWorldManager = GetWorld()->GetSubsystem<UBulletNetworkPredictionWorldManager>();
-		jnpCheckSlow(NetworkPredictionWorldManager);
+		bnpCheckSlow(NetworkPredictionWorldManager);
 		NetworkPredictionWorldManager->ReplicatedManager = this;
 	}
 }
@@ -64,12 +64,12 @@ uint8 ABulletNetworkPredictionReplicatedManager::GetIDForObject(UObject* Obj) co
 		const FBulletSharedPackageMapItem& Item = *It;
 		if (Item.SoftPtr.Get() == Obj)
 		{
-			jnpCheckSlow(It.GetIndex() < TNumericLimits<uint8>::Max());
+			bnpCheckSlow(It.GetIndex() < TNumericLimits<uint8>::Max());
 			return (uint8)It.GetIndex();
 		}
 	}
 
-	jnpEnsureMsgf(false, TEXT("Could not find Object %s in SharedPackageMap."), *GetNameSafe(Obj));
+	bnpEnsureMsgf(false, TEXT("Could not find Object %s in SharedPackageMap."), *GetNameSafe(Obj));
 	return 0;
 }
 

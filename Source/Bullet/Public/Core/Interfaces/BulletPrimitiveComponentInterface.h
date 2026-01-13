@@ -27,4 +27,6 @@ public:
 	virtual const FBulletShapeOptions& GetShapeOptions() const = 0;
 	
 	virtual FBulletShapeOptions& GetShapeOptions() = 0;
+	
+	virtual const FCollisionResponseContainer& GetDefaultResponseContainer() const = 0;
 };

@@ -14,7 +14,7 @@ struct FBulletGenericKinematicActorSyncState
 // but hopefully useful is that they can still be recorded and restored
 struct FBulletGenericKinematicActorDef : FBulletNetworkPredictionModelDef
 {
-	JNP_MODEL_BODY();
+	BNP_MODEL_BODY();
 
 	using StateTypes = TBulletNetworkPredictionStateTypes<void, FBulletGenericKinematicActorSyncState, void>;
 	using Driver = AActor;

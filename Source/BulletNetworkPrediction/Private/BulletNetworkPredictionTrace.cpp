@@ -168,7 +168,7 @@ void FBulletNetworkPredictionTrace::TraceWorldFrameStart(UGameInstance* GameInst
 
 void FBulletNetworkPredictionTrace::TraceSimulationConfig(int32 TraceID, ENetRole NetRole, bool bHasNetConnection, const FBulletNetworkPredictionInstanceArchetype& Archetype, const FBulletNetworkPredictionInstanceConfig& Config, int32 ServiceMask)
 {
-	jnpEnsureMsgf(NetRole != ENetRole::ROLE_None && NetRole != ENetRole::ROLE_MAX, TEXT("Invalid NetRole %d"), NetRole);
+	bnpEnsureMsgf(NetRole != ENetRole::ROLE_None && NetRole != ENetRole::ROLE_MAX, TEXT("Invalid NetRole %d"), NetRole);
 
 	UE_TRACE_LOG(NetworkPrediction, SimulationConfig, NetworkPredictionChannel)
 		<< SimulationConfig.TraceID(TraceID)

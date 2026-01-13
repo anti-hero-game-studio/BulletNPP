@@ -22,7 +22,7 @@ struct TBulletInstanceMap
 		FIndex* MappedIdx = Lookup.Find((int32)ID);
 		if (MappedIdx)
 		{
-			jnpEnsure(MappedIdx->idx != INDEX_NONE);
+			bnpEnsure(MappedIdx->idx != INDEX_NONE);
 			return &Data[MappedIdx->idx];
 		}
 		return nullptr;
@@ -57,7 +57,7 @@ struct TBulletInstanceMap
 
 	T& GetByIndexChecked(int32 idx)
 	{
-		jnpCheckSlow(Data.IsValidIndex(idx));
+		bnpCheckSlow(Data.IsValidIndex(idx));
 		return Data[idx];
 	}
 
@@ -83,7 +83,7 @@ struct TBulletStableInstanceMap
 		FIndex* MappedIdx = Lookup.Find((int32)ID);
 		if (MappedIdx)
 		{
-			jnpEnsure(MappedIdx->idx != INDEX_NONE);
+			bnpEnsure(MappedIdx->idx != INDEX_NONE);
 			return &Data[MappedIdx->idx].Get();
 		}
 		return nullptr;
@@ -118,7 +118,7 @@ struct TBulletStableInstanceMap
 
 	T& GetByIndexChecked(int32 idx)
 	{
-		jnpCheckSlow(Data.IsValidIndex(idx));
+		bnpCheckSlow(Data.IsValidIndex(idx));
 		return Data[idx].Get();
 	}
 

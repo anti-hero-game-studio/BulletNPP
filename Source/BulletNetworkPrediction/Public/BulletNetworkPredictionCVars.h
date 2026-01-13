@@ -41,7 +41,7 @@ struct FBulletConditionalAutoConsoleRegister
 	}
 };
 
-#define JNP_DEVCVAR_INT(Var,Value,VarName,Help) \
+#define BNP_DEVCVAR_INT(Var,Value,VarName,Help) \
 	int32 Var = Value; \
 	static FAutoConsoleVariableRef Var##CVar(TEXT(VarName), Var, TEXT(Help), ECVF_Cheat );
 
@@ -70,7 +70,7 @@ struct FBulletConditionalAutoConsoleRegister
 
 
 
-#define JNP_DEVCVAR_FLOAT(Var,Value,VarName,Help) \
+#define BNP_DEVCVAR_FLOAT(Var,Value,VarName,Help) \
 	float Var = Value; \
 	static FAutoConsoleVariableRef Var##CVar(TEXT(VarName), Var, TEXT(Help), ECVF_Cheat );
 

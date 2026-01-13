@@ -190,6 +190,7 @@ enum class EBulletShapeType : uint8
 };
 
 
+
 USTRUCT(BlueprintType)
 struct FBulletShapeOptions
 {
@@ -200,27 +201,16 @@ struct FBulletShapeOptions
 		
 	}
 	
-	FBulletShapeOptions(const EBulletShapeType& InShapeType)
-		:ShapeType(InShapeType)
-	{
-		switch (InShapeType) 
-		{
-		case EBulletShapeType::STATIC:
-			Mass = 0.f;
-			break;
-		case EBulletShapeType::DYNAMIC:
-			break;
-		case EBulletShapeType::KINEMATIC:
-			Mass = 0.f;
-			break;
-		}
-	}	
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	EBulletShapeType ShapeType = EBulletShapeType::STATIC;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bAutomaticallyActivate = false;
+	
+	/* Useful for player controlled bodies that should never be sent to sleep*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bDisableDeactivation = false;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bUsePhysicsMaterial = false;
@@ -240,10 +230,13 @@ struct FBulletShapeOptions
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bKeepShapeVertical = false;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="bUsePhysicsMaterial", EditConditionHides))
+	TObjectPtr<UPhysicalMaterial> PhysMaterial;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="!bUsePhysicsMaterial", EditConditionHides))
 	float Restitution = 1.f;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="!bUsePhysicsMaterial", EditConditionHides))
 	float Friction = 1.f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)

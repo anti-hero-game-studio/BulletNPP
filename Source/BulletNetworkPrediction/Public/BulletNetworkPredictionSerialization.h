@@ -62,7 +62,7 @@ struct FBulletNetworkPredictionSerialization
 	{
 		Ar << Frame;
 
-		//jnpCheckSlow(Ar.IsSaving());
+		//bnpCheckSlow(Ar.IsSaving());
 		//((FNetBitWriter&)Ar).WriteIntWrapped( Frame, MAX_FRAME_WRITE );
 	}
 
@@ -142,7 +142,7 @@ public:
 				{
 					for (int32 DroppedFrame = ServerRecvData.LastRecvFrame+1; DroppedFrame < Frame; ++DroppedFrame)
 					{
-						UE_JNP_TRACE_SYSTEM_FAULT("Gap in input stream detected on server. Client frames involved: LastConsumedFrame: %d LastRecvFrame: %d. DroppedFrame: %d", ServerRecvData.LastConsumedFrame, ServerRecvData.LastRecvFrame, DroppedFrame);
+						UE_BNP_TRACE_SYSTEM_FAULT("Gap in input stream detected on server. Client frames involved: LastConsumedFrame: %d LastRecvFrame: %d. DroppedFrame: %d", ServerRecvData.LastConsumedFrame, ServerRecvData.LastRecvFrame, DroppedFrame);
 						if (DroppedFrame > 0)
 						{
 							// FixedTick can't skip frames like independent, so copy previous input
@@ -152,11 +152,11 @@ public:
 				}
 				else
 				{
-					//UE_JNP_TRACE_SYSTEM_FAULT("Recovering from input stream starvation on server. Advancing over dropped client frames [%d-%d]", ServerRecvData.LastConsumedFrame+1, StartFrame-1);
+					//UE_BNP_TRACE_SYSTEM_FAULT("Recovering from input stream starvation on server. Advancing over dropped client frames [%d-%d]", ServerRecvData.LastConsumedFrame+1, StartFrame-1);
 					//ServerRecvData.LastConsumedFrame = StartFrame-1;
 				}
 
-				jnpEnsure(Frame >= 0);
+				bnpEnsure(Frame >= 0);
 
 				FBulletNetworkPredictionDriver<ModelDef>::NetSerialize(ServerRecvData.InputBuffer[Frame].Value, P); // 2. InputCmd
 
@@ -164,8 +164,8 @@ public:
 				// Trace what we received
 				const int32 ExpectedFrameDelay = ServerRecvData.LastRecvFrame - ServerRecvData.LastConsumedFrame;
 				const int32 ExpectedConsumeFrame = TickState->PendingFrame + ExpectedFrameDelay - 1;
-				UE_JNP_TRACE_NET_RECV(ExpectedConsumeFrame, ExpectedConsumeFrame * TickState->FixedStepMS);
-				UE_JNP_TRACE_USER_STATE_INPUT(ModelDef, ServerRecvData.InputBuffer[Frame].Value.Get());
+				UE_BNP_TRACE_NET_RECV(ExpectedConsumeFrame, ExpectedConsumeFrame * TickState->FixedStepMS);
+				UE_BNP_TRACE_USER_STATE_INPUT(ModelDef, ServerRecvData.InputBuffer[Frame].Value.Get());
 			}
 		}
 	}
@@ -178,7 +178,7 @@ public:
 		FArchive& Ar = P.Ar;
 		
 		TBulletInstanceFrameState<ModelDef>* Frames = DataStore->Frames.Find(ID);
-		jnpCheckSlow(Frames);
+		bnpCheckSlow(Frames);
 
 		FBulletNetworkPredictionSerialization::WriteCompressedFrame(Ar, TickState->PendingFrame); // 1. Client's PendingFrame number
 
@@ -265,12 +265,12 @@ public:
 			}
 			else
 			{
-				jnpEnsure(Frame >= 0);
+				bnpEnsure(Frame >= 0);
 
 				for (int32 DroppedFrame = ServerRecvData.LastRecvFrame+1; DroppedFrame < Frame; ++DroppedFrame)
 				{
 					// FIXME: trace ID has to be better
-					UE_JNP_TRACE_SYSTEM_FAULT("Gap in input stream detected on server. LastRecvFrame: %d. New Frame: %d", ServerRecvData.LastRecvFrame, DroppedFrame);
+					UE_BNP_TRACE_SYSTEM_FAULT("Gap in input stream detected on server. LastRecvFrame: %d. New Frame: %d", ServerRecvData.LastRecvFrame, DroppedFrame);
 					ServerRecvData.InputBuffer[DroppedFrame].DeltaTimeMS = 0;
 				}
 
@@ -283,9 +283,9 @@ public:
 				const int32 ExpectedFrameDelay = ServerRecvData.LastRecvFrame - ServerRecvData.LastConsumedFrame;
 				const int32 ExpectedConsumeFrame = ServerRecvData.PendingFrame + ExpectedFrameDelay;
 				
-				jnpEnsure(ExpectedConsumeFrame >= 0);
-				UE_JNP_TRACE_NET_RECV(ExpectedConsumeFrame, ExpectedTimeMS);
-				UE_JNP_TRACE_USER_STATE_INPUT(ModelDef, ServerRecvData.InputBuffer[Frame].InputCmd.Get());
+				bnpEnsure(ExpectedConsumeFrame >= 0);
+				UE_BNP_TRACE_NET_RECV(ExpectedConsumeFrame, ExpectedTimeMS);
+				UE_BNP_TRACE_USER_STATE_INPUT(ModelDef, ServerRecvData.InputBuffer[Frame].InputCmd.Get());
 
 				// Advance
 				ExpectedTimeMS += RecvFrame.DeltaTimeMS;
@@ -303,7 +303,7 @@ public:
 		
 
 		TBulletInstanceFrameState<ModelDef>* Frames = DataStore->Frames.Find(ID);
-		jnpCheckSlow(Frames);
+		bnpCheckSlow(Frames);
 
 		FBulletNetworkPredictionSerialization::WriteCompressedFrame(Ar, TickState->PendingFrame); // 1. Client's PendingFrame number
 
@@ -384,8 +384,8 @@ public:
 			FBulletNetworkPredictionDriver<ModelDef>::NetSerialize(ClientRecvState.AuxState, DeltaSerializationParams);	// 2. Aux
 		}
 		
-		UE_JNP_TRACE_USER_STATE_SYNC(ModelDef, ClientRecvState.SyncState.Get());
-		UE_JNP_TRACE_USER_STATE_AUX(ModelDef, ClientRecvState.AuxState.Get());
+		UE_BNP_TRACE_USER_STATE_SYNC(ModelDef, ClientRecvState.SyncState.Get());
+		UE_BNP_TRACE_USER_STATE_AUX(ModelDef, ClientRecvState.AuxState.Get());
 		
 	}
 
@@ -473,8 +473,8 @@ public:
 		// big frame delta , so client doesn't tick for a couple of frames but server still ticking and advancing the input.
 		// in this case we need the client to jump his simulation forward by the amount of time it was stopped and consider the state unchanged during this lag spike
 		
-		jnpEnsure(LastConsumedInputFrame <= TickState->PendingFrame);
-		jnpEnsure(ServerFrame >= 0);
+		bnpEnsure(LastConsumedInputFrame <= TickState->PendingFrame);
+		bnpEnsure(ServerFrame >= 0);
 		
 
 		if (LastConsumedInputFrame != INDEX_NONE)
@@ -499,9 +499,9 @@ public:
 		TickState->ConfirmedFrame = ServerFrame - TickState->Offset;
 		
 		ClientRecvState.ServerFrame = ServerFrame;
-		UE_JNP_TRACE_NET_RECV(ServerFrame, ServerFrame * TickState->FixedStepMS);
+		UE_BNP_TRACE_NET_RECV(ServerFrame, ServerFrame * TickState->FixedStepMS);
 
-		jnpEnsureSlow(ClientRecvState.InstanceIdx >= 0);
+		bnpEnsureSlow(ClientRecvState.InstanceIdx >= 0);
 		TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(ClientRecvState.InstanceIdx);
 
 		TCommonReplicator_AP<ModelDef>::NetRecv(P, InstanceData, ClientRecvState,BaseDeltaFrame); // 6. Common
@@ -528,13 +528,13 @@ public:
 		FArchive& Ar = P.Ar;
 		UPackageMapClient* PackageMapClient = Cast<UPackageMapClient>(P.Map);
 		UNetConnection* NetConnection = PackageMapClient->GetConnection();
-		jnpCheckSlow(NetConnection);
+		bnpCheckSlow(NetConnection);
 		
 		TInstanceData<ModelDef>* Instance = DataStore->Instances.Find(ID);
-		jnpCheckSlow(Instance);
+		bnpCheckSlow(Instance);
 
 		TBulletInstanceFrameState<ModelDef>* Frames = DataStore->Frames.Find(ID);
-		jnpCheckSlow(Frames);
+		bnpCheckSlow(Frames);
 
 		int32 LastConsumedFrame = INDEX_NONE;
 		int32 LastReceivedFrame = INDEX_NONE; 
@@ -546,7 +546,7 @@ public:
 		}
 
 		const int32 PendingFrame = TickState->PendingFrame;
-		jnpEnsureSlow(PendingFrame >= 0);
+		bnpEnsureSlow(PendingFrame >= 0);
 
 		//** Delta Serialization **// 
 		typename TBulletInstanceFrameState<ModelDef>::FFrame* BaseDeltaFrame = nullptr;
@@ -625,13 +625,13 @@ public:
 		FArchive& Ar = P.Ar;
 		const int32 LastConsumedInputFrame = FBulletNetworkPredictionSerialization::ReadCompressedFrame(Ar, TickState->PendingFrame); // 1. Last Consumed (Client) Input Frame
 		ClientRecvState.ServerFrame = LastConsumedInputFrame + 1;
-		jnpEnsure(ClientRecvState.ServerFrame >= 0);
+		bnpEnsure(ClientRecvState.ServerFrame >= 0);
 
 		TickState->ConfirmedFrame = ClientRecvState.ServerFrame;
 
 		FBulletNetworkPredictionSerialization::SerializeTimeMS(P.Ar, ClientRecvState.SimTimeMS); // 2. TotalSimTime
 
-		UE_JNP_TRACE_NET_RECV(ClientRecvState.ServerFrame, ClientRecvState.SimTimeMS);
+		UE_BNP_TRACE_NET_RECV(ClientRecvState.ServerFrame, ClientRecvState.SimTimeMS);
 
 		TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(ClientRecvState.InstanceIdx);
 		TCommonReplicator_AP<ModelDef>::NetRecv(P, InstanceData, ClientRecvState,nullptr); // 3. Common
@@ -698,17 +698,17 @@ public:
 		}
 		
 
-		UE_JNP_TRACE_USER_STATE_INPUT(ModelDef, ClientRecvState.InputCmd.Get());
-		UE_JNP_TRACE_USER_STATE_SYNC(ModelDef, ClientRecvState.SyncState.Get());
-		UE_JNP_TRACE_USER_STATE_AUX(ModelDef, ClientRecvState.AuxState.Get());
+		UE_BNP_TRACE_USER_STATE_INPUT(ModelDef, ClientRecvState.InputCmd.Get());
+		UE_BNP_TRACE_USER_STATE_SYNC(ModelDef, ClientRecvState.SyncState.Get());
+		UE_BNP_TRACE_USER_STATE_AUX(ModelDef, ClientRecvState.AuxState.Get());
 	}
 	
 	static void NetSend(const FBulletNetSerializeParams& P, FBulletNetworkPredictionID ID, TBulletModelDataStore<ModelDef>* DataStore, TInstanceData<ModelDef>* InstanceData, int32 PendingFrame, typename TBulletInstanceFrameState<ModelDef>::FFrame* BaseDeltaFrame)
 	{
-		jnpCheckSlow(InstanceData);
+		bnpCheckSlow(InstanceData);
 		
 		TBulletInstanceFrameState<ModelDef>* Frames = DataStore->Frames.Find(ID);
-		jnpCheckSlow(Frames);
+		bnpCheckSlow(Frames);
 		// ** Modified By Kai Delta Serialization Support **//
 		typename TBulletInstanceFrameState<ModelDef>::FFrame& FrameData = Frames->Buffer[PendingFrame];
 		if (BaseDeltaFrame)
@@ -791,11 +791,11 @@ public:
 		const int32 PrevRecv = ClientRecvState.ServerFrame;
 		ClientRecvState.ServerFrame = FBulletNetworkPredictionSerialization::ReadCompressedFrame(P.Ar, 0); // 4. PendingFrame (Server Frame)
 		
-		jnpEnsure(ClientRecvState.ServerFrame >= 0);
+		bnpEnsure(ClientRecvState.ServerFrame >= 0);
 
 		TickState->Interpolation.LatestRecvFrameSP = FMath::Max(TickState->Interpolation.LatestRecvFrameSP, ClientRecvState.ServerFrame);
 
-		UE_JNP_TRACE_NET_RECV(ClientRecvState.ServerFrame, ClientRecvState.ServerFrame * TickState->FixedStepMS);
+		UE_BNP_TRACE_NET_RECV(ClientRecvState.ServerFrame, ClientRecvState.ServerFrame * TickState->FixedStepMS);
 		
 		TCommonReplicator_SP<ModelDef>::NetRecv(P, ClientRecvState, DataStore, BaseDeltaFrame); // 5. Common
 		// Add Acked frame to Tick state acked frames , auto proxy is in his RPC responsible for sending it to server
@@ -808,7 +808,7 @@ public:
 			ClientRecvState.AuxState.CopyTo(AckedFrameData.AuxState);
 			ClientRecvState.InputCmd.CopyTo(AckedFrameData.InputCmd);
 		}
-		jnpEnsureSlow(ClientRecvState.InstanceIdx >= 0);
+		bnpEnsureSlow(ClientRecvState.InstanceIdx >= 0);
 		TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(ClientRecvState.InstanceIdx);
 
 		const bool bSerializeCueFrames = true; // Fixed tick can use Frame numbers for SP serialization
@@ -821,18 +821,18 @@ public:
 	static void NetSend(const FBulletNetSerializeParams& P, FBulletNetworkPredictionID ID, TBulletModelDataStore<ModelDef>* DataStore, const FBulletFixedTickState* TickState)
 	{
 		const int32 PendingFrame = TickState->PendingFrame;
-		jnpEnsure(PendingFrame >= 0);
+		bnpEnsure(PendingFrame >= 0);
 
 		TInstanceData<ModelDef>* Instance = DataStore->Instances.Find(ID);
-		jnpCheckSlow(Instance);
+		bnpCheckSlow(Instance);
 		
 		TBulletInstanceFrameState<ModelDef>* Frames = DataStore->Frames.Find(ID);
-		jnpCheckSlow(Frames);
+		bnpCheckSlow(Frames);
 
 		// ** Added By Kai Delta Serialization Support **//
 		UPackageMapClient* PackageMapClient = Cast<UPackageMapClient>(P.Map);
 		UNetConnection* NetConnection = PackageMapClient->GetConnection();
-		jnpCheckSlow(NetConnection);
+		bnpCheckSlow(NetConnection);
 		
 		// ** Added By Kai Delta Serialization **//
 		typename TBulletInstanceFrameState<ModelDef>::FFrame* BaseDeltaFrame = nullptr;
@@ -899,7 +899,7 @@ public:
 		FBulletNetworkPredictionSerialization::SerializeTimeMS(P.Ar, ClientRecvState.SimTimeMS); // 1. ServerTotalSimTime
 
 		
-#if UE_JNP_TRACE_ENABLED
+#if UE_BNP_TRACE_ENABLED
 		int32 TraceSimTime = 0;
 		FBulletNetworkPredictionSerialization::SerializeTimeMS(P.Ar, TraceSimTime); // 2. ServerTotalSimTime
 #else
@@ -914,13 +914,13 @@ public:
 		// Should we not trace it and have insights handle this case explicitly? Or guess where it would go roughly?
 		// Just tracing it as "latest" for now.
 		const int32 TraceFrame = TickState->PendingFrame;
-		jnpEnsure(TraceFrame >= 0);
+		bnpEnsure(TraceFrame >= 0);
 
-		UE_JNP_TRACE_NET_RECV(TraceFrame, TraceSimTime);
+		UE_BNP_TRACE_NET_RECV(TraceFrame, TraceSimTime);
 		
 		TCommonReplicator_SP<ModelDef>::NetRecv(P, ClientRecvState, DataStore,nullptr); // 3. Common
 
-		jnpEnsureSlow(ClientRecvState.InstanceIdx >= 0);
+		bnpEnsureSlow(ClientRecvState.InstanceIdx >= 0);
 		TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(ClientRecvState.InstanceIdx);
 
 		const bool bSerializeCueFrames = true; // Fixed tick can use Frame numbers for SP serialization
@@ -952,7 +952,7 @@ public:
 		const int32 VariableTickTimeMS = VariableTickState->Frames[VariableTickState->PendingFrame].TotalMS;
 
 		TBulletServerRecvData_Independent<ModelDef>* IndependentTickData =  DataStore->ServerRecv_IndependentTick.Find(ID);
-		jnpCheckSlow(IndependentTickData);
+		bnpCheckSlow(IndependentTickData);
 		const int32 IndependentSimTimeMS = IndependentTickData->TotalSimTimeMS;
 
 		NetSend(P, ID, DataStore, IndependentSimTimeMS, VariableTickTimeMS, IndependentTickState.PendingFrame);
@@ -963,11 +963,11 @@ private:
 	static void NetSend(const FBulletNetSerializeParams& P, FBulletNetworkPredictionID ID, TBulletModelDataStore<ModelDef>* DataStore, int32 IndependentSimTime, int32 ServerTotalSimTime, int32 PendingFrame)
 	{
 		TInstanceData<ModelDef>* Instance = DataStore->Instances.Find(ID);
-		jnpCheckSlow(Instance);
+		bnpCheckSlow(Instance);
 
 		FBulletNetworkPredictionSerialization::SerializeTimeMS(P.Ar, ServerTotalSimTime); // 1. ServerTotalSimTime
 
-#if UE_JNP_TRACE_ENABLED
+#if UE_BNP_TRACE_ENABLED
 		FBulletNetworkPredictionSerialization::SerializeTimeMS(P.Ar, IndependentSimTime); // 2. IndependentSimTime
 #endif
 

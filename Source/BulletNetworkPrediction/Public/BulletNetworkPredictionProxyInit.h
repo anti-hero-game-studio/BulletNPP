@@ -20,7 +20,7 @@ void FBulletNetworkPredictionProxy::Init(const FInitParams<ModelDef>& Params)
 
 	// Aquire an ID but don't register yet
 	WorldManager = Params.WorldManager;
-	jnpCheckSlow(WorldManager);
+	bnpCheckSlow(WorldManager);
 
 	if (ID.IsValid() == false)
 	{
@@ -52,20 +52,20 @@ void FBulletNetworkPredictionProxy::Init(const FInitParams<ModelDef>& Params)
 				return;
 
 			case EConfigAction::UpdateConfigWithDefault:
-				jnpEnsureSlow(This->CachedNetRole != ROLE_None); // role must have already been set
+				bnpEnsureSlow(This->CachedNetRole != ROLE_None); // role must have already been set
 				This->CachedConfig = FBulletNetworkPredictionDriver<ModelDef>::GetConfig(This->CachedArchetype, This->WorldManager->GetSettings(), This->CachedNetRole, This->bCachedHasNetConnection);
 				break; // purposefully breaking, not returning, so that we do call ConfigureInstance
 				
 			case EConfigAction::TraceInput:
-				UE_JNP_TRACE_USER_STATE_INPUT(ModelDef, (InputType*)This->View.PendingInputCmd);
+				UE_BNP_TRACE_USER_STATE_INPUT(ModelDef, (InputType*)This->View.PendingInputCmd);
 				return;
 
 			case EConfigAction::TraceSync:
-				UE_JNP_TRACE_USER_STATE_SYNC(ModelDef, (SyncType*)This->View.PendingSyncState);
+				UE_BNP_TRACE_USER_STATE_SYNC(ModelDef, (SyncType*)This->View.PendingSyncState);
 				return;
 
 			case EConfigAction::TraceAux:
-				UE_JNP_TRACE_USER_STATE_AUX(ModelDef, (AuxType*)This->View.PendingAuxState);
+				UE_BNP_TRACE_USER_STATE_AUX(ModelDef, (AuxType*)This->View.PendingAuxState);
 				return;
 		};
 

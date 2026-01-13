@@ -53,8 +53,8 @@
 //	
 // Adding new services:
 //	1. Add entry to EBulletNetworkPredictionService
-//	2. Add JNP_DECLARE_SERVICE 
-//	3. Add JNP_DEFINE_SERVICE_CALL
+//	2. Add BNP_DECLARE_SERVICE 
+//	3. Add BNP_DEFINE_SERVICE_CALL
 //	4. Add logic to UBulletNetworkPredictionWorldManager::ConfigureInstance to determine the conditions for subscribing to the service
 //	5. Add logic in UBulletNetworkPredictionWorldManager to actually invoke the service. This will obviously be service dependent.
 //
@@ -83,7 +83,7 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID, TInstanceData<ModelDef>& InstanceData, EBulletNetworkPredictionService ServiceMask)
 	{
 		// Expected to register for fixed XOR independent services
-		jnpEnsureSlow(EnumHasAnyFlags(ServiceMask, EBulletNetworkPredictionService::ANY_FIXED) ^ EnumHasAnyFlags(ServiceMask, EBulletNetworkPredictionService::ANY_INDEPENDENT));
+		bnpEnsureSlow(EnumHasAnyFlags(ServiceMask, EBulletNetworkPredictionService::ANY_FIXED) ^ EnumHasAnyFlags(ServiceMask, EBulletNetworkPredictionService::ANY_INDEPENDENT));
 		if (InstanceData.ServiceMask != EBulletNetworkPredictionService::None)
 		{
 			// Only unregister/register what is changing
@@ -134,7 +134,7 @@ public:
 	template<typename ModelDef=FBulletNetworkPredictionModelDef>
 	TBulletModelDataStore<ModelDef>* GetDataStore()
 	{
-		jnpEnsureMsgf(ModelDef::ID > 0, TEXT("ModelDef %s has invalid ID assigned. Could be missing JNP_MODEL_REGISTER."), ModelDef::GetName());
+		bnpEnsureMsgf(ModelDef::ID > 0, TEXT("ModelDef %s has invalid ID assigned. Could be missing BNP_MODEL_REGISTER."), ModelDef::GetName());
 
 		struct FThisDataStore : IDataStore
 		{
@@ -167,34 +167,34 @@ public:
 	};
 
 	// Macros are mainly to enforce consistent naming and cohesion with EBulletNetworkPredictionService
-#define JNP_DECLARE_SERVICE(EnumName, ServiceInterface) TServiceStorage<ServiceInterface> EnumName
-#define JNP_DEFINE_SERVICE_CALL(EnumName, ServiceType) ConditionalCallFuncOnService<EBulletNetworkPredictionService::EnumName, ServiceType<ModelDef>>(EnumName, Func, Mask)
+#define BNP_DECLARE_SERVICE(EnumName, ServiceInterface) TServiceStorage<ServiceInterface> EnumName
+#define BNP_DEFINE_SERVICE_CALL(EnumName, ServiceType) ConditionalCallFuncOnService<EBulletNetworkPredictionService::EnumName, ServiceType<ModelDef>>(EnumName, Func, Mask)
 	
 	// Declares generic storage for the service type: TServiceStorage<InterfaceType>
 	
 	
-	JNP_DECLARE_SERVICE(FixedServerRPC,			    IBulletFixedServerRPCService);
-	JNP_DECLARE_SERVICE(FixedRollback,				IBulletFixedRollbackService);
-	JNP_DECLARE_SERVICE(FixedPhysicsRollback,				IBulletFixedPhysicsRollbackService);
-	JNP_DECLARE_SERVICE(FixedInterpolate,			IBulletFixedInterpolateService);
-	JNP_DECLARE_SERVICE(FixedInputLocal,				IBulletInputService);
-	JNP_DECLARE_SERVICE(FixedInputRemote,			IBulletInputService);
-	JNP_DECLARE_SERVICE(FixedTick,					IBulletLocalTickService);
-	JNP_DECLARE_SERVICE(FixedPhysics,					IBulletLocalPhysicsService);
-	JNP_DECLARE_SERVICE(FixedFinalize,				IBulletFinalizeService);
-	JNP_DECLARE_SERVICE(FixedSmoothing,				IBulletFixedSmoothingService);
+	BNP_DECLARE_SERVICE(FixedServerRPC,			    IBulletFixedServerRPCService);
+	BNP_DECLARE_SERVICE(FixedRollback,				IBulletFixedRollbackService);
+	BNP_DECLARE_SERVICE(FixedPhysicsRollback,				IBulletFixedPhysicsRollbackService);
+	BNP_DECLARE_SERVICE(FixedInterpolate,			IBulletFixedInterpolateService);
+	BNP_DECLARE_SERVICE(FixedInputLocal,				IBulletInputService);
+	BNP_DECLARE_SERVICE(FixedInputRemote,			IBulletInputService);
+	BNP_DECLARE_SERVICE(FixedTick,					IBulletLocalTickService);
+	BNP_DECLARE_SERVICE(FixedPhysics,					IBulletLocalPhysicsService);
+	BNP_DECLARE_SERVICE(FixedFinalize,				IBulletFinalizeService);
+	BNP_DECLARE_SERVICE(FixedSmoothing,				IBulletFixedSmoothingService);
 
-	JNP_DECLARE_SERVICE(ServerRPC,			        IBulletServerRPCService);
-	JNP_DECLARE_SERVICE(IndependentRollback,			IBulletIndependentRollbackService);
-	JNP_DECLARE_SERVICE(IndependentPhysicsRollback,			IBulletIndependentPhysicsRollbackService);
-	JNP_DECLARE_SERVICE(IndependentInterpolate,		IBulletIndependentInterpolateService);
-	JNP_DECLARE_SERVICE(IndependentLocalInput,		IBulletInputService);
-	JNP_DECLARE_SERVICE(IndependentLocalTick,		IBulletLocalTickService);
-	JNP_DECLARE_SERVICE(IndependentLocalPhysics,		IBulletLocalPhysicsService);
-	JNP_DECLARE_SERVICE(IndependentRemoteTick,		IBulletRemoteIndependentTickService);
-	JNP_DECLARE_SERVICE(IndependentRemotePhysics,		IBulletRemoteIndependentPhysicsService);
-	JNP_DECLARE_SERVICE(IndependentLocalFinalize,	IBulletFinalizeService);
-	JNP_DECLARE_SERVICE(IndependentRemoteFinalize,	IBulletRemoteFinalizeService);
+	BNP_DECLARE_SERVICE(ServerRPC,			        IBulletServerRPCService);
+	BNP_DECLARE_SERVICE(IndependentRollback,			IBulletIndependentRollbackService);
+	BNP_DECLARE_SERVICE(IndependentPhysicsRollback,			IBulletIndependentPhysicsRollbackService);
+	BNP_DECLARE_SERVICE(IndependentInterpolate,		IBulletIndependentInterpolateService);
+	BNP_DECLARE_SERVICE(IndependentLocalInput,		IBulletInputService);
+	BNP_DECLARE_SERVICE(IndependentLocalTick,		IBulletLocalTickService);
+	BNP_DECLARE_SERVICE(IndependentLocalPhysics,		IBulletLocalPhysicsService);
+	BNP_DECLARE_SERVICE(IndependentRemoteTick,		IBulletRemoteIndependentTickService);
+	BNP_DECLARE_SERVICE(IndependentRemotePhysics,		IBulletRemoteIndependentPhysicsService);
+	BNP_DECLARE_SERVICE(IndependentLocalFinalize,	IBulletFinalizeService);
+	BNP_DECLARE_SERVICE(IndependentRemoteFinalize,	IBulletRemoteFinalizeService);
 	
 private:
 
@@ -206,31 +206,31 @@ private:
 
 		if (EnumHasAnyFlags(Mask, EBulletNetworkPredictionService::ANY_FIXED))
 		{
-			JNP_DEFINE_SERVICE_CALL(FixedServerRPC,			        TBulletFixedServerRPCService);
-			JNP_DEFINE_SERVICE_CALL(FixedRollback,				TBulletFixedRollbackService);
-			JNP_DEFINE_SERVICE_CALL(FixedPhysicsRollback,				TBulletFixedPhysicsRollbackService);
-			JNP_DEFINE_SERVICE_CALL(FixedInterpolate,			TBulletFixedInterpolateService);
-			JNP_DEFINE_SERVICE_CALL(FixedInputLocal,				TBulletLocalInputService);
-			JNP_DEFINE_SERVICE_CALL(FixedInputRemote,			TBulletRemoteInputService);
-			JNP_DEFINE_SERVICE_CALL(FixedTick,					TBulletLocalTickService);
-			JNP_DEFINE_SERVICE_CALL(FixedPhysics,					TBulletLocalPhysicsService);
-			JNP_DEFINE_SERVICE_CALL(FixedFinalize,				TBulletFinalizeService);
-			JNP_DEFINE_SERVICE_CALL(FixedSmoothing,				TBulletFixedSmoothingService);
+			BNP_DEFINE_SERVICE_CALL(FixedServerRPC,			        TBulletFixedServerRPCService);
+			BNP_DEFINE_SERVICE_CALL(FixedRollback,				TBulletFixedRollbackService);
+			BNP_DEFINE_SERVICE_CALL(FixedPhysicsRollback,				TBulletFixedPhysicsRollbackService);
+			BNP_DEFINE_SERVICE_CALL(FixedInterpolate,			TBulletFixedInterpolateService);
+			BNP_DEFINE_SERVICE_CALL(FixedInputLocal,				TBulletLocalInputService);
+			BNP_DEFINE_SERVICE_CALL(FixedInputRemote,			TBulletRemoteInputService);
+			BNP_DEFINE_SERVICE_CALL(FixedTick,					TBulletLocalTickService);
+			BNP_DEFINE_SERVICE_CALL(FixedPhysics,					TBulletLocalPhysicsService);
+			BNP_DEFINE_SERVICE_CALL(FixedFinalize,				TBulletFinalizeService);
+			BNP_DEFINE_SERVICE_CALL(FixedSmoothing,				TBulletFixedSmoothingService);
 		}
 		else if (EnumHasAnyFlags(Mask, EBulletNetworkPredictionService::ANY_INDEPENDENT))
 		{
 
-			JNP_DEFINE_SERVICE_CALL(ServerRPC,			        TBulletServerRPCService);
-			JNP_DEFINE_SERVICE_CALL(IndependentRollback,			TBulletIndependentRollbackService);
-			JNP_DEFINE_SERVICE_CALL(IndependentPhysicsRollback,			TBulletIndependentPhysicsRollbackService);
-			JNP_DEFINE_SERVICE_CALL(IndependentInterpolate,		TBulletIndependentInterpolateService);
-			JNP_DEFINE_SERVICE_CALL(IndependentLocalInput,		TBulletLocalInputService);
-			JNP_DEFINE_SERVICE_CALL(IndependentLocalTick,		TBulletLocalTickService);
-			JNP_DEFINE_SERVICE_CALL(IndependentLocalPhysics,		TBulletLocalPhysicsService);
-			JNP_DEFINE_SERVICE_CALL(IndependentRemoteTick,		TBulletRemoteIndependentTickService);
-			JNP_DEFINE_SERVICE_CALL(IndependentRemotePhysics,		TBulletRemoteIndependentPhysicsService);
-			JNP_DEFINE_SERVICE_CALL(IndependentLocalFinalize,	TBulletFinalizeService);
-			JNP_DEFINE_SERVICE_CALL(IndependentRemoteFinalize,	TBulletRemoteFinalizeService);
+			BNP_DEFINE_SERVICE_CALL(ServerRPC,			        TBulletServerRPCService);
+			BNP_DEFINE_SERVICE_CALL(IndependentRollback,			TBulletIndependentRollbackService);
+			BNP_DEFINE_SERVICE_CALL(IndependentPhysicsRollback,			TBulletIndependentPhysicsRollbackService);
+			BNP_DEFINE_SERVICE_CALL(IndependentInterpolate,		TBulletIndependentInterpolateService);
+			BNP_DEFINE_SERVICE_CALL(IndependentLocalInput,		TBulletLocalInputService);
+			BNP_DEFINE_SERVICE_CALL(IndependentLocalTick,		TBulletLocalTickService);
+			BNP_DEFINE_SERVICE_CALL(IndependentLocalPhysics,		TBulletLocalPhysicsService);
+			BNP_DEFINE_SERVICE_CALL(IndependentRemoteTick,		TBulletRemoteIndependentTickService);
+			BNP_DEFINE_SERVICE_CALL(IndependentRemotePhysics,		TBulletRemoteIndependentPhysicsService);
+			BNP_DEFINE_SERVICE_CALL(IndependentLocalFinalize,	TBulletFinalizeService);
+			BNP_DEFINE_SERVICE_CALL(IndependentRemoteFinalize,	TBulletRemoteFinalizeService);
 		}
 	}
 
@@ -269,7 +269,7 @@ private:
 		}
 
 		auto& Item = Array[ModelDef::ID];
-		jnpCheckf(Item.IsValid(), TEXT("Service not initialized"));
+		bnpCheckf(Item.IsValid(), TEXT("Service not initialized"));
 		return (ServiceType*)Item.Get();
 	}
 

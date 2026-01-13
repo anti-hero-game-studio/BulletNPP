@@ -175,7 +175,7 @@ public:
 
 		// Thet TypeInfoMap has to be immediately invalidated, since it contains a TFunction that was allocated in memory that is (probably) about to go away
 		Singleton.TypeInfoMap.Reset();
-		jnpEnsureMsgf(RegisteredTypes.bDirty, TEXT("Unmatch TCue type"));
+		bnpEnsureMsgf(RegisteredTypes.bDirty, TEXT("Unmatch TCue type"));
 	}
 
 	static bool IsRegisterationTypeInfoDirty() { return GetRegistedTypeInfo().bDirty; }
@@ -290,7 +290,7 @@ struct FSavedCue
 	
 	void NetSerialize(FArchive& Ar, const bool bSerializeFrameNumber)
 	{
-		jnpCheckSlow(FGlobalCueTypeTable::IsRegisterationTypeInfoDirty() == false);
+		bnpCheckSlow(FGlobalCueTypeTable::IsRegisterationTypeInfoDirty() == false);
 
 		if (Ar.IsSaving())
 		{
@@ -397,7 +397,7 @@ public:
 
 	void Dispatch(FSavedCue& SavedCue, TCueHandler& Handler, const int32& TimeSinceInvocation)
 	{
-		jnpCheckSlow(FGlobalCueTypeTable::IsRegisterationTypeInfoDirty() == false);
+		bnpCheckSlow(FGlobalCueTypeTable::IsRegisterationTypeInfoDirty() == false);
 
 		if (FCueTypeInfo* TypeInfo = CueTypeInfoMap.Find(SavedCue.ID))
 		{
@@ -463,7 +463,7 @@ struct FBulletNetSimCueDispatcher
 	template<typename T, typename... ArgsType>
 	void Invoke(ArgsType&&... Args)
 	{
-		jnpCheckSlow(FGlobalCueTypeTable::IsRegisterationTypeInfoDirty() == false);
+		bnpCheckSlow(FGlobalCueTypeTable::IsRegisterationTypeInfoDirty() == false);
 
 		if (EnsureValidContext())
 		{
@@ -490,13 +490,13 @@ struct FBulletNetSimCueDispatcher
 					bNetConfirmed = !bAllowRollback;
 				}
 
-				jnpEnsure(!(bTransient && bAllowRollback)); // this combination cannot happen: we can't be transient and support rollback (but we can be transient without supporting rollback)
-				jnpEnsure(!(bNetConfirmed && bAllowRollback)); // a confirmed cue shouldn't be rolled back.
+				bnpEnsure(!(bTransient && bAllowRollback)); // this combination cannot happen: we can't be transient and support rollback (but we can be transient without supporting rollback)
+				bnpEnsure(!(bNetConfirmed && bAllowRollback)); // a confirmed cue shouldn't be rolled back.
 
 				// In resimulate case, we have to see if we already predicted it
 				if (Context.TickContext == EBulletSimulationTickContext::Resimulate)
 				{
-					jnpEnsure(RollbackFrame >= 0 && RollbackFrame <= Context.Frame);
+					bnpEnsure(RollbackFrame >= 0 && RollbackFrame <= Context.Frame);
 					
 					// Since we haven't constructed the cue yet, we can't test for uniqueness!
 					// So, create one on the stack. If we let it through we can move it to the appropriate buffer
@@ -505,7 +505,7 @@ struct FBulletNetSimCueDispatcher
 
 					for (FSavedCue& ExistingCue : SavedCues)
 					{
-						jnpEnsureSlow(ExistingCue.Frame != INDEX_NONE);
+						bnpEnsureSlow(ExistingCue.Frame != INDEX_NONE);
 						if (RollbackFrame <= ExistingCue.Frame && ExistingCue.NetIdentical(NewCue))
 						{
 							// We've matched with an already predicted cue, so suppress this invocation and don't undo the predicted cue
@@ -539,7 +539,7 @@ protected:
 
 	bool EnsureValidContext()
 	{
-		return jnpEnsure(Context.CurrentSimTime > 0 && Context.TickContext != EBulletSimulationTickContext::None);
+		return bnpEnsure(Context.CurrentSimTime > 0 && Context.TickContext != EBulletSimulationTickContext::None);
 	}
 
 	// Sim Context: the Sim has to tell the dispatcher what its doing so that it can decide if it should supress Invocations or not
@@ -576,7 +576,7 @@ struct TBulletNetSimCueDispatcher : public FBulletNetSimCueDispatcher
 	//	bSerializeFrameNumber - whether to serialize Frame# or Time to this target. Frame is more accurate but some cases require time based replication.
 	void NetSendSavedCues(FArchive& Ar, EBulletNetSimCueReplicationTarget ReplicationMask, bool bSerializeFrameNumber)
 	{
-		jnpCheckSlow(Ar.IsSaving());
+		bnpCheckSlow(Ar.IsSaving());
 		
 		// FIXME: requires two passes to count how many elements are valid for this replication mask.
 		// We could count this as saved cues are added or possibly modify the bitstream after writing the elements (tricky and would require casting to FNetBitWriter which feels real bad)
@@ -603,7 +603,7 @@ struct TBulletNetSimCueDispatcher : public FBulletNetSimCueDispatcher
 
 	void NetRecvSavedCues(FArchive& Ar, const bool bSerializeFrameNumber, const int32 InLastRecvFrame, const int32 InLastRecvTime)
 	{
-		jnpCheckSlow(Ar.IsLoading());
+		bnpCheckSlow(Ar.IsLoading());
 		
 		FBulletNetSimCueTypeId NumCues;
 		Ar << NumCues;
@@ -696,7 +696,7 @@ struct TBulletNetSimCueDispatcher : public FBulletNetSimCueDispatcher
 			for (auto It = SavedCues.CreateIterator(); It; ++It)
 			{
 				FSavedCue& SavedCue = *It;
-				jnpEnsureSlow(SavedCue.Frame != INDEX_NONE);
+				bnpEnsureSlow(SavedCue.Frame != INDEX_NONE);
 				if (!SavedCue.bNetConfirmed && SavedCue.Frame <= LastRecvFrame)
 				{
 					UE_LOG(LogBulletNetworkPredictionCues, Log, TEXT("%s. Calling OnRollback for SavedCue BulletNetSimCue %s. Cue has not been matched but it <= LastRecvFrame %d."), *GetDebugName(), *SavedCue.GetDebugName(), LastRecvFrame);
@@ -813,13 +813,13 @@ struct TBulletNetSimCueDispatcher : public FBulletNetSimCueDispatcher
 		else
 		{
 			// Two rollbacks could happen in between DispatchCueRecord calls. That is ok as long as the subsequent rollbacks are further ahead in simulation time
-			jnpEnsure(RollbackFrame <= InRollbackFrame);
+			bnpEnsure(RollbackFrame <= InRollbackFrame);
 		}
 
 		// Mark all cues that support invocation during resimulation as pending rollback (unless they match in an Invoke)
 		for (FSavedCue& SavedCue : SavedCues)
 		{
-			jnpEnsureSlow(SavedCue.Frame != INDEX_NONE);
+			bnpEnsureSlow(SavedCue.Frame != INDEX_NONE);
 			if (SavedCue.bResimulates && SavedCue.Frame >= InRollbackFrame)
 			{
 				SavedCue.bPendingResimulateRollback = true;

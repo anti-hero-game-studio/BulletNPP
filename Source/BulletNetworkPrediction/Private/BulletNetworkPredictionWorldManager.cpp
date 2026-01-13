@@ -183,7 +183,7 @@ void UBulletNetworkPredictionWorldManager::OnWorldPreTick(UWorld* InWorld, ELeve
 		return;
 	}
 
-	UE_JNP_TRACE_WORLD_FRAME_START(InWorld->GetGameInstance(), InDeltaSeconds);
+	UE_BNP_TRACE_WORLD_FRAME_START(InWorld->GetGameInstance(), InDeltaSeconds);
 
 	OnWorldPreTick_Internal(InDeltaSeconds, Settings.FixedTickFrameRate);
 
@@ -238,7 +238,7 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 
 void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate_Internal()
 {
-	QUICK_SCOPE_CYCLE_COUNTER(STAT_JNP_RECONCILE);
+	QUICK_SCOPE_CYCLE_COUNTER(STAT_BNP_RECONCILE);
 	TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::Reconcile);
 
 	ActiveInstance = this;
@@ -247,7 +247,7 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 	// Trace Local->Server offset. We need to trace this so that we can flag reconciles that happened
 	// due to this (usually caused by server being starved for input)
 	const bool OffsetChanged = (FixedTickState.LastOffset != FixedTickState.Offset);
-	UE_JNP_TRACE_FIXED_TICK_OFFSET(FixedTickState.Offset, OffsetChanged);
+	UE_BNP_TRACE_FIXED_TICK_OFFSET(FixedTickState.Offset, OffsetChanged);
 	if (OffsetChanged)
 	{
 		UE_LOG(LogBulletNetworkPrediction,Warning,TEXT("ReconcileFromInputOffset Old Offset %d, New Offset %d"),FixedTickState.LastOffset,FixedTickState.Offset)
@@ -289,7 +289,7 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 
 	if (RollbackFrame != INDEX_NONE)
 	{
-		QUICK_SCOPE_CYCLE_COUNTER(STAT_JNP_ROLLBACK);
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_BNP_ROLLBACK);
 		TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::Rollback);
 
 		if (RollbackFrame < FixedTickState.PendingFrame)
@@ -298,7 +298,7 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 
 			const int32 EndFrame = FixedTickState.PendingFrame;
 			const int32 NumFrames = EndFrame - RollbackFrame;
-			jnpEnsureSlow(NumFrames > 0);
+			bnpEnsureSlow(NumFrames > 0);
 			
 			
 			bool bFirstStep = true;
@@ -311,7 +311,7 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 				FBulletServiceTimeStep ServiceStep = FixedTickState.GetNextServiceTimeStep();
 			
 				const int32 ServerInputFrame = Frame + FixedTickState.Offset;
-				UE_JNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, FixedTickState.FixedStepMS, Step.Frame);
+				UE_BNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, FixedTickState.FixedStepMS, Step.Frame);
 
 				// Everyone must apply corrections and flush as necessary before anyone runs the next sim tick
 				// bFirstStep will indicate that even if they don't have a correction, they need to rollback their historic state
@@ -394,7 +394,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame(UWorld* InWor
 
 void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(float DeltaTimeSeconds)
 {
-	QUICK_SCOPE_CYCLE_COUNTER(STAT_JNP_TICK);
+	QUICK_SCOPE_CYCLE_COUNTER(STAT_BNP_TICK);
 	TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::Tick);
 	
 	ActiveInstance = this;
@@ -407,7 +407,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 	// -------------------------------------------------------------------------
 	if (Services.FixedTick.Array.Num() > 0)
 	{
-		QUICK_SCOPE_CYCLE_COUNTER(STAT_JNP_TICK_FIXED);
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_BNP_TICK_FIXED);
 		TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::FixedTick);
 
 		FixedTickState.UnspentTimeMS += fEngineFrameDeltaTimeMS;
@@ -430,7 +430,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 			// server that produces input doesn't interpolate, all entities tick for him so provide sim time as interp time
 			const bool bIsServer = GetWorld()->GetNetMode() == NM_ListenServer || GetWorld()->GetNetMode() == NM_DedicatedServer;
 			const float InterpTimeMs = bIsServer ? FixedTickState.GetTotalSimTimeMS() : FixedTickState.Interpolation.InterpolatedTimeMS;
-			UE_JNP_TRACE_PUSH_INPUT_FRAME(ServerInputFrame);
+			UE_BNP_TRACE_PUSH_INPUT_FRAME(ServerInputFrame);
 			if (Services.FixedInputRemote.Array.Num() > 0)
 			{
 				for (UBulletNetworkPredictionPlayerControllerComponent*& InputHandler : RPCHandlers)
@@ -452,7 +452,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 				Ptr->ProduceInput(FixedTickState.FixedStepMS,InterpTimeMs);
 			}
 
-			UE_JNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, FixedTickState.FixedStepMS, Step.Frame);
+			UE_BNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, FixedTickState.FixedStepMS, Step.Frame);
 			
 			// Should we increment PendingFrame before or after the tick?
 			// Before: sims that are spawned during Tick (of other sims) will not be ticked this frame.
@@ -554,7 +554,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 		PendingFrameData.DeltaMS = DeltaSimMS;
 
 		// Input
-		UE_JNP_TRACE_PUSH_INPUT_FRAME(VariableTickState.PendingFrame);
+		UE_BNP_TRACE_PUSH_INPUT_FRAME(VariableTickState.PendingFrame);
 		for (TUniquePtr<IBulletInputService>& Ptr : Services.IndependentLocalInput.Array)
 		{
 			Ptr->ProduceInput(DeltaSimMS,VariableTickState.Interpolation.fTimeMS);
@@ -566,7 +566,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 
 		FBulletNetSimTimeStep Step = VariableTickState.GetNextTimeStep(PendingFrameData);
 		FBulletServiceTimeStep ServiceStep = VariableTickState.GetNextServiceTimeStep(PendingFrameData);
-		UE_JNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, Step.StepMS, Step.Frame);
+		UE_BNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, Step.StepMS, Step.Frame);
 
 		for (TUniquePtr<IBulletLocalTickService>& Ptr : Services.IndependentLocalTick.Array)
 		{
@@ -687,7 +687,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 					}
 					const float RawPCT = FixedTickState.Interpolation.AccumulatedTimeMS / (float)FixedTickState.FixedStepRealTimeMS;
 					FixedTickState.Interpolation.PCT = FMath::Clamp<float>(RawPCT, 0.f, 1.f);
-					jnpEnsureMsgf(FixedTickState.Interpolation.PCT >= 0.f && FixedTickState.Interpolation.PCT <= 1.f, TEXT("Interpolation PCT out of range. %f"), FixedTickState.Interpolation.PCT);
+					bnpEnsureMsgf(FixedTickState.Interpolation.PCT >= 0.f && FixedTickState.Interpolation.PCT <= 1.f, TEXT("Interpolation PCT out of range. %f"), FixedTickState.Interpolation.PCT);
 
 					const float PCTms = FixedTickState.Interpolation.PCT * (float)FixedTickState.FixedStepMS;
 					FixedTickState.Interpolation.InterpolatedTimeMS = ((FixedTickState.Interpolation.ToFrame-1) * FixedTickState.FixedStepMS) + (int32)PCTms;

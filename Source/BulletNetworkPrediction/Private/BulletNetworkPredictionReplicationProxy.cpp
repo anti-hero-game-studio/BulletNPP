@@ -18,7 +18,7 @@ void FBulletReplicationProxy::Init(FBulletNetworkPredictionProxy* InBulletNetSim
 
 bool FBulletReplicationProxy::NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
 {
-	if (jnpEnsureMsgf(NetSerializeFunc, TEXT("NetSerializeFunc not set for FBulletReplicationProxy %d"), ReplicationTarget))
+	if (bnpEnsureMsgf(NetSerializeFunc, TEXT("NetSerializeFunc not set for FBulletReplicationProxy %d"), ReplicationTarget))
 	{
 		NetSerializeFunc(FBulletNetSerializeParams(Ar,Map,ReplicationTarget));
 		return true;

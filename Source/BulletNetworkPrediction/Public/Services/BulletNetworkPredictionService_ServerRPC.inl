@@ -35,7 +35,7 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
 		TInstanceData<ModelDef>* InstanceData = DataStore->Instances.Find(ID);
-		jnpCheckSlow(InstanceData);
+		bnpCheckSlow(InstanceData);
 
 		Instances.Add((int32)ID, FInstance{InstanceData->TraceID, InstanceData->Info.Driver});
 	}
@@ -94,7 +94,7 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
 		TInstanceData<ModelDef>* InstanceData = DataStore->Instances.Find(ID);
-		jnpCheckSlow(InstanceData);
+		bnpCheckSlow(InstanceData);
 		int32 FramesID = DataStore->Frames.GetIndex(ID);
 		const int32 InstanceIndex = DataStore->Instances.GetIndexChecked(ID);
 
@@ -120,7 +120,7 @@ public:
 		for (auto& MapIt : Instances)
 		{
 			FInstance& Instance = MapIt.Value;
-			UE_JNP_TRACE_SIM(Instance.TraceID);
+			UE_BNP_TRACE_SIM(Instance.TraceID);
 			TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(Instance.InstanceIndex);
 			UBulletNetworkPredictionPlayerControllerComponent* RPCHandler = InstanceData.Info.RPCHandler;
 			if (RPCHandler && RPCHandler->GetNetConnection())

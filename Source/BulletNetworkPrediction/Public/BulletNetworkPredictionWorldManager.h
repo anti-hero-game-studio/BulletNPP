@@ -46,8 +46,8 @@ public:
 	template<typename ModelDef>
 	void RemapClientSimulationID(FBulletNetworkPredictionID ClientID, FBulletNetworkPredictionID ServerID)
 	{
-		jnpEnsure((int32)ClientID < INDEX_NONE && (int32)ServerID >= 0);
-		jnpEnsure(ClientID.GetTraceID() == ServerID.GetTraceID());
+		bnpEnsure((int32)ClientID < INDEX_NONE && (int32)ServerID >= 0);
+		bnpEnsure(ClientID.GetTraceID() == ServerID.GetTraceID());
 		
 		TBulletModelDataStore<ModelDef>* DataStore = Services.GetDataStore<ModelDef>();
 		TInstanceData<ModelDef>& InstanceData = DataStore->Instances.FindOrAdd(ServerID);
@@ -372,8 +372,8 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 {
 	static constexpr FBulletNetworkPredictionModelDefCapabilities Capabilities = FBulletNetworkPredictionDriver<ModelDef>::GetCapabilities();
 
-	jnpCheckSlow((int32)ID > 0);
-	jnpEnsure(Role != ROLE_None);
+	bnpCheckSlow((int32)ID > 0);
+	bnpEnsure(Role != ROLE_None);
 
 	TBulletModelDataStore<ModelDef>* DataStore = Services.GetDataStore<ModelDef>();
 	TInstanceData<ModelDef>& InstanceData = *DataStore->Instances.Find(ID);
@@ -418,7 +418,7 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 
 					// Point view to the ServerRecv PendingFrame instead
 					TBulletServerRecvData_Independent<ModelDef>* ServerRecvData = DataStore->ServerRecv_IndependentTick.Find(ID);
-					jnpCheckSlow(ServerRecvData);
+					bnpCheckSlow(ServerRecvData);
 
 					const int32 ServerRecvPendingFrame = ServerRecvData->PendingFrame;
 
@@ -455,8 +455,8 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 				BindNetSend_IndependentLocal<TIndependentTickReplicator_Server<ModelDef>>(ID, RepProxies.ServerRPC, DataStore);
 				BindReplayNetSendRecv_IndependentLocal<TIndependentTickReplicator_SP<ModelDef>>(ID, RepProxies.Replay, DataStore, Role);
 				
-				jnpCheckf(FBulletNetworkPredictionDriver<ModelDef>::HasSimulation(), TEXT("AP must have Simulation."));
-				jnpCheckf(FBulletNetworkPredictionDriver<ModelDef>::HasInput(), TEXT("AP sim doesn't have Input?"));
+				bnpCheckf(FBulletNetworkPredictionDriver<ModelDef>::HasSimulation(), TEXT("AP must have Simulation."));
+				bnpCheckf(FBulletNetworkPredictionDriver<ModelDef>::HasInput(), TEXT("AP sim doesn't have Input?"));
 
 				ServiceMask |= EBulletNetworkPredictionService::IndependentLocalInput;
 				ServiceMask |= EBulletNetworkPredictionService::IndependentLocalTick;
@@ -511,8 +511,8 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 			}
 			case ENetRole::ROLE_AutonomousProxy:
 			{
-				jnpCheckf(FBulletNetworkPredictionDriver<ModelDef>::HasSimulation(), TEXT("AP must have Simulation."));
-				jnpCheckf(FBulletNetworkPredictionDriver<ModelDef>::HasInput(), TEXT("AP sim doesn't have Input?"));
+				bnpCheckf(FBulletNetworkPredictionDriver<ModelDef>::HasSimulation(), TEXT("AP must have Simulation."));
+				bnpCheckf(FBulletNetworkPredictionDriver<ModelDef>::HasInput(), TEXT("AP sim doesn't have Input?"));
 
 				BindClientNetRecv_Fixed<TFixedTickReplicator_AP<ModelDef>>(ID, RepProxies.AutonomousProxy, DataStore, Role);
 				BindClientNetRecv_Fixed<TFixedTickReplicator_SP<ModelDef>>(ID, RepProxies.SimulatedProxy, DataStore, Role);
@@ -619,7 +619,7 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 	// Call into driver to seed initial state if this is a new instance
 	if (bNewInstance)
 	{
-		UE_JNP_TRACE_SIM_CREATED(ID, InstanceData.Info.Driver, ModelDef);
+		UE_BNP_TRACE_SIM_CREATED(ID, InstanceData.Info.Driver, ModelDef);
 		if (FBulletNetworkPredictionDriver<ModelDef>::HasNpState())
 		{
 			FBulletNetworkPredictionDriver<ModelDef>::InitializeSimulationState(InstanceData.Info.Driver, InstanceData.Info.View);
@@ -634,7 +634,7 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 		}
 	}
 
-	UE_JNP_TRACE_SIM_CONFIG(ID.GetTraceID(), Role, bHasNetConnection, Archetype, Config, ServiceMask);
+	UE_BNP_TRACE_SIM_CONFIG(ID.GetTraceID(), Role, bHasNetConnection, Archetype, Config, ServiceMask);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -659,10 +659,10 @@ void UBulletNetworkPredictionWorldManager::BindServerNetRecv_Fixed(FBulletNetwor
 	FBulletFixedTickState* TickState = &this->FixedTickState;
 	RepProxy->NetSerializeFunc = [DataStore, ServerRecvIdx, TickState](const FBulletNetSerializeParams& P)
 	{
-		jnpEnsure(P.Ar.IsLoading());
+		bnpEnsure(P.Ar.IsLoading());
 		TBulletServerRecvData_Fixed<ModelDef>& ServerRecvData = DataStore->ServerRecv.GetByIndexChecked(ServerRecvIdx);
 		
-		UE_JNP_TRACE_SIM(ServerRecvData.TraceID);
+		UE_BNP_TRACE_SIM(ServerRecvData.TraceID);
 		TFixedTickReplicator_Server<ModelDef>::NetRecv(P, ServerRecvData, DataStore, TickState);
 	};
 }
@@ -689,10 +689,10 @@ void UBulletNetworkPredictionWorldManager::BindServerNetRecv_Independent(FBullet
 
 	RepProxy->NetSerializeFunc = [DataStore, ServerRecvIdx](const FBulletNetSerializeParams& P)
 	{
-		jnpEnsure(P.Ar.IsLoading());		
+		bnpEnsure(P.Ar.IsLoading());		
 		TBulletServerRecvData_Independent<ModelDef>& ServerRecvData = DataStore->ServerRecv_IndependentTick.GetByIndexChecked(ServerRecvIdx);
 
-		UE_JNP_TRACE_SIM(ServerRecvData.TraceID);
+		UE_BNP_TRACE_SIM(ServerRecvData.TraceID);
 		TIndependentTickReplicator_Server<ModelDef>::NetRecv(P, ServerRecvData, DataStore);
 	};
 }
@@ -717,7 +717,7 @@ void UBulletNetworkPredictionWorldManager::BindClientNetRecv_Fixed(FBulletNetwor
 	TFixedTickReplicator_Server<ModelDef>::SetNumInputsPerSend(Settings.FixedTickInputSendCount);
 
 	const int32 ClientRecvIdx = DataStore->ClientRecv.GetIndex(ID);
-	JnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
+	BnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
 
 	TBulletClientRecvData<ModelDef>& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 	InitClientRecvData<ModelDef>(ID, ClientRecvData, DataStore, NetRole);
@@ -725,11 +725,11 @@ void UBulletNetworkPredictionWorldManager::BindClientNetRecv_Fixed(FBulletNetwor
 	FBulletFixedTickState* TickState = &this->FixedTickState;
 	RepProxy->NetSerializeFunc = [DataStore, ClientRecvIdx, TickState](const FBulletNetSerializeParams& P)
 	{
-		jnpEnsure(P.Ar.IsLoading());
+		bnpEnsure(P.Ar.IsLoading());
 		DataStore->ClientRecvBitMask[ClientRecvIdx] = true;
 		auto& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 
-		UE_JNP_TRACE_SIM(ClientRecvData.TraceID);
+		UE_BNP_TRACE_SIM(ClientRecvData.TraceID);
 		ReplicatorType::NetRecv(P, ClientRecvData, DataStore, TickState);
 	};
 }
@@ -743,7 +743,7 @@ void UBulletNetworkPredictionWorldManager::BindClientNetRecv_Independent(FBullet
 	TIndependentTickReplicator_Server<ModelDef>::SetNumInputsPerSend(Settings.IndependentTickInputSendCount);
 
 	const int32 ClientRecvIdx = DataStore->ClientRecv.GetIndex(ID);
-	JnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
+	BnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
 
 	TBulletClientRecvData<ModelDef>& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 	InitClientRecvData<ModelDef>(ID, ClientRecvData, DataStore, NetRole);
@@ -751,11 +751,11 @@ void UBulletNetworkPredictionWorldManager::BindClientNetRecv_Independent(FBullet
 	FBulletVariableTickState* TickState = &this->VariableTickState;
 	RepProxy->NetSerializeFunc = [DataStore, ClientRecvIdx, TickState](const FBulletNetSerializeParams& P)
 	{
-		jnpEnsure(P.Ar.IsLoading());
+		bnpEnsure(P.Ar.IsLoading());
 		DataStore->ClientRecvBitMask[ClientRecvIdx] = true;
 		auto& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 
-		UE_JNP_TRACE_SIM(ClientRecvData.TraceID);
+		UE_BNP_TRACE_SIM(ClientRecvData.TraceID);
 		ReplicatorType::NetRecv(P, ClientRecvData, DataStore, TickState);
 	};
 }
@@ -783,8 +783,8 @@ void UBulletNetworkPredictionWorldManager::BindNetSend_Fixed(FBulletNetworkPredi
 	FBulletFixedTickState* TickState = &this->FixedTickState;
 	RepProxy->NetSerializeFunc = [ID, DataStore, TickState](const FBulletNetSerializeParams& P)
 	{
-		jnpEnsure(P.Ar.IsSaving());
-		UE_JNP_TRACE_SIM(ID.GetTraceID());
+		bnpEnsure(P.Ar.IsSaving());
+		UE_BNP_TRACE_SIM(ID.GetTraceID());
 		ReplicatorType::NetSend(P, ID, DataStore, TickState);
 	};
 }
@@ -799,8 +799,8 @@ void UBulletNetworkPredictionWorldManager::BindNetSend_IndependentLocal(FBulletN
 	FBulletVariableTickState* TickState = &this->VariableTickState;
 	RepProxy->NetSerializeFunc = [ID, DataStore, TickState](const FBulletNetSerializeParams& P)
 	{
-		jnpEnsure(P.Ar.IsSaving());
-		UE_JNP_TRACE_SIM(ID.GetTraceID());
+		bnpEnsure(P.Ar.IsSaving());
+		UE_BNP_TRACE_SIM(ID.GetTraceID());
 		ReplicatorType::NetSend(P, ID, DataStore, TickState);
 	};
 }
@@ -815,9 +815,9 @@ void UBulletNetworkPredictionWorldManager::BindNetSend_IndependentRemote(FBullet
 	const int32 ServerRecvIdx = DataStore->ServerRecv_IndependentTick.GetIndex(ID);
 	RepProxy->NetSerializeFunc = [ID, this, DataStore, ServerRecvIdx](const FBulletNetSerializeParams& P)
 	{
-		jnpEnsureSlow(P.Ar.IsSaving());
+		bnpEnsureSlow(P.Ar.IsSaving());
 		TBulletServerRecvData_Independent<ModelDef>& ServerRecv = DataStore->ServerRecv_IndependentTick.GetByIndexChecked(ServerRecvIdx);
-		UE_JNP_TRACE_SIM(ID.GetTraceID());
+		UE_BNP_TRACE_SIM(ID.GetTraceID());
 		ReplicatorType::NetSend(P, ID, DataStore, ServerRecv, &this->VariableTickState);
 	};
 }
@@ -837,7 +837,7 @@ void UBulletNetworkPredictionWorldManager::BindReplayNetSendRecv_Fixed(FBulletNe
 	}
 
 	const int32 ClientRecvIdx = DataStore->ClientRecv.GetIndex(ID);
-	JnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
+	BnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
 
 	TBulletClientRecvData<ModelDef>& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 	InitClientRecvData<ModelDef>(ID, ClientRecvData, DataStore, NetRole);
@@ -850,12 +850,12 @@ void UBulletNetworkPredictionWorldManager::BindReplayNetSendRecv_Fixed(FBulletNe
 			DataStore->ClientRecvBitMask[ClientRecvIdx] = true;
 			auto& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 
-			UE_JNP_TRACE_SIM(ClientRecvData.TraceID);
+			UE_BNP_TRACE_SIM(ClientRecvData.TraceID);
 			ReplicatorType::NetRecv(P, ClientRecvData, DataStore, TickState);
 		}
 		else // Sending replay data
 		{
-			UE_JNP_TRACE_SIM(ID.GetTraceID());
+			UE_BNP_TRACE_SIM(ID.GetTraceID());
 			ReplicatorType::NetSend(P, ID, DataStore, TickState);
 		}
 	};
@@ -871,7 +871,7 @@ void UBulletNetworkPredictionWorldManager::BindReplayNetSendRecv_IndependentLoca
 	}
 
 	const int32 ClientRecvIdx = DataStore->ClientRecv.GetIndex(ID);
-	JnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
+	BnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
 
 	TBulletClientRecvData<ModelDef>& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 	InitClientRecvData<ModelDef>(ID, ClientRecvData, DataStore, NetRole);
@@ -884,12 +884,12 @@ void UBulletNetworkPredictionWorldManager::BindReplayNetSendRecv_IndependentLoca
 			DataStore->ClientRecvBitMask[ClientRecvIdx] = true;
 			auto& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 
-			UE_JNP_TRACE_SIM(ClientRecvData.TraceID);
+			UE_BNP_TRACE_SIM(ClientRecvData.TraceID);
 			ReplicatorType::NetRecv(P, ClientRecvData, DataStore, TickState);
 		}
 		else // Sending replay data
 		{
-			UE_JNP_TRACE_SIM(ID.GetTraceID());
+			UE_BNP_TRACE_SIM(ID.GetTraceID());
 			ReplicatorType::NetSend(P, ID, DataStore, TickState);
 		}
 	};
@@ -905,7 +905,7 @@ void UBulletNetworkPredictionWorldManager::BindReplayNetSendRecv_IndependentRemo
 	}
 
 	const int32 ClientRecvIdx = DataStore->ClientRecv.GetIndex(ID);
-	JnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
+	BnpResizeAndSetBit(DataStore->ClientRecvBitMask, ClientRecvIdx, false);
 
 	TBulletClientRecvData<ModelDef>& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 	InitClientRecvData<ModelDef>(ID, ClientRecvData, DataStore, NetRole);
@@ -921,13 +921,13 @@ void UBulletNetworkPredictionWorldManager::BindReplayNetSendRecv_IndependentRemo
 			DataStore->ClientRecvBitMask[ClientRecvIdx] = true;
 			auto& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 
-			UE_JNP_TRACE_SIM(ClientRecvData.TraceID);
+			UE_BNP_TRACE_SIM(ClientRecvData.TraceID);
 			ReplicatorType::NetRecv(P, ClientRecvData, DataStore, TickState);
 		}
 		else // Sending replay data
 		{
 			TBulletServerRecvData_Independent<ModelDef>& ServerRecv = DataStore->ServerRecv_IndependentTick.GetByIndexChecked(ServerRecvIdx);
-			UE_JNP_TRACE_SIM(ID.GetTraceID());
+			UE_BNP_TRACE_SIM(ID.GetTraceID());
 			ReplicatorType::NetSend(P, ID, DataStore, ServerRecv, TickState);
 		}
 	};

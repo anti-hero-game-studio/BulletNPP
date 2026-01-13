@@ -3,4 +3,4 @@
 #include "BulletNetworkPredictionGenericKinematicActor.h"
 #include "BulletNetworkPredictionModelDefRegistry.h"
 
-JNP_MODEL_REGISTER(FBulletGenericKinematicActorDef);
+BNP_MODEL_REGISTER(FBulletGenericKinematicActorDef);

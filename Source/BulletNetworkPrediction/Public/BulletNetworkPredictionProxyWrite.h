@@ -10,7 +10,7 @@ inline void FBulletNetworkPredictionProxy::TraceViaConfigFunc(EConfigAction Acti
 	// The ConfigFunc allows use to use the registered ModelDef type to access FBulletNetworkPredictionDriver<ModelDef>::TraceUserState
 	// this allows for per-ModelDef customizations but more importantly will call State->ToString on the correct child class.
 	// consider FChildSyncState : FBaseSyncState{}; with a base driver class that calls WriteSyncState<FBaseSyncState>(...);
-#if UE_JNP_TRACE_USER_STATES_ENABLED
+#if UE_BNP_TRACE_USER_STATES_ENABLED
 	if (UE_TRACE_CHANNELEXPR_IS_ENABLED(NetworkPredictionChannel))
 	{
 		ConfigFunc(this, FBulletNetworkPredictionID(), Action);
@@ -25,7 +25,7 @@ const TInputCmd* FBulletNetworkPredictionProxy::WriteInputCmd(TFunctionRef<void(
 	{
 		WriteFunc(*InputCmd);
 		
-		UE_JNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
+		UE_BNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
 		TraceViaConfigFunc(EConfigAction::TraceInput);
 		return InputCmd;
 	}
@@ -38,7 +38,7 @@ const TSyncState* FBulletNetworkPredictionProxy::WriteSyncState(TFunctionRef<voi
 	if (TSyncState* SyncState = static_cast<TSyncState*>(View.PendingSyncState))
 	{
 		WriteFunc(*SyncState);
-		UE_JNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
+		UE_BNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
 		ConfigFunc(this, FBulletNetworkPredictionID(), EConfigAction::TraceSync);
 		return SyncState;
 	}
@@ -51,7 +51,7 @@ const TSyncState* FBulletNetworkPredictionProxy::WritePresentationSyncState(TFun
 	if (TSyncState* SyncState = static_cast<TSyncState*>(View.PresentationSyncState))
 	{
 		WriteFunc(*SyncState);
-		UE_JNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
+		UE_BNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
 		ConfigFunc(this, FBulletNetworkPredictionID(), EConfigAction::TraceSync);
 		return SyncState;
 	}
@@ -64,7 +64,7 @@ const TSyncState* FBulletNetworkPredictionProxy::WritePrevPresentationSyncState(
 	if (TSyncState* SyncState = static_cast<TSyncState*>(View.PrevPresentationSyncState))
 	{
 		WriteFunc(*SyncState);
-		UE_JNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
+		UE_BNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
 		ConfigFunc(this, FBulletNetworkPredictionID(), EConfigAction::TraceSync);
 		return SyncState;
 	}
@@ -77,7 +77,7 @@ const TAuxState* FBulletNetworkPredictionProxy::WriteAuxState(TFunctionRef<void(
 	if (TAuxState* AuxState = static_cast<TAuxState*>(View.PendingAuxState))
 	{
 		WriteFunc(*AuxState);
-		UE_JNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
+		UE_BNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
 		ConfigFunc(this, FBulletNetworkPredictionID(), EConfigAction::TraceAux);
 		return AuxState;
 	}
@@ -90,7 +90,7 @@ const TAuxState* FBulletNetworkPredictionProxy::WritePresentationAuxState(TFunct
 	if (TAuxState* AuxState = static_cast<TAuxState*>(View.PresentationAuxState))
 	{
 		WriteFunc(*AuxState);
-		UE_JNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
+		UE_BNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
 		ConfigFunc(this, FBulletNetworkPredictionID(), EConfigAction::TraceAux);
 		return AuxState;
 	}
@@ -103,7 +103,7 @@ const TAuxState* FBulletNetworkPredictionProxy::WritePrevPresentationAuxState(TF
 	if (TAuxState* AuxState = static_cast<TAuxState*>(View.PrevPresentationAuxState))
 	{
 		WriteFunc(*AuxState);
-		UE_JNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
+		UE_BNP_TRACE_OOB_STATE_MOD(ID.GetTraceID(), View.PendingFrame, TraceMsg);
 		ConfigFunc(this, FBulletNetworkPredictionID(), EConfigAction::TraceAux);
 		return AuxState;
 	}

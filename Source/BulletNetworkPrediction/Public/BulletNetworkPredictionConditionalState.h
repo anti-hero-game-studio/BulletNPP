@@ -18,7 +18,7 @@ struct TBulletConditionalState
 
 	void CopyTo(UnderlyingType* Dest) const
 	{
-		jnpCheckSlow(Dest);
+		bnpCheckSlow(Dest);
 		*Dest = State;
 	}
 

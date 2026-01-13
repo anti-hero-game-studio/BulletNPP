@@ -88,6 +88,7 @@ bool UBulletBoxComponent::IsAnyRigidBodyAwake()
 	return IsAnySimulatingPhysics();
 }
 
+
 ECollisionEnabled::Type UBulletBoxComponent::GetCollisionEnabled() const
 {
 	if (!GetWorld() || !GetWorld()->IsGameWorld())
@@ -104,17 +105,17 @@ ECollisionEnabled::Type UBulletBoxComponent::GetCollisionEnabled() const
 		return ECollisionEnabled::Type::NoCollision;
 	}
 
-	if (Subsystem->IsCollisionBodyActive(this) && Subsystem->IsGhostBodyActive(this))
+	if (Subsystem->HasRigidBodyBeenCreated(this) && Subsystem->HasGhostBodyBeenCreated(this))
 	{
 		return ECollisionEnabled::Type::QueryAndPhysics;
 	}
 	
-	if (Subsystem->IsGhostBodyActive(this) && !Subsystem->IsCollisionBodyActive(this))
+	if (Subsystem->HasGhostBodyBeenCreated(this) && !Subsystem->HasRigidBodyBeenCreated(this))
 	{
 		return ECollisionEnabled::Type::QueryOnly;
 	}
 	
-	if (!Subsystem->IsGhostBodyActive(this) && Subsystem->IsCollisionBodyActive(this))
+	if (!Subsystem->HasGhostBodyBeenCreated(this) && Subsystem->HasRigidBodyBeenCreated(this))
 	{
 		return ECollisionEnabled::Type::PhysicsOnly;
 	}
@@ -122,6 +123,8 @@ ECollisionEnabled::Type UBulletBoxComponent::GetCollisionEnabled() const
 	
 	return Super::GetCollisionEnabled();
 }
+
+
 
 ECollisionResponse UBulletBoxComponent::GetCollisionResponseToChannel(ECollisionChannel Channel) const
 {
@@ -140,5 +143,6 @@ const FCollisionResponseContainer& UBulletBoxComponent::GetCollisionResponseToCh
 	
 	return Subsystem->GetCollisionResponseContainer(this);
 }
+
 
 

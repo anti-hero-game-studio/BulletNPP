@@ -45,6 +45,7 @@ public class Bullet : ModuleRules
 				"BulletNativeTags",
 				"GameplayTags",
 				"BulletPhysicsEngineLibrary",
+				"PhysicsCore"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

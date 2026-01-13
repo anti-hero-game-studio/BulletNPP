@@ -515,9 +515,9 @@ void UBulletMoverComponent::TickInterpolatedSimProxy(const FBulletMoverTimeStep&
 
 void UBulletMoverComponent::InitializeSimulationState(FBulletMoverSyncState* OutSync, FBulletMoverAuxStateContext* OutAux)
 {
-	jnpCheckSlow(UpdatedComponent);
-	jnpCheckSlow(OutSync);
-	jnpCheckSlow(OutAux);
+	bnpCheckSlow(UpdatedComponent);
+	bnpCheckSlow(OutSync);
+	bnpCheckSlow(OutAux);
 
 	CreateDefaultInputAndState(CachedLastProducedInputCmd, *OutSync, *OutAux);
 

@@ -14,6 +14,7 @@
 #include "Core/CollisionFilters/RaycastResultCallback_IgnoreActors.h"
 #include "Core/CollisionFilters/UnrealCollisionDispatcher.h"
 #include "Core/CollisionFilters/BulletOverlappingPairCache.h"
+#include "Core/ContactHandling/BulletContactGatherer.h"
 #include "Core/Interfaces/BulletPrimitiveComponentInterface.h"
 
 int32 DrawDebugShapes = 0;
@@ -45,6 +46,8 @@ void UBulletPhysicsWorldSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 	
 	BtWorld->getPairCache()->setOverlapFilterCallback(&OverlapFilterCallback);
 	BtBroadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new FBulletGhostPairCallBack());
+	
+	BtWorld->setForceUpdateAllAabbs(false); //TODO:@GreggoryAddison::UserOptions || This should be a configurable option in the settings object.
 
 	UE_LOG(LogTemp, Warning, TEXT("UBulletPhysicsWorldSubsystem:: Bullet world init"));
 
@@ -86,11 +89,6 @@ void UBulletPhysicsWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 		if (!bShouldRegister) continue;
 		
 		RegisterBulletRigidBody(Actor);
-
-		
-		// Check if the actor has a UStaticMeshComponent directly
-		
-		
 		
 	}
 }
@@ -113,7 +111,10 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 
 		if (UPrimitiveComponent* P = Descriptor.Shapes.Last().Shape.Get())
 		{
-			const FCollisionResponseContainer& ResponseContainer = P->GetCollisionResponseToChannels();
+			IBulletPrimitiveComponentInterface* I = Cast<IBulletPrimitiveComponentInterface>(P);
+			if (!I) return;
+			
+			const FCollisionResponseContainer& ResponseContainer = I->GetDefaultResponseContainer();
 			const UCollisionProfile* Profile = UCollisionProfile::Get();
 			for (int i = 0; i < 32; i++)
 			{
@@ -133,6 +134,16 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 					bShouldCreateBlockCollider = Options.bGenerateCollisionEventsInBullet;
 					IsBlockingAnyTraceChannel = Profile->ConvertToTraceType(Channel) != TraceTypeQuery_MAX;
 				}
+			}
+			
+			if (!Options.bGenerateCollisionEventsInChaos)
+			{
+				P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				P->GetBodyInstance()->bNotifyRigidBodyCollision = false;
+			}
+			if (!Options.bGenerateOverlapEventsInChaos)
+			{
+				P->SetGenerateOverlapEvents(false);
 			}
 			
 			Descriptor.Shapes.Last().CollisionResponses = ResponseContainer;
@@ -468,9 +479,30 @@ bool UBulletPhysicsWorldSubsystem::IsBodyValid(const UPrimitiveComponent* Target
 	return true;
 }
 
+bool UBulletPhysicsWorldSubsystem::HasGhostBodyBeenCreated(const UPrimitiveComponent* Target) const
+{
+	if (!IsBodyValid(Target)) return false;
+	
+	const FUnrealShapeDescriptor& Desc = GlobalShapeDescriptorDataCache[Target->GetOwner()];
+
+	const btCollisionObject* Block = BtWorld->getCollisionObjectArray()[Desc.Find(Target, false)];
+	
+	if (!Block) return false;
+	
+	return true;
+}
+
 bool UBulletPhysicsWorldSubsystem::HasRigidBodyBeenCreated(const UPrimitiveComponent* Target) const
 {
-	return IsBodyValid(Target);
+	if (!IsBodyValid(Target)) return false;
+	
+	const FUnrealShapeDescriptor& Desc = GlobalShapeDescriptorDataCache[Target->GetOwner()];
+
+	const btCollisionObject* Block = BtWorld->getCollisionObjectArray()[Desc.Find(Target)];
+	
+	if (!Block) return false;
+	
+	return true;
 }
 
 bool UBulletPhysicsWorldSubsystem::IsCollisionBodyActive(const UPrimitiveComponent* Target) const
@@ -533,6 +565,72 @@ const FCollisionResponseContainer& UBulletPhysicsWorldSubsystem::GetCollisionRes
 	return Desc.GetCollisionResponseContainer(Target); 
 }
 
+void UBulletPhysicsWorldSubsystem::BroadcastSymmetricHits(const FBulletHitEvent& Base)
+{
+	// Self (as stored)
+	BroadcastComponentHit(Base);
+
+	// Mirrored for the other component
+	FBulletHitEvent Mirror = Base;
+	Mirror.SelfComp = Base.OtherComp;
+	Mirror.OtherComp = Base.SelfComp;
+	Mirror.ImpactNormal = -Base.ImpactNormal;
+	Mirror.ImpulseDir = -Base.ImpulseDir;
+	BroadcastComponentHit(Mirror);
+}
+
+void UBulletPhysicsWorldSubsystem::BroadcastComponentHit(const FBulletHitEvent& E)
+{
+	UPrimitiveComponent* Self = E.SelfComp.Get();
+	UPrimitiveComponent* Other = E.OtherComp.Get();
+	if (!Self || !Other) return;
+
+	AActor* SelfOwner = Self->GetOwner();
+	AActor* OtherOwner = Other->GetOwner();
+	if (!SelfOwner || !OtherOwner) return;
+
+	FHitResult Hit;
+	Hit.bBlockingHit = true;
+
+	Hit.Component = Self;
+	Hit.HitObjectHandle = OtherOwner;
+
+	Hit.ImpactPoint = E.ImpactPoint;
+	Hit.Location = E.ImpactPoint;
+
+	Hit.ImpactNormal = E.ImpactNormal;
+	Hit.Normal = E.ImpactNormal;
+
+	Hit.PenetrationDepth = E.PenetrationDepth;
+
+	// These are optional; set if you can compute them.
+	Hit.BoneName = NAME_None;
+	Hit.MyBoneName = NAME_None;
+
+	// HitResult has PhysMaterial, FaceIndex, Item, etc. (usually unavailable from Bullet without extra bookkeeping)
+
+	// Unreal's OnComponentHit signature is:
+	// (UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	//  FVector NormalImpulse, const FHitResult& Hit)
+	const FVector NormalImpulse = E.ImpulseDir * E.AppliedImpulse; // You may scale/tune as needed
+
+	// Broadcast on component
+	Self->OnComponentHit.Broadcast(Self, OtherOwner, Other, NormalImpulse, Hit);
+
+	// Optional: call NotifyHit on the owning actor (many gameplay systems listen here)
+	// Actor NotifyHit signature differs slightly; pass values as best-effort.
+	SelfOwner->NotifyHit(
+		Self,
+		OtherOwner,
+		Other,
+		true,               // bSelfMoved (unknown; set true if self is kinematic/moved)
+		E.ImpactPoint,
+		E.ImpactNormal,
+		NormalImpulse,
+		Hit
+	);
+}
+
 
 btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape,  const FBulletShapeOptions& Options)
 {
@@ -542,8 +640,6 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, c
 	const btRigidBody::btRigidBodyConstructionInfo RBInfo(Options.Mass, MotionState, CollisionShape, Inertia);
 	btRigidBody* Body = new btRigidBody(RBInfo);
 	Body->setWorldTransform(BulletHelpers::ToBulletTransform(FinalTransform, UE_WORLD_ORIGIN));
-	Body->setActivationState(DISABLE_DEACTIVATION);
-	Body->setDeactivationTime(0);
 	
 	if (Options.bKeepShapeVertical)
 	{
@@ -552,12 +648,12 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, c
 	
 	if (Options.bAutomaticallyActivate)
 	{
-		Body->setActivationState(DISABLE_DEACTIVATION);
+		Body->forceActivationState(Options.bDisableDeactivation ? DISABLE_DEACTIVATION : ACTIVE_TAG);
 		Body->setDeactivationTime(0);
 	}
 	else
 	{
-		Body->forceActivationState(WANTS_DEACTIVATION);
+		Body->forceActivationState(ISLAND_SLEEPING);
 		Body->setDeactivationTime(0.f);
 	}
 	
@@ -719,6 +815,14 @@ void UBulletPhysicsWorldSubsystem::StepPhysics(const float DeltaSeconds, const i
 	{
 		OnPostPhysicsStep.Broadcast(FixedTimeStep);
 	}
+	
+	Gatherer.Gather(BtWorld);
+
+	for (const FBulletHitEvent& Event : Gatherer.OutEvents)
+	{
+		BroadcastSymmetricHits(Event);
+	}
+	
 }
 
 void UBulletPhysicsWorldSubsystem::AddImpulse(AActor* Target, const FVector Impulse)

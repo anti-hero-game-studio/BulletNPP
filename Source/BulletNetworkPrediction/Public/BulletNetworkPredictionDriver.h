@@ -205,7 +205,7 @@ struct FBulletNetworkPredictionDriverBase
 
 	static FTransform GetDebugWorldTransform(void* NoDriver)
 	{
-		jnpEnsure(false);
+		bnpEnsure(false);
 		return FTransform::Identity;
 	}
 
@@ -221,7 +221,7 @@ struct FBulletNetworkPredictionDriverBase
 
 	static FBox GetDebugBoundingBox(void* NoDriver)
 	{
-		jnpEnsure(false);
+		bnpEnsure(false);
 		return FBox();
 	}
 
@@ -249,7 +249,7 @@ struct FBulletNetworkPredictionDriverBase
 	template <typename Type>
 	static typename TEnableIf<!TIsDerivedFrom<Type, UObject>::Value, bool>::Type IsValidObject(Type* Object)
 	{
-		jnpCheckSlow(Object);
+		bnpCheckSlow(Object);
 		return Object != nullptr;
 	}
 	// -----------------------------------------------------------------------------------------------------------------------------------
@@ -263,7 +263,7 @@ struct FBulletNetworkPredictionDriverBase
 	// -----------------------------------------------------------------------------------------------------------------------------------
 	static void InitializeSimulationState(DriverType* Driver, FBulletNetworkPredictionStateView* View)
 	{
-		jnpCheckSlow(View);
+		bnpCheckSlow(View);
 		InitializeSimulationState(Driver, (SyncType*)View->PendingSyncState, (AuxType*)View->PendingAuxState);
 	}
 	
@@ -283,14 +283,14 @@ struct FBulletNetworkPredictionDriverBase
 	template<bool HasFunc=HasInitializeSimulationState>
 	static typename TEnableIf<HasFunc>::Type CallInitializeSimulationStateMemberFunc(DriverType* Driver, SyncType* Sync, AuxType* Aux)
 	{
-		jnpCheckSlow(Driver);
+		bnpCheckSlow(Driver);
 		Driver->InitializeSimulationState(Sync, Aux);
 	}
 
 	template<bool HasFunc=HasInitializeSimulationState>
 	static typename TEnableIf<!HasFunc>::Type CallInitializeSimulationStateMemberFunc(DriverType* Driver, SyncType* Sync, AuxType* Aux)
 	{
-		jnpCheckf(!HasNpState(), TEXT("No InitializeSimulationState implementation found. Implement DriverType::ProduceInput or ModelDef::ProduceInput"));
+		bnpCheckf(!HasNpState(), TEXT("No InitializeSimulationState implementation found. Implement DriverType::ProduceInput or ModelDef::ProduceInput"));
 	}	
 
 	// -----------------------------------------------------------------------------------------------------------------------------------
@@ -317,14 +317,14 @@ struct FBulletNetworkPredictionDriverBase
 	template<bool HasFunc=HasProduceInput>
 	static typename TEnableIf<HasFunc>::Type CallProduceInputMemberFunc(DriverType* Driver, int32 DeltaTimeMS, InputType* InputCmd)
 	{
-		jnpCheckSlow(Driver);
+		bnpCheckSlow(Driver);
 		Driver->ProduceInput(DeltaTimeMS, InputCmd);
 	}
 
 	template<bool HasFunc=HasProduceInput>
 	static typename TEnableIf<!HasFunc>::Type CallProduceInputMemberFunc(DriverType* Driver, int32 DeltaTimeMS, InputType* InputCmd)
 	{
-		jnpCheckf(false, TEXT("No ProduceInput implementation found. Implement DriverType::ProduceInput or ModelDef::ProduceInput"));
+		bnpCheckf(false, TEXT("No ProduceInput implementation found. Implement DriverType::ProduceInput or ModelDef::ProduceInput"));
 	}
 
 	// -----------------------------------------------------------------------------------------------------------------------------------
@@ -348,14 +348,14 @@ struct FBulletNetworkPredictionDriverBase
 	template<bool HasFunc=HasFinalizeFrame>
 	static typename TEnableIf<HasFunc>::Type CallFinalizeFrameMemberFunc(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
 	{
-		jnpCheckSlow(Driver);
+		bnpCheckSlow(Driver);
 		Driver->FinalizeFrame(SyncState, AuxState);
 	}
 
 	template<bool HasFunc=HasFinalizeFrame>
 	static typename TEnableIf<!HasFunc>::Type CallFinalizeFrameMemberFunc(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
 	{
-		jnpCheckf(!HasNpState(), TEXT("No FinalizeFrame implementation found. Implement DriverType::FinalizeFrame or ModelDef::FinalizeFrame"));
+		bnpCheckf(!HasNpState(), TEXT("No FinalizeFrame implementation found. Implement DriverType::FinalizeFrame or ModelDef::FinalizeFrame"));
 	}
 
 	// **** Modified By Kai - Smoothing Support ****
@@ -489,7 +489,7 @@ struct FBulletNetworkPredictionDriverBase
 	template<bool HasFunc=HasFinalizeSmoothingFrame>
 	static typename TEnableIf<HasFunc>::Type CallFinalizeSmoothingFrameMemberFunc(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
 	{
-		jnpCheckSlow(Driver);
+		bnpCheckSlow(Driver);
 		Driver->FinalizeSmoothingFrame(SyncState, AuxState);
 	}
 
@@ -531,7 +531,7 @@ struct FBulletNetworkPredictionDriverBase
 	template<bool HasFunc=HasRestoreFrame>
 	static typename TEnableIf<HasFunc>::Type CallRestoreFrameMemberFunc(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
 	{
-		jnpCheckSlow(Driver);
+		bnpCheckSlow(Driver);
 		Driver->RestoreFrame(SyncState, AuxState);
 	}
 
@@ -555,7 +555,7 @@ struct FBulletNetworkPredictionDriverBase
 	template<bool HasFunc=HasRestorePhysicsFrame>
 	static typename TEnableIf<HasFunc>::Type CallRestorePhysicsFrameMemberFunc(DriverType* Driver, const SyncType* SyncState, const AuxType* AuxState)
 	{
-		jnpCheckSlow(Driver);
+		bnpCheckSlow(Driver);
 		Driver->RestorePhysicsFrame(SyncState, AuxState);
 	}
 	
@@ -591,14 +591,14 @@ struct FBulletNetworkPredictionDriverBase
 	template<bool HasFunc=HasCallServerRPC>
 	static typename TEnableIf<HasFunc>::Type CallServerRPCMemberFunc(DriverType* Driver)
 	{
-		jnpCheckSlow(Driver);
+		bnpCheckSlow(Driver);
 		Driver->CallServerRPC();
 	}
 
 	template<bool HasFunc=HasCallServerRPC>
 	static typename TEnableIf<!HasFunc>::Type CallServerRPCMemberFunc(DriverType* Driver)
 	{
-		jnpCheckf(false, TEXT("No CallServerRPC implementation found. Implement DriverType::CallServerRPC or ModelDef::CallServerRPC"));
+		bnpCheckf(false, TEXT("No CallServerRPC implementation found. Implement DriverType::CallServerRPC or ModelDef::CallServerRPC"));
 	}
 	// -----------------------------------------------------------------------------------------------------------------------------------
 	//	Dispatch Cues
@@ -609,7 +609,7 @@ struct FBulletNetworkPredictionDriverBase
 	template<typename InDriverType=DriverType>
 	static void DispatchCues(TBulletNetSimCueDispatcher<ModelDef>* CueDispatcher, InDriverType* Driver, int32 SimFrame, int32 SimTimeMS, const int32 FixedStepMS)
 	{
-		jnpCheckSlow(Driver);
+		bnpCheckSlow(Driver);
 		CueDispatcher-> template DispatchCueRecord<InDriverType>(*Driver, SimFrame, SimTimeMS, FixedStepMS);
 	}
 
@@ -679,7 +679,7 @@ struct FBulletNetworkPredictionDriverBase
 	template<bool HasFunc=HasSetHiddenForInterpolation>
 	static typename TEnableIf<HasFunc>::Type CallSetHiddenForInterpolation(DriverType* Driver, bool bHide)
 	{
-		jnpCheckSlow(Driver);
+		bnpCheckSlow(Driver);
 		Driver->SetHiddenForInterpolation(bHide);
 	}
 

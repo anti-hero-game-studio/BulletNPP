@@ -75,7 +75,7 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
 		const int32 ClientRecvIdx = DataStore->ClientRecv.GetIndexChecked(ID);
-		JnpResizeAndSetBit(ClientRecvBitMask, ClientRecvIdx);
+		BnpResizeAndSetBit(ClientRecvBitMask, ClientRecvIdx);
 
 		const int32 InstanceDataIdx = DataStore->Instances.GetIndexChecked(ID);
 		TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(InstanceDataIdx);
@@ -116,10 +116,10 @@ public:
 		const int32 FromFrame = TickState->Interpolation.ToFrame-1;
 		const int32 ToFrame = TickState->Interpolation.ToFrame;
 
-		jnpCheckSlow(ToFrame != INDEX_NONE); // Reconcile calls should be suppressed until interpolation begins
+		bnpCheckSlow(ToFrame != INDEX_NONE); // Reconcile calls should be suppressed until interpolation begins
 
 		// DataStore->ClientRecvBitMask size can change without us knowing so make sure out InstanceBitArray size stays in sync
-		JnpResizeBitArray(ClientRecvBitMask, DataStore->ClientRecvBitMask.Num());
+		BnpResizeBitArray(ClientRecvBitMask, DataStore->ClientRecvBitMask.Num());
 
 		for (TConstDualSetBitIterator<FDefaultBitArrayAllocator,FDefaultBitArrayAllocator> BitIt(ClientRecvBitMask, DataStore->ClientRecvBitMask); BitIt; ++BitIt)
 		{
@@ -134,7 +134,7 @@ public:
 				UE_LOG(LogBulletNetworkPrediction,Error,TEXT("Local Frame %d , ToFrame %d, Capacity %d"),LocalFrame,ToFrame,Frames.Buffer.Capacity());
 			}
 			
-			UE_JNP_TRACE_SIM(ClientRecvData.TraceID);
+			UE_BNP_TRACE_SIM(ClientRecvData.TraceID);
 
 			// Copy latest received state into local frame buffer
 			LocalFrameData.SyncState = ClientRecvData.SyncState;
@@ -174,7 +174,7 @@ public:
 				const int32 GapFromFrame = bLastWrittenFrameValid ? InterpolationData.LastWrittenFrame : LocalFrame;
 				const int32 GapToFrame = LocalFrame;
 
-				jnpEnsureMsgfSlow(StartFrame - EndFrame <= Frames.Buffer.Capacity(), TEXT("Gap longer than expected. StartFrame: %d. EndFrame: %d (%d)"), StartFrame, EndFrame, StartFrame - EndFrame);
+				bnpEnsureMsgfSlow(StartFrame - EndFrame <= Frames.Buffer.Capacity(), TEXT("Gap longer than expected. StartFrame: %d. EndFrame: %d (%d)"), StartFrame, EndFrame, StartFrame - EndFrame);
 
 				for (int32 Frame = StartFrame; Frame < EndFrame; ++Frame)
 				{
@@ -190,12 +190,12 @@ public:
 					}
 
 					InterpolationData.LastWrittenFrame = Frame; // We just wrote something into FromFrame
-					jnpEnsureSlow(InterpolationData.LastWrittenFrame >= 0);
+					bnpEnsureSlow(InterpolationData.LastWrittenFrame >= 0);
 				}
 			}
 
 			InterpolationData.LastWrittenFrame = LocalFrame;
-			jnpEnsureSlow(InterpolationData.LastWrittenFrame >= 0);
+			bnpEnsureSlow(InterpolationData.LastWrittenFrame >= 0);
 
 			// We've taken care of this instance, reset it for next time
 			DataStore->ClientRecvBitMask[ClientRecvIdx] = false;
@@ -209,8 +209,8 @@ public:
 		const float PCT = TickState->Interpolation.PCT;
 		const int32 InterpolatedTimeMS = TickState->Interpolation.InterpolatedTimeMS;
 
-		jnpEnsureSlow(FromFrame > INDEX_NONE);
-		jnpEnsureSlow(ToFrame > FromFrame);
+		bnpEnsureSlow(FromFrame > INDEX_NONE);
+		bnpEnsureSlow(ToFrame > FromFrame);
 
 		if ( NetworkPredictionCVars::DisableInterpolation() > 0)
 		{
@@ -233,7 +233,7 @@ public:
 		for (auto& It : Instances)
 		{
 			FInstance& Instance = It;
-			UE_JNP_TRACE_SIM(Instance.TraceID);
+			UE_BNP_TRACE_SIM(Instance.TraceID);
 
 			TBulletInstanceFrameState<ModelDef>& Frames = DataStore->Frames.GetByIndexChecked(Instance.FramesIdx);
 			
@@ -242,11 +242,11 @@ public:
 			{
 				if (Instance.LastWrittenFrame == INDEX_NONE)
 				{
-					UE_JNP_TRACE_SYSTEM_FAULT("No valid frames for interpolation. LastWrittenFrame: %d. ToFrame: %d", Instance.LastWrittenFrame, ToFrame);
+					UE_BNP_TRACE_SYSTEM_FAULT("No valid frames for interpolation. LastWrittenFrame: %d. ToFrame: %d", Instance.LastWrittenFrame, ToFrame);
 					continue;
 				}
 
-				//UE_JNP_TRACE_SYSTEM_FAULT("Invalid interpolation frames. Copying old content forward. LastWrittenFrame: %d. ToFrame: %d", Instance.LastWrittenFrame, ToFrame);
+				//UE_BNP_TRACE_SYSTEM_FAULT("Invalid interpolation frames. Copying old content forward. LastWrittenFrame: %d. ToFrame: %d", Instance.LastWrittenFrame, ToFrame);
 				if (Instance.LastWrittenFrame < FromFrame)
 				{
 					CopyFrameData(Instance.LastWrittenFrame, FromFrame, Frames, Instance);
@@ -255,7 +255,7 @@ public:
 				CopyFrameData(Instance.LastWrittenFrame, ToFrame, Frames, Instance);
 
 				Instance.LastWrittenFrame = ToFrame;
-				jnpEnsureSlow(Instance.LastWrittenFrame >= 0);
+				bnpEnsureSlow(Instance.LastWrittenFrame >= 0);
 			}
 
 			// Interpolate and dispatch
@@ -319,9 +319,9 @@ private:
 
 	static void Interpolate(const int32 FromSourceFrame, const int32 ToSourceFrame, const int32 DestFrame, TBulletInstanceFrameState<ModelDef>& Frames, FInstance& Instance, const int32 FixedStepMS)
 	{
-		jnpEnsureSlow(FromSourceFrame < ToSourceFrame);
-		jnpEnsureSlow(FromSourceFrame < DestFrame);
-		jnpEnsureSlow(DestFrame < ToSourceFrame);
+		bnpEnsureSlow(FromSourceFrame < ToSourceFrame);
+		bnpEnsureSlow(FromSourceFrame < DestFrame);
+		bnpEnsureSlow(DestFrame < ToSourceFrame);
 
 		typename TBulletInstanceFrameState<ModelDef>::FFrame& FromFrameData = Frames.Buffer[FromSourceFrame];
 		typename TBulletInstanceFrameState<ModelDef>::FFrame& ToFrameData = Frames.Buffer[ToSourceFrame];
@@ -334,7 +334,7 @@ private:
 		const int32 SpreadMS = ToMS - FromMS;
 		const int32 InterpolateMS = DestMS - FromMS;
 
-		jnpCheckSlow(SpreadMS != 0);
+		bnpCheckSlow(SpreadMS != 0);
 		const float PCT = (float)InterpolateMS/(float)SpreadMS;
 
 		FBulletNetworkPredictionDriver<ModelDef>::Interpolate(SyncAuxType{FromFrameData.SyncState, FromFrameData.AuxState}, SyncAuxType{ToFrameData.SyncState, ToFrameData.AuxState}, 
@@ -386,7 +386,7 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
 		const int32 ClientRecvIdx = DataStore->ClientRecv.GetIndexChecked(ID);
-		JnpResizeAndSetBit(ClientRecvBitMask, ClientRecvIdx);
+		BnpResizeAndSetBit(ClientRecvBitMask, ClientRecvIdx);
 
 		const int32 InstanceDataIdx = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx).InstanceIdx;
 
@@ -414,7 +414,7 @@ public:
 	void Reconcile(const FBulletVariableTickState* TickState) final override
 	{
 		// DataStore->ClientRecvBitMask size can change without us knowing so make sure out InstanceBitArray size stays in sync
-		JnpResizeBitArray(ClientRecvBitMask, DataStore->ClientRecvBitMask.Num());
+		BnpResizeBitArray(ClientRecvBitMask, DataStore->ClientRecvBitMask.Num());
 
 		for (TConstDualSetBitIterator<FDefaultBitArrayAllocator,FDefaultBitArrayAllocator> BitIt(ClientRecvBitMask, DataStore->ClientRecvBitMask); BitIt; ++BitIt)
 		{
@@ -423,7 +423,7 @@ public:
 			TBulletInstanceFrameState<ModelDef>& Frames = DataStore->Frames.GetByIndexChecked(ClientRecvData.FramesIdx);
 			FInstance& InterpolationData = Instances[ClientRecvIdx];
 
-			UE_JNP_TRACE_SIM(ClientRecvData.TraceID);
+			UE_BNP_TRACE_SIM(ClientRecvData.TraceID);
 			const int32 LocalFrame = ++InterpolationData.LastWrittenFrame;
 			
 			typename FInstance::FFrame& RecvFrame = InterpolationData.ClientRecvFrames[LocalFrame];
@@ -433,7 +433,7 @@ public:
 
 			if (LocalFrame >= 1)
 			{
-				jnpEnsureMsgfSlow(RecvFrame.SimTimeMS >= InterpolationData.ClientRecvFrames[LocalFrame-1].SimTimeMS, TEXT("Time in reverse? %d %d"), RecvFrame.SimTimeMS, InterpolationData.ClientRecvFrames[LocalFrame-1].SimTimeMS);
+				bnpEnsureMsgfSlow(RecvFrame.SimTimeMS >= InterpolationData.ClientRecvFrames[LocalFrame-1].SimTimeMS, TEXT("Time in reverse? %d %d"), RecvFrame.SimTimeMS, InterpolationData.ClientRecvFrames[LocalFrame-1].SimTimeMS);
 			}
 
 			// We've taken care of this instance, reset it for next time
@@ -479,15 +479,15 @@ public:
 				}
 			}
 
-			jnpEnsureSlow(FromFrame != INDEX_NONE);
-			jnpEnsureSlow(ToFrame != INDEX_NONE);
-			jnpEnsureSlow(FromFrame <= ToFrame);
-			jnpEnsureSlow(FromFrame >= MinFrame);
-			jnpEnsureSlow(ToFrame <= MaxFrame);
+			bnpEnsureSlow(FromFrame != INDEX_NONE);
+			bnpEnsureSlow(ToFrame != INDEX_NONE);
+			bnpEnsureSlow(FromFrame <= ToFrame);
+			bnpEnsureSlow(FromFrame >= MinFrame);
+			bnpEnsureSlow(ToFrame <= MaxFrame);
 
 			// Can happen if starved and fall behind
-			//jnpEnsureMsgfSlow(Instance.ClientRecvFrames[FromFrame].SimTimeMS <= InterpolationTimeMS, TEXT("Unexpected FromFrame time: %d > Interpolation Time %d"), Instance.ClientRecvFrames[FromFrame].SimTimeMS, InterpolationTimeMS);
-			//jnpEnsureMsgfSlow(Instance.ClientRecvFrames[ToFrame].SimTimeMS >= InterpolationTimeMS, TEXT("Unexpected ToFrame time: %d > Interpolation Time %d"), Instance.ClientRecvFrames[ToFrame].SimTimeMS, InterpolationTimeMS);
+			//bnpEnsureMsgfSlow(Instance.ClientRecvFrames[FromFrame].SimTimeMS <= InterpolationTimeMS, TEXT("Unexpected FromFrame time: %d > Interpolation Time %d"), Instance.ClientRecvFrames[FromFrame].SimTimeMS, InterpolationTimeMS);
+			//bnpEnsureMsgfSlow(Instance.ClientRecvFrames[ToFrame].SimTimeMS >= InterpolationTimeMS, TEXT("Unexpected ToFrame time: %d > Interpolation Time %d"), Instance.ClientRecvFrames[ToFrame].SimTimeMS, InterpolationTimeMS);
 
 			TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(Instance.InstanceIdx);
 
@@ -499,16 +499,16 @@ public:
 				const int32 FromTimeMS = FromFrameData.SimTimeMS;
 				const int32 ToTimeMS = ToFromData.SimTimeMS;
 				const int32 DeltaMS = ToTimeMS - FromTimeMS;
-				jnpEnsureSlow(DeltaMS > 0);
+				bnpEnsureSlow(DeltaMS > 0);
 
 				const float fDeltaInterpolateMS = fInterpolationTimeMS - (float)FromTimeMS;
-				jnpEnsureSlow(fDeltaInterpolateMS >= 0);
+				bnpEnsureSlow(fDeltaInterpolateMS >= 0);
 
 				const float PCT = fDeltaInterpolateMS / (float)DeltaMS;
-				jnpEnsure(PCT >= 0.f && PCT <= 1.f);
+				bnpEnsure(PCT >= 0.f && PCT <= 1.f);
 
-				jnpEnsureMsgfSlow(Instance.ClientRecvFrames[FromFrame].SimTimeMS <= InterpolationTimeMS, TEXT("Unexpected FromFrame time: %d > Interpolation Time %d"), Instance.ClientRecvFrames[FromFrame].SimTimeMS, InterpolationTimeMS);
-				jnpEnsureMsgfSlow(Instance.ClientRecvFrames[ToFrame].SimTimeMS >= InterpolationTimeMS, TEXT("Unexpected ToFrame time: %d > Interpolation Time %d"), Instance.ClientRecvFrames[ToFrame].SimTimeMS, InterpolationTimeMS);
+				bnpEnsureMsgfSlow(Instance.ClientRecvFrames[FromFrame].SimTimeMS <= InterpolationTimeMS, TEXT("Unexpected FromFrame time: %d > Interpolation Time %d"), Instance.ClientRecvFrames[FromFrame].SimTimeMS, InterpolationTimeMS);
+				bnpEnsureMsgfSlow(Instance.ClientRecvFrames[ToFrame].SimTimeMS >= InterpolationTimeMS, TEXT("Unexpected ToFrame time: %d > Interpolation Time %d"), Instance.ClientRecvFrames[ToFrame].SimTimeMS, InterpolationTimeMS);
 
 				FBulletNetworkPredictionDriver<ModelDef>::Interpolate(SyncAuxType{FromFrameData.SyncState, FromFrameData.AuxState}, SyncAuxType{ToFromData.SyncState, ToFromData.AuxState}, 
 					PCT, Instance.SyncState, Instance.AuxState);

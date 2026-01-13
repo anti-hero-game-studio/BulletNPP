@@ -32,7 +32,7 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
 		const int32 InstanceIdx = DataStore->Instances.GetIndex(ID);
-		JnpResizeAndSetBit(FinalizeBitArray, InstanceIdx);
+		BnpResizeAndSetBit(FinalizeBitArray, InstanceIdx);
 	}
 
 	void UnregisterInstance(FBulletNetworkPredictionID ID)
@@ -47,8 +47,8 @@ public:
 		{
 			TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(BitIt.GetIndex());
 
-			jnpCheckSlow(InstanceData.Info.View);
-			jnpCheckSlow(InstanceData.Info.View->PendingSyncState && InstanceData.Info.View->PendingAuxState);
+			bnpCheckSlow(InstanceData.Info.View);
+			bnpCheckSlow(InstanceData.Info.View->PendingSyncState && InstanceData.Info.View->PendingAuxState);
 
 			SyncType* SyncState = (SyncType*)InstanceData.Info.View->PendingSyncState;
 			AuxType* AuxState = (AuxType*)InstanceData.Info.View->PendingAuxState;
@@ -95,7 +95,7 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
 		const int32 InstanceIdx = DataStore->ServerRecv_IndependentTick.GetIndex(ID);
-		JnpResizeAndSetBit(FinalizeBitArray, InstanceIdx);
+		BnpResizeAndSetBit(FinalizeBitArray, InstanceIdx);
 	}
 
 	void UnregisterInstance(FBulletNetworkPredictionID ID)
@@ -111,8 +111,8 @@ public:
 			TBulletServerRecvData_Independent<ModelDef>& ServerRecvData = DataStore->ServerRecv_IndependentTick.GetByIndexChecked(BitIt.GetIndex());
 			TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(ServerRecvData.InstanceIdx);
 
-			jnpCheckSlow(InstanceData.Info.View);
-			jnpCheckSlow(InstanceData.Info.View->PendingSyncState && InstanceData.Info.View->PendingAuxState);
+			bnpCheckSlow(InstanceData.Info.View);
+			bnpCheckSlow(InstanceData.Info.View->PendingSyncState && InstanceData.Info.View->PendingAuxState);
 
 			SyncType* SyncState = (SyncType*)InstanceData.Info.View->PendingSyncState;
 			AuxType* AuxState = (AuxType*)InstanceData.Info.View->PendingAuxState;

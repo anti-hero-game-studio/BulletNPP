@@ -50,14 +50,14 @@ struct TBulletTickUtil
 		Instance.CueDispatcher->PopContext();
 
 		// Fixme: should only trace aux if it changed
-		UE_JNP_TRACE_USER_STATE_SYNC(ModelDef, OutputFrameData.SyncState.Get());
-		UE_JNP_TRACE_USER_STATE_AUX(ModelDef, OutputFrameData.AuxState.Get());
+		UE_BNP_TRACE_USER_STATE_SYNC(ModelDef, OutputFrameData.SyncState.Get());
+		UE_BNP_TRACE_USER_STATE_AUX(ModelDef, OutputFrameData.AuxState.Get());
 	}
 
 	template<typename SimulationType = typename ModelDef::Simulation>
 	static typename TEnableIf<std::is_same_v<SimulationType, void>>::Type DoTick(TInstanceData<ModelDef>& Instance, FrameDataType& InputFrameData, FrameDataType& OutputFrameData, const FBulletNetSimTimeStep& Step, const int32 EndTimeMS, EBulletSimulationTickContext TickContext)
 	{
-		jnpCheckf(false, TEXT("DoTick called on %s with no Simulation defined"), ModelDef::GetName());
+		bnpCheckf(false, TEXT("DoTick called on %s with no Simulation defined"), ModelDef::GetName());
 	}
 };
 
@@ -110,7 +110,7 @@ public:
 		for (auto It : InstancesToTick)
 		{
 			TInstanceData<ModelDef>& Instance = DataStore->Instances.GetByIndexChecked(It.Value.InstanceIdx);
-			UE_JNP_TRACE_SIM(Instance.TraceID);
+			UE_BNP_TRACE_SIM(Instance.TraceID);
 			Instance.CueDispatcher->NotifyRollback(ServerFrame);
 		}
 	}
@@ -134,7 +134,7 @@ protected:
 			typename TBulletInstanceFrameState<ModelDef>::FFrame& InputFrameData = Frames.Buffer[InputFrame];
 			typename TBulletInstanceFrameState<ModelDef>::FFrame& OutputFrameData = Frames.Buffer[OutputFrame];
 
-			UE_JNP_TRACE_SIM_TICK(It.Value.TraceID);
+			UE_BNP_TRACE_SIM_TICK(It.Value.TraceID);
 
 			// Copy current input into the output frame. This is redundant in the case where we are polling
 			// local input but is needed in the other cases. Simpler to just copy it always.
@@ -178,7 +178,7 @@ protected:
 			}
 		}
 
-		jnpEnsureMsgf(false, TEXT("Unexpected NetRole %d during regular tick"), NetRole);
+		bnpEnsureMsgf(false, TEXT("Unexpected NetRole %d during regular tick"), NetRole);
 		return EBulletSimulationTickContext::None;
 	}
 
@@ -239,7 +239,7 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
 		const int32 ServerRecvIdx = DataStore->ServerRecv_IndependentTick.GetIndexChecked(ID);
-		JnpResizeAndSetBit(InstanceBitArray, ServerRecvIdx);
+		BnpResizeAndSetBit(InstanceBitArray, ServerRecvIdx);
 	}
 
 	void UnregisterInstance(FBulletNetworkPredictionID ID)
@@ -250,7 +250,7 @@ public:
 
 	void Tick(float DeltaTimeSeconds, const FBulletVariableTickState* VariableTickState) final override
 	{
-		jnpEnsureSlow(VariableTickState->PendingFrame >= 0);
+		bnpEnsureSlow(VariableTickState->PendingFrame >= 0);
 
 		const float fEngineFrameDeltaTimeMS = DeltaTimeSeconds * 1000.f;
 		const int32 CueTimeMS = VariableTickState->Frames[VariableTickState->PendingFrame].TotalMS; // This time stamp is what will get replicated to SP clients for Cues.
@@ -314,8 +314,8 @@ public:
 
 					ServerRecvData.TotalSimTimeMS += InputCmdMS;
 
-					UE_JNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, Step.StepMS, Step.Frame);
-					UE_JNP_TRACE_SIM_TICK(TraceID);
+					UE_BNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, Step.StepMS, Step.Frame);
+					UE_BNP_TRACE_SIM_TICK(TraceID);
 
 					TBulletTickUtil<ModelDef>::DoTick(InstanceData, InputFrameData, OutputFrameData, Step, CueTimeMS, EBulletSimulationTickContext::Authority);
 					

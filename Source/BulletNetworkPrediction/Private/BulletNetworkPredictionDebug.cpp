@@ -14,7 +14,7 @@ namespace BulletNetworkPredictionDebug
 	{
 		static constexpr float Thickness = 2.f;
 
-		jnpCheck(UBulletNetworkPredictionWorldManager::ActiveInstance != nullptr);
+		bnpCheck(UBulletNetworkPredictionWorldManager::ActiveInstance != nullptr);
 		UWorld* World = UBulletNetworkPredictionWorldManager::ActiveInstance->GetWorld();
 
 		FVector ActorOrigin;
@@ -27,7 +27,7 @@ namespace BulletNetworkPredictionDebug
 
 	void DrawDebugText3D(const TCHAR* Str, FTransform Transform, FColor DrawColor, float Lifetime)
 	{	
-		jnpCheck(UBulletNetworkPredictionWorldManager::ActiveInstance != nullptr);
+		bnpCheck(UBulletNetworkPredictionWorldManager::ActiveInstance != nullptr);
 		UWorld* World = UBulletNetworkPredictionWorldManager::ActiveInstance->GetWorld();
 
 		DrawDebugString(World, Transform.GetLocation(), Str, nullptr, DrawColor, Lifetime, false);

@@ -24,14 +24,14 @@ public:
 	{
 		bFinalized = false; // New type must re-finalize
 
-		if (!jnpEnsure(ModelDefList.Contains(&ModelDef::ID) == false))
+		if (!bnpEnsure(ModelDefList.Contains(&ModelDef::ID) == false))
 		{
 			return;
 		}
 
 		FTypeInfo TypeInfo =
 		{
-			&ModelDef::ID,				 // Must include JNP_MODEL_BODY()
+			&ModelDef::ID,				 // Must include BNP_MODEL_BODY()
 			ModelDef::GetSortPriority(), // Must implement ::GetSortPriorty()
 			ModelDef::GetName()			 // Must implement ::GetName()
 		};
@@ -53,7 +53,7 @@ public:
 			{
 				UE_LOG(LogBulletNetworkPrediction, Log, TEXT("ModelDefs %s and %s have same sort priority. Using lexical sort as backup"), LHS.Name, RHS.Name);
 				int32 StrCmpResult = FCString::Strcmp(LHS.Name, RHS.Name);
-				jnpEnsureMsgf(StrCmpResult != 0, TEXT("Duplicate ModelDefs appear to have been registered."));
+				bnpEnsureMsgf(StrCmpResult != 0, TEXT("Duplicate ModelDefs appear to have been registered."));
 				return StrCmpResult > 0;
 			}
 
@@ -99,6 +99,6 @@ struct TBulletNetworkPredictionModelDefRegisterHelper
 
 // Helper to register ModelDef type.
 // Sets static ID to 0 (invalid) and calls global registration function
-#define JNP_MODEL_REGISTER(X) \
+#define BNP_MODEL_REGISTER(X) \
 	FModelDefId X::ID=0; \
 	static TBulletNetworkPredictionModelDefRegisterHelper<X> NetModelAr_##X = TBulletNetworkPredictionModelDefRegisterHelper<X>();

@@ -4,7 +4,7 @@
 
 #include "BulletNetworkPredictionConfig.generated.h"
 
-// Must be kept in sync with EJNP_TickingPolicy
+// Must be kept in sync with EBNP_TickingPolicy
 UENUM()
 enum class EBulletNetworkPredictionTickingPolicy : uint8
 {
@@ -25,7 +25,7 @@ enum class EBulletNetworkPredictionLocalInputPolicy : uint8
 	PollPerSimFrame,
 };
 
-// Must be kept in sync with EJNP_NetworkLOD. Note: SimExtrapolate Not currently implemented so it is hidden
+// Must be kept in sync with EBNP_NetworkLOD. Note: SimExtrapolate Not currently implemented so it is hidden
 UENUM()
 enum class EBulletNetworkLOD : uint8
 {

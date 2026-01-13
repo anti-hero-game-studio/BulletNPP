@@ -45,7 +45,7 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
 		const int32 ClientRecvIdx = DataStore->ClientRecv.GetIndexChecked(ID);
-		JnpResizeAndSetBit(InstanceBitArray, ClientRecvIdx);
+		BnpResizeAndSetBit(InstanceBitArray, ClientRecvIdx);
 
 		if (bNeedsTickService)
 		{
@@ -66,11 +66,11 @@ public:
 
 	int32 QueryRollback(FBulletFixedTickState* TickState) final override
 	{
-		jnpCheckSlow(TickState);
-		JnpClearBitArray(RollbackBitArray);
+		bnpCheckSlow(TickState);
+		BnpClearBitArray(RollbackBitArray);
 
 		// DataStore->ClientRecvBitMask size can change without us knowing so make sure out InstanceBitArray size stays in sync
-		JnpResizeBitArray(InstanceBitArray, DataStore->ClientRecvBitMask.Num());
+		BnpResizeBitArray(InstanceBitArray, DataStore->ClientRecvBitMask.Num());
 
 		const int32 Offset = TickState->Offset;
 		int32 RollbackFrame = INDEX_NONE;
@@ -80,7 +80,7 @@ public:
 			TBulletClientRecvData<ModelDef>& ClientRecvData = DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx);
 			TBulletInstanceFrameState<ModelDef>& Frames = DataStore->Frames.GetByIndexChecked(ClientRecvData.FramesIdx);
 
-			UE_JNP_TRACE_SIM(ClientRecvData.TraceID);
+			UE_BNP_TRACE_SIM(ClientRecvData.TraceID);
 			
 			const int32 LocalFrame = ClientRecvData.ServerFrame - Offset;
 			typename TBulletInstanceFrameState<ModelDef>::FFrame& LocalFrameData = Frames.Buffer[LocalFrame];
@@ -89,7 +89,7 @@ public:
 
 			if (NetworkPredictionCVars::ForceReconcile() > 0)
 			{
-				UE_JNP_TRACE_SHOULD_RECONCILE(ClientRecvData.TraceID);
+				UE_BNP_TRACE_SHOULD_RECONCILE(ClientRecvData.TraceID);
 				bDoRollback = true;
 				RollbackFrame = LocalFrame - FMath::Max(0, NetworkPredictionCVars::ForceReconcileExtraFrames());
 
@@ -102,7 +102,7 @@ public:
 			}
 			else if (FBulletNetworkPredictionDriver<ModelDef>::ShouldReconcile( SyncAuxType(LocalFrameData.SyncState, LocalFrameData.AuxState), SyncAuxType(ClientRecvData.SyncState, ClientRecvData.AuxState) ))
 			{
-				UE_JNP_TRACE_SHOULD_RECONCILE(ClientRecvData.TraceID);
+				UE_BNP_TRACE_SHOULD_RECONCILE(ClientRecvData.TraceID);
 				bDoRollback = true;
 				
 				if (NetworkPredictionCVars::PrintReconciles())
@@ -135,7 +135,7 @@ public:
 			// Regardless if this instance needs to rollback or not, we are marking it in the RollbackBitArray.
 			// This could be a ModelDef setting ("Rollback everyone" or "Just who needs it") 
 			// Or maybe something more dynamic/spatial ("rollback all instances within this radius", though to do this you may need to consider some ModelDef independent way of doing so)
-			JnpResizeAndSetBit(RollbackBitArray, ClientRecvIdx);
+			BnpResizeAndSetBit(RollbackBitArray, ClientRecvIdx);
 
 			// We've taken care of this instance, reset it for next time
 			DataStore->ClientRecvBitMask[ClientRecvIdx] = false;
@@ -157,7 +157,7 @@ public:
 			// Everyone we are managing needs to rollback to this frame, even if they don't have a correction 
 			// (this frame or this rollback - they will need to restore their collision data since we are about to retick everyone in step)
 
-			QUICK_SCOPE_CYCLE_COUNTER(JNP_Rollback_RestorePhysicsFrame);
+			QUICK_SCOPE_CYCLE_COUNTER(BNP_Rollback_RestorePhysicsFrame);
 			TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::RestorePhysicsFrame);
 
 			for (TConstSetBitIterator<> BitIt(InstanceBitArray); BitIt; ++BitIt)
@@ -213,7 +213,7 @@ private:
 				}
 
 				RollbackBitArray[ClientRecvIdx] = false;
-				UE_JNP_TRACE_ROLLBACK_INJECT(ClientRecvData.TraceID);
+				UE_BNP_TRACE_ROLLBACK_INJECT(ClientRecvData.TraceID);
 
 				if (FlushCorrection)
 				{
@@ -257,10 +257,10 @@ public:
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
 		const int32 ClientRecvIdx = DataStore->ClientRecv.GetIndexChecked(ID);
-		JnpResizeAndSetBit(InstanceBitArray, ClientRecvIdx);
+		BnpResizeAndSetBit(InstanceBitArray, ClientRecvIdx);
 
 		// Only APs should register for this service. We do not support rollback for independent tick SP actors.
-		jnpEnsureSlow(DataStore->Instances.GetByIndexChecked( DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx).InstanceIdx ).NetRole == ROLE_AutonomousProxy);
+		bnpEnsureSlow(DataStore->Instances.GetByIndexChecked( DataStore->ClientRecv.GetByIndexChecked(ClientRecvIdx).InstanceIdx ).NetRole == ROLE_AutonomousProxy);
 	}
 
 	void UnregisterInstance(FBulletNetworkPredictionID ID)
@@ -272,7 +272,7 @@ public:
 	void Reconcile(const FBulletVariableTickState* TickState) final override
 	{
 		// DataStore->ClientRecvBitMask size can change without us knowing so make sure out InstanceBitArray size stays in sync
-		JnpResizeBitArray(InstanceBitArray, DataStore->ClientRecvBitMask.Num());
+		BnpResizeBitArray(InstanceBitArray, DataStore->ClientRecvBitMask.Num());
 
 		for (TConstDualSetBitIterator<FDefaultBitArrayAllocator,FDefaultBitArrayAllocator> BitIt(InstanceBitArray, DataStore->ClientRecvBitMask); BitIt; ++BitIt)
 		{
@@ -285,7 +285,7 @@ public:
 
 			if (FBulletNetworkPredictionDriver<ModelDef>::ShouldReconcile( SyncAuxType(LocalFrameData.SyncState, LocalFrameData.AuxState), SyncAuxType(ClientRecvData.SyncState, ClientRecvData.AuxState) ))
 			{
-				UE_JNP_TRACE_SHOULD_RECONCILE(ClientRecvData.TraceID);
+				UE_BNP_TRACE_SHOULD_RECONCILE(ClientRecvData.TraceID);
 				if (NetworkPredictionCVars::PrintReconciles())
 				{
 					UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("ShouldReconcile. Frame: %d."), LocalFrame);
@@ -322,8 +322,8 @@ public:
 
 					TBulletTickUtil<ModelDef>::DoTick(Instance, InputFrameData, OutputFrameData, Step, EndTimeMS, EBulletSimulationTickContext::Resimulate);
 
-					UE_JNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, Step.StepMS, Step.Frame);
-					UE_JNP_TRACE_SIM_TICK(ClientRecvData.TraceID);
+					UE_BNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, Step.StepMS, Step.Frame);
+					UE_BNP_TRACE_SIM_TICK(ClientRecvData.TraceID);
 				}
 			}
 

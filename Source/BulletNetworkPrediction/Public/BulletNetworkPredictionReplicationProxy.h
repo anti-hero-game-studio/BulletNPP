@@ -81,7 +81,7 @@ struct FBulletReplicationProxySet
 
 	void UnbindAll() const
 	{
-		jnpCheckSlow(ServerRPC && AutonomousProxy && SimulatedProxy && Replay);
+		bnpCheckSlow(ServerRPC && AutonomousProxy && SimulatedProxy && Replay);
 		ServerRPC->NetSerializeFunc = nullptr;
 		AutonomousProxy->NetSerializeFunc = nullptr;
 		SimulatedProxy->NetSerializeFunc = nullptr;

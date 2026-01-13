@@ -73,7 +73,6 @@ bool UBulletStaticMeshComponent::IsAnyRigidBodyAwake()
 
 ECollisionEnabled::Type UBulletStaticMeshComponent::GetCollisionEnabled() const
 {
-	
 	if (!GetWorld() || !GetWorld()->IsGameWorld())
 	{
 		return Super::GetCollisionEnabled();
@@ -88,17 +87,17 @@ ECollisionEnabled::Type UBulletStaticMeshComponent::GetCollisionEnabled() const
 		return ECollisionEnabled::Type::NoCollision;
 	}
 
-	if (Subsystem->IsCollisionBodyActive(this) && Subsystem->IsGhostBodyActive(this))
+	if (Subsystem->HasRigidBodyBeenCreated(this) && Subsystem->HasGhostBodyBeenCreated(this))
 	{
 		return ECollisionEnabled::Type::QueryAndPhysics;
 	}
 	
-	if (Subsystem->IsGhostBodyActive(this) && !Subsystem->IsCollisionBodyActive(this))
+	if (Subsystem->HasGhostBodyBeenCreated(this) && !Subsystem->HasRigidBodyBeenCreated(this))
 	{
 		return ECollisionEnabled::Type::QueryOnly;
 	}
 	
-	if (!Subsystem->IsGhostBodyActive(this) && Subsystem->IsCollisionBodyActive(this))
+	if (!Subsystem->HasGhostBodyBeenCreated(this) && Subsystem->HasRigidBodyBeenCreated(this))
 	{
 		return ECollisionEnabled::Type::PhysicsOnly;
 	}

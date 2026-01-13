@@ -51,10 +51,10 @@ public:
 
 	void RegisterInstance(FBulletNetworkPredictionID ID)
 	{
-		jnpCheckfSlow(!std::is_void_v<InputType>, TEXT("ModelDef %s with null InputCmd type was registered for local input service."), ModelDef::GetName());
+		bnpCheckfSlow(!std::is_void_v<InputType>, TEXT("ModelDef %s with null InputCmd type was registered for local input service."), ModelDef::GetName());
 
 		TInstanceData<ModelDef>* InstanceData = DataStore->Instances.Find(ID);
-		jnpCheckSlow(InstanceData);
+		bnpCheckSlow(InstanceData);
 
 		InstanceMap.Add((int32)ID, FInstance{ID.GetTraceID(), InstanceData->Info.View, InstanceData->Info.Driver});
 	}
@@ -70,15 +70,15 @@ public:
 		{
 			FInstance& Instance = MapIt.Value;
 
-			jnpCheckSlow(Instance.Driver);
-			jnpCheckSlow(Instance.View);
-			jnpCheckSlow(Instance.View->PendingInputCmd);
+			bnpCheckSlow(Instance.Driver);
+			bnpCheckSlow(Instance.View);
+			bnpCheckSlow(Instance.View->PendingInputCmd);
 
 			FBulletNetworkPredictionDriver<ModelDef>::ProduceInput(Instance.Driver, DeltaTimeMS, (InputType*)Instance.View->PendingInputCmd);
 			*Instance.View->InterpolationTimeMS = InterpolationTimeMS;
 
-			UE_JNP_TRACE_PRODUCE_INPUT(Instance.TraceID);
-			UE_JNP_TRACE_USER_STATE_INPUT(ModelDef, (InputType*)Instance.View->PendingInputCmd);
+			UE_BNP_TRACE_PRODUCE_INPUT(Instance.TraceID);
+			UE_BNP_TRACE_USER_STATE_INPUT(ModelDef, (InputType*)Instance.View->PendingInputCmd);
 		}
 	}
 
@@ -142,7 +142,7 @@ public:
 		,UBulletNetworkPredictionPlayerControllerComponent* RPCHandler
 		,FBulletFixedTickState* TickState) final override
 	{
-		jnpEnsure(ClientFrame >= 0);
+		bnpEnsure(ClientFrame >= 0);
 		for (auto& MapIt : InstanceMap)
 		{
 			FInstance& Instance = MapIt.Value;
@@ -163,11 +163,11 @@ public:
 				FNetBitReader Reader(NetConnection->PackageMap,Input.InputData.GetData(),Input.DataSize);
 				FBulletNetSerializeParams Params(Reader,NetConnection->PackageMap,EBulletReplicationProxyTarget::ServerRPC);
 			
-				UE_JNP_TRACE_SIM(Instance.TraceID);
+				UE_BNP_TRACE_SIM(Instance.TraceID);
 				TBulletServerRecvData_Fixed<ModelDef>& ServerRecvData = DataStore->ServerRecv.GetByIndexChecked(Instance.ServerRecvIdx);
 				for (int32 DroppedFrame = RPCHandler->LastReceivedFrame+1; DroppedFrame < ClientFrame; ++DroppedFrame)
 				{
-					UE_JNP_TRACE_SYSTEM_FAULT("Gap in input stream detected on server. Client frames involved: LastConsumedFrame: %d LastRecvFrame: %d. DroppedFrame: %d", ServerRecvData.LastConsumedFrame, ServerRecvData.LastRecvFrame, DroppedFrame);
+					UE_BNP_TRACE_SYSTEM_FAULT("Gap in input stream detected on server. Client frames involved: LastConsumedFrame: %d LastRecvFrame: %d. DroppedFrame: %d", ServerRecvData.LastConsumedFrame, ServerRecvData.LastRecvFrame, DroppedFrame);
 					if (DroppedFrame > 0)
 					{
 						// FixedTick can't skip frames like independent, so copy previous input
@@ -181,8 +181,8 @@ public:
 				// Trace what we received
 				const int32 ExpectedFrameDelay = ClientFrame - RPCHandler->LastConsumedFrame;
 				const int32 ExpectedConsumeFrame = TickState->PendingFrame + ExpectedFrameDelay - 1;
-				UE_JNP_TRACE_NET_RECV(ExpectedConsumeFrame, ExpectedConsumeFrame * TickState->FixedStepMS);
-				UE_JNP_TRACE_USER_STATE_INPUT(ModelDef, ServerRecvData.InputBuffer[ClientFrame].Value.Get());
+				UE_BNP_TRACE_NET_RECV(ExpectedConsumeFrame, ExpectedConsumeFrame * TickState->FixedStepMS);
+				UE_BNP_TRACE_USER_STATE_INPUT(ModelDef, ServerRecvData.InputBuffer[ClientFrame].Value.Get());
 			}
 		}
 	};
@@ -208,12 +208,12 @@ public:
 		{
 			FInstance& Remote = MapIt.Value;
 			TInstanceData<ModelDef>& InstanceData = DataStore->Instances.GetByIndexChecked(Remote.InstanceIndex);
-			jnpCheckSlow(InstanceData.Info.View);
-			jnpCheckSlow(InstanceData.Info.View->PendingInputCmd);
-			jnpCheckSlow(InstanceData.Info.View->PendingFrame >= 0);
+			bnpCheckSlow(InstanceData.Info.View);
+			bnpCheckSlow(InstanceData.Info.View->PendingInputCmd);
+			bnpCheckSlow(InstanceData.Info.View->PendingFrame >= 0);
 			
-			UE_JNP_TRACE_PRODUCE_INPUT(Remote.TraceID);
-			UE_JNP_TRACE_PUSH_INPUT_FRAME(InstanceData.Info.View->PendingFrame);
+			UE_BNP_TRACE_PRODUCE_INPUT(Remote.TraceID);
+			UE_BNP_TRACE_PUSH_INPUT_FRAME(InstanceData.Info.View->PendingFrame);
 
 			TBulletServerRecvData_Fixed<ModelDef>& ServerRecvData = DataStore->ServerRecv.GetByIndexChecked(Remote.ServerRecvIdx);
 			if (!InstanceData.Info.RPCHandler)
@@ -278,8 +278,8 @@ public:
 			}
 			
 			const int32 NumBufferedInputCmds = InstanceData.Info.RPCHandler->LastReceivedFrame - InstanceData.Info.RPCHandler->LastConsumedFrame;
-			UE_JNP_TRACE_BUFFERED_INPUT(NumBufferedInputCmds, false);
-			UE_JNP_TRACE_USER_STATE_INPUT(ModelDef, (InputType*)InstanceData.Info.View->PendingInputCmd);
+			UE_BNP_TRACE_BUFFERED_INPUT(NumBufferedInputCmds, false);
+			UE_BNP_TRACE_USER_STATE_INPUT(ModelDef, (InputType*)InstanceData.Info.View->PendingInputCmd);
 		}
 	}
 
