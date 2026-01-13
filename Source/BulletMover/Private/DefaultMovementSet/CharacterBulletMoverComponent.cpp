@@ -43,7 +43,7 @@ void UCharacterBulletMoverComponent::BeginPlay()
 
 	OnHandlerSettingChanged();
 
-	OnPostFinalize.AddDynamic(this, &UCharacterBulletMoverComponent::OnMoverPostFinalize);
+	//OnPostFinalize.AddDynamic(this, &UCharacterBulletMoverComponent::OnMoverPostFinalize);
 }
 
 bool UCharacterBulletMoverComponent::GetHandleJump() const

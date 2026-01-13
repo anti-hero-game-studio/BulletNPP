@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BulletMain.h"
+#include "Core/Interfaces/BulletActorInterface.h"
 #include "Core/Libraries/BulletLibrary.h"
 
 
@@ -17,6 +18,7 @@ protected:
 		FVector WorldOrigin;
 		btTransform CenterOfMassTransform;
 		FTransform FinalTransform;
+		FTransform BaseVisualComponentTransform;
 
 
 	public:
@@ -25,8 +27,19 @@ protected:
 
 		}
 
-		FBulletMotionState(AActor* ParentActor, const FVector& WorldCentre, const btTransform& CenterOfMassOffset = btTransform::getIdentity())
+		FBulletMotionState(const AActor* ParentActor, const FVector& WorldCentre, const btTransform& CenterOfMassOffset = btTransform::getIdentity())
 		{
+			
+			const IBulletActorInterface* I = Cast<IBulletActorInterface>(ParentActor);
+			if (ParentActor->Implements<UBulletActorInterface>())
+			{
+				if (const UPrimitiveComponent* P  = IBulletActorInterface::Execute_GetVisualProxyRootComponent(ParentActor))
+				{
+					BaseVisualComponentTransform = P->GetRelativeTransform();
+				}
+					
+			}
+			
 			UpdatedComponent = ParentActor->GetRootComponent(); //TODO:@GreggoryAddison::CodeUpgrade | This needs to be more dynamic to allow for runtime changes.
 			WorldOrigin=WorldCentre;
 			CenterOfMassTransform=CenterOfMassOffset;
@@ -45,11 +58,26 @@ protected:
 		///synchronizes world transform from physics to UE
 		void setWorldTransform(const btTransform& CenterOfMassWorldTrans) override
 		{// send this to actor
+			QUICK_SCOPE_CYCLE_COUNTER(STAT_BNP_TICK_FIXED);
+			TRACE_CPUPROFILER_EVENT_SCOPE(BulletMotionState::SetWorldTransform);
 			if (UpdatedComponent.IsValid(false))
 			{
 				FinalTransform = BulletHelpers::ToUnrealTransform(CenterOfMassWorldTrans * CenterOfMassTransform, WorldOrigin);
 				FinalTransform.SetScale3D(UpdatedComponent->K2_GetComponentScale());
 				UpdatedComponent->SetWorldTransform(FinalTransform);
+				
+				if (!UpdatedComponent->GetOwner()) return;
+
+				if (UpdatedComponent->GetOwner()->Implements<UBulletActorInterface>())
+				{
+					UPrimitiveComponent* P = IBulletActorInterface::Execute_GetVisualProxyRootComponent(UpdatedComponent->GetOwner());
+					if (!P) return;
+					
+					if (!P->GetRelativeTransform().Equals(BaseVisualComponentTransform))
+					{
+						P->SetRelativeTransform(BaseVisualComponentTransform);
+					}
+				}
 			}
 		}
 	

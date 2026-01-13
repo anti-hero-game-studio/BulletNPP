@@ -375,10 +375,10 @@ void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState
 	
 	if (MoverState)
 	{
-		const FRotator ComponentRot =  UpdatedComponent->GetComponentQuat().Rotator();
-		const FRotator StateRot = MoverState->GetOrientation_WorldSpace();
-		const FVector ComponentLoc = UpdatedComponent->GetComponentLocation();	
-		const FVector StateLoc = MoverState->GetLocation_WorldSpace();
+		const FRotator& ComponentRot =  UpdatedComponent->GetComponentQuat().Rotator();
+		const FRotator& StateRot = MoverState->GetOrientation_WorldSpace();
+		const FVector& ComponentLoc = UpdatedComponent->GetComponentLocation();	
+		const FVector& StateLoc = MoverState->GetLocation_WorldSpace();
 
 		if ((ComponentLoc.Equals(StateLoc) == false ||
 			 ComponentRot.Equals(StateRot, ROTATOR_TOLERANCE) == false))
