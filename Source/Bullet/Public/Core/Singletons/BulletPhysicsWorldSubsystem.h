@@ -233,11 +233,11 @@ public:
 
 	btRigidBody* AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, const FBulletShapeOptions& Options);
 
-	btRigidBody* AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& localTransform, btCollisionShape* CollisionShape, float Mass, float Friction, float Restitution);
+	btRigidBody* AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& localTransform, btCollisionShape* CollisionShape, const FBulletShapeOptions& Options);
 	
-	btCollisionObject* AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, float Friction, float Restitution, AActor* Actor);
+	btCollisionObject* AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletShapeOptions& Options);
 	
-	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, AActor* Actor, const bool bIsBlockingAnyTraceChannel);
+	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletShapeOptions& Options);
 	
 	
 	btCollisionObject* GetStaticObject(int ID) const;

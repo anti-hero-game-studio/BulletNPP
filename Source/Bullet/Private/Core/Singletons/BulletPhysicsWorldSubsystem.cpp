@@ -101,11 +101,6 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 		// Every sub-collider in the actor is passed to this callback function
 		// We're baking this in world space, so apply actor transform to relative
 		const FTransform FinalXform = RelTransform;
-		
-		bool bShouldCreateGhostCollider = false;
-		bool bShouldCreateBlockCollider = false;
-		bool IsBlockingAnyTraceChannel = false;
-		
 		FBulletUserData* UserData = new  FBulletUserData();
 
 		if (UPrimitiveComponent* P = Descriptor.Shapes.Last().Shape.Get())
@@ -119,40 +114,20 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 			BulletHelpers->BuildResponseMasks(ResponseContainer, UserData->BlockMask, UserData->OverlapMask, IgnoreMask);
 			UserData->ObjectChannel = (uint8)P->GetCollisionObjectType();
 			
-			const UCollisionProfile* Profile = UCollisionProfile::Get();
-			for (int i = 0; i < 32; i++)
-			{
-				const FString& ChannelName = Profile->ReturnChannelNameFromContainerIndex(i).ToString();
-				const bool bShouldConsiderChannel = !(ChannelName.Contains(TEXT("GameTraceChannel")) || ChannelName.Contains(TEXT("EngineTraceChannel")));
-				if (!bShouldConsiderChannel) continue;
-				
-				const ECollisionChannel& Channel = (ECollisionChannel)(i);
-				const ECollisionResponse& Response = P->GetCollisionResponseToChannels().GetResponse(Channel);
-					
-				if (Response == ECR_Overlap || Options.bGenerateOverlapEventsInBullet)
-				{
-					bShouldCreateGhostCollider = true;
-				}
-				else if (Response == ECR_Block)
-				{
-					bShouldCreateBlockCollider = Options.bGenerateCollisionEventsInBullet;
-					IsBlockingAnyTraceChannel = Profile->ConvertToTraceType(Channel) != TraceTypeQuery_MAX;
-				}
-			}
-			
 			if (!Options.bGenerateCollisionEventsInChaos)
 			{
 				P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				P->GetBodyInstance()->bNotifyRigidBodyCollision = false;
 			}
+			
 			if (!Options.bGenerateOverlapEventsInChaos)
 			{
+				P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				P->SetGenerateOverlapEvents(false);
 			}
 			
-			UserData->Component = Descriptor.Shapes.Last().Shape.Get();
+			UserData->Component = P;
 			Descriptor.Shapes.Last().CollisionResponses = ResponseContainer;
-			
 			BtUserData.Add(UserData);
 		}
 		
@@ -160,37 +135,42 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 		{
 			if (btCollisionObject* CollisionObject = AddRigidBodyCollider(Target, RelTransform, Shape, Options))
 			{
+				const int ExtraFlag = Options.ShapeType == EBulletShapeType::KINEMATIC ? btCollisionObject::CF_KINEMATIC_OBJECT : btCollisionObject::CF_DYNAMIC_OBJECT;
+				CollisionObject->setCollisionFlags(CollisionObject->getCollisionFlags() | ExtraFlag);
 				CollisionObject->setUserPointer(UserData);
 				Descriptor.Shapes.Last().Id.BlockingShapeWorldArrayIndex = CollisionObject->getWorldArrayIndex();
 				Descriptor.Shapes.Last().BlockingCollider = CollisionObject;
 			}
-		}
-		else
-		{
-			if (bShouldCreateBlockCollider)
-			{
-				if (btCollisionObject* CollisionObject = AddStaticCollider(Shape, FinalXform, Options.Friction, Options.Restitution, Target))
-				{
-					CollisionObject->setUserPointer(UserData);
-					Descriptor.Shapes.Last().Id.BlockingShapeWorldArrayIndex = CollisionObject->getWorldArrayIndex();
-					Descriptor.Shapes.Last().BlockingCollider = CollisionObject;
-				}
-			}
+			
+			GlobalShapeDescriptorDataCache.Add(Target, Descriptor);
+			return;
 		}
 		
 		
-		
-		if (bShouldCreateGhostCollider)
+		if (Options.bGenerateOverlapEventsInBullet && !Options.bGenerateCollisionEventsInBullet)
 		{
-			if (btGhostObject* CollisionObject = AddGhostCollider(Shape, FinalXform, Target, IsBlockingAnyTraceChannel))
+			if (btGhostObject* CollisionObject = AddGhostCollider(Shape, FinalXform, Options))
 			{
 				CollisionObject->setUserPointer(UserData);
 				Descriptor.Shapes.Last().Id.OverlappingShapeWorldArrayIndex = CollisionObject->getWorldArrayIndex();
 				Descriptor.Shapes.Last().OverlappingCollider = CollisionObject;
 			}
+			
+			GlobalShapeDescriptorDataCache.Add(Target, Descriptor);
+			return;
 		}
 		
-		GlobalShapeDescriptorDataCache.Add(Target, Descriptor);
+		if (Options.bGenerateCollisionEventsInBullet)
+		{
+			if (btCollisionObject* CollisionObject = AddStaticCollider(Shape, FinalXform, Options))
+			{
+				CollisionObject->setUserPointer(UserData);
+				Descriptor.Shapes.Last().Id.BlockingShapeWorldArrayIndex = CollisionObject->getWorldArrayIndex();
+				Descriptor.Shapes.Last().BlockingCollider = CollisionObject;
+			}
+			
+			GlobalShapeDescriptorDataCache.Add(Target, Descriptor);
+		}
 		
 	}, Descriptor);
 	
@@ -743,34 +723,42 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, c
 	}
 	
 	const short DynGroup = btBroadphaseProxy::DefaultFilter;
-	const short DynMask  = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::SensorTrigger; // allow ghost overlaps
+	short DynMask  = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter; // allow ghost overlaps
+	if (Options.bGenerateOverlapEventsInBullet)
+	{
+		DynMask |= btBroadphaseProxy::SensorTrigger;;
+	}
 	BtWorld->addRigidBody(Body, DynGroup, DynMask);
 	BtRigidBodies.Add(Body);
 	return Body;
 }
 
-btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& PhysicsAssetTransform, btCollisionShape* CollisionShape, const float Mass, float Friction, float Restitution)
+btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& PhysicsAssetTransform, btCollisionShape* CollisionShape, const FBulletShapeOptions& Options)
 {
 	checkf(Skel!=nullptr, TEXT("Got null skeletal mesh"));
 	btVector3 Inertia(0,0,0);
 	checkf(CollisionShape!=nullptr, TEXT("Please configure physics asset for: %s"), *Skel->GetName());
-	CollisionShape->calculateLocalInertia(Mass, Inertia);
+	CollisionShape->calculateLocalInertia(Options.Mass, Inertia);
 	FBulletUEMotionState* OBJMotionState = new FBulletUEMotionState(Skel, UE_WORLD_ORIGIN, PhysicsAssetTransform);
-	const btRigidBody::btRigidBodyConstructionInfo RBInfo(Mass, OBJMotionState, CollisionShape, Inertia);
+	const btRigidBody::btRigidBodyConstructionInfo RBInfo(Options.Mass, OBJMotionState, CollisionShape, Inertia);
 	btRigidBody* Body = new btRigidBody(RBInfo);
 	Body->setUserPointer(Skel);
 	Body->setActivationState(DISABLE_DEACTIVATION);
 	Body->setDeactivationTime(0);
 	
 	const short DynGroup = btBroadphaseProxy::DefaultFilter;
-	const short DynMask  = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::SensorTrigger; // allow ghost overlaps
+	short DynMask  = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter; // allow ghost overlaps
+	if (Options.bGenerateOverlapEventsInBullet)
+	{
+		DynMask |= btBroadphaseProxy::SensorTrigger;;
+	}
 	BtWorld->addRigidBody(Body, DynGroup, DynMask);
 	
 	BtRigidBodies.Add(Body);
 	return Body;
 }
 
-btCollisionObject* UBulletPhysicsWorldSubsystem::AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, float Friction, float Restitution, AActor* Actor)
+btCollisionObject* UBulletPhysicsWorldSubsystem::AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletShapeOptions& Options)
 {
 	if (!BtWorld){
 		UE_LOG(LogTemp, Warning, TEXT("UBulletPhysicsWorldSubsystem::AddStaticCollision: BtWorld is empty"));
@@ -780,20 +768,27 @@ btCollisionObject* UBulletPhysicsWorldSubsystem::AddStaticCollider(btCollisionSh
 	btCollisionObject* Obj = new btCollisionObject();
 	Obj->setCollisionShape(Shape);
 	Obj->setWorldTransform(Xform);
-	Obj->setFriction(Friction);
-	Obj->setRestitution(Restitution);
+	Obj->setFriction(Options.Friction);
+	Obj->setRestitution(Options.Restitution);
 	Obj->setActivationState(DISABLE_DEACTIVATION);
-	BtWorld->addCollisionObject(Obj, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::DefaultFilter);
+	
+	const short DynGroup = btBroadphaseProxy::StaticFilter;
+	short DynMask  = btBroadphaseProxy::DefaultFilter; // allow ghost overlaps
+	if (Options.bGenerateOverlapEventsInBullet)
+	{
+		DynMask |= btBroadphaseProxy::SensorTrigger;;
+	}
+	BtWorld->addCollisionObject(Obj, DynGroup, DynMask);
 	BtStaticBodies.Add(Obj);
 	return Obj;
 }
 
-btGhostObject* UBulletPhysicsWorldSubsystem::AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, AActor* Actor, const bool bIsBlockingAnyTraceChannel)
+btGhostObject* UBulletPhysicsWorldSubsystem::AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletShapeOptions& Options)
 {
 	btGhostObject* Ghost = new btGhostObject();
 	
 	Ghost->setCollisionShape(Shape);
-	if (!bIsBlockingAnyTraceChannel)
+	if (!Options.bGenerateCollisionEventsInBullet)
 	{
 		// No physical response, overlap only
 		Ghost->setCollisionFlags(Ghost->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
