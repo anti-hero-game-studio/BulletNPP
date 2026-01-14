@@ -436,7 +436,7 @@ void UBulletBasedMovementUtils::UpdateSimpleBasedMovement(UBulletMoverComponent*
 				if (TargetMoverComp->BackendLiaisonComp->ReadPendingSyncState(OUT PendingSimSyncState))
 				{
 					// Modify the PENDING sync state that has not yet been committed to simulation history nor replicated
-					if (FBulletMoverDefaultSyncState* PendingMoverState = PendingSimSyncState.Collection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
+					if (FBulletUpdatedMotionState* PendingMoverState = PendingSimSyncState.Collection.FindMutableDataByType<FBulletUpdatedMotionState>())
 					{
 						FTransform OldSyncTransformWs = PendingMoverState->GetTransform_WorldSpace();
 						FTransform NewSyncTransformWs = UpdatedComponent->GetComponentTransform();
@@ -459,7 +459,7 @@ void UBulletBasedMovementUtils::UpdateSimpleBasedMovement(UBulletMoverComponent*
 							FBulletMoverSyncState PresentationSyncState;
 							if (TargetMoverComp->BackendLiaisonComp->ReadPresentationSyncState(OUT PresentationSyncState))
 							{
-								if (FBulletMoverDefaultSyncState* PresentationMoverState = PresentationSyncState.Collection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
+								if (FBulletUpdatedMotionState* PresentationMoverState = PresentationSyncState.Collection.FindMutableDataByType<FBulletUpdatedMotionState>())
 								{
 									OldSyncTransformWs = PresentationMoverState->GetTransform_WorldSpace();
 									NewSyncTransformWs = OldToNewTransform * OldSyncTransformWs;
@@ -479,7 +479,7 @@ void UBulletBasedMovementUtils::UpdateSimpleBasedMovement(UBulletMoverComponent*
 							FBulletMoverSyncState PrevPresentationSyncState;
 							if (TargetMoverComp->BackendLiaisonComp->ReadPrevPresentationSyncState(OUT PrevPresentationSyncState))
 							{
-								if (FBulletMoverDefaultSyncState* PrevPresentationMoverState = PrevPresentationSyncState.Collection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
+								if (FBulletUpdatedMotionState* PrevPresentationMoverState = PrevPresentationSyncState.Collection.FindMutableDataByType<FBulletUpdatedMotionState>())
 								{
 									OldSyncTransformWs = PrevPresentationMoverState->GetTransform_WorldSpace();
 									NewSyncTransformWs = OldToNewTransform * OldSyncTransformWs;

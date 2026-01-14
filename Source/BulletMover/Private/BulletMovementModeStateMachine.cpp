@@ -197,7 +197,7 @@ void UBulletMovementModeStateMachine::OnSimulationTick(USceneComponent* UpdatedC
 
 		WorkingSubstepStartData.SyncState.MovementMode = CurrentModeName;
 
-		FBulletMoverDefaultSyncState* OutputSyncState = &OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+		FBulletUpdatedMotionState* OutputSyncState = &OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 		OutputState.SyncState.MovementMode = CurrentModeName;
 
 		OutputState.MovementEndState.ResetToDefaults();

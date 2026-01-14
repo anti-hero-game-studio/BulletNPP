@@ -158,16 +158,16 @@ void FBulletCharacterDefaultInputs::Decay(float DecayAmount)
 	bIsJumpJustPressed = FMath::IsNearlyZero(DecayAmount) ? bIsJumpJustPressed : false;
 }
 
-// FBulletMoverDefaultSyncState //////////////////////////////////////////////////////////////
+// FBulletUpdatedMotionState //////////////////////////////////////////////////////////////
 
-FBulletMoverDataStructBase* FBulletMoverDefaultSyncState::Clone() const
+FBulletMoverDataStructBase* FBulletUpdatedMotionState::Clone() const
 {
 	// TODO: ensure that this memory allocation jives with deletion method
-	FBulletMoverDefaultSyncState* CopyPtr = new FBulletMoverDefaultSyncState(*this);
+	FBulletUpdatedMotionState* CopyPtr = new FBulletUpdatedMotionState(*this);
 	return CopyPtr;
 }
 
-bool FBulletMoverDefaultSyncState::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
+bool FBulletUpdatedMotionState::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
 	Super::NetSerialize(Ar, Map, bOutSuccess);
 
@@ -198,7 +198,7 @@ bool FBulletMoverDefaultSyncState::NetSerialize(FArchive& Ar, UPackageMap* Map, 
 	return true;
 }
 
-void FBulletMoverDefaultSyncState::ToString(FAnsiStringBuilderBase& Out) const
+void FBulletUpdatedMotionState::ToString(FAnsiStringBuilderBase& Out) const
 {
 	Super::ToString(Out);
 
@@ -221,9 +221,9 @@ void FBulletMoverDefaultSyncState::ToString(FAnsiStringBuilderBase& Out) const
 }
 
 
-bool FBulletMoverDefaultSyncState::ShouldReconcile(const FBulletMoverDataStructBase& AuthorityState) const
+bool FBulletUpdatedMotionState::ShouldReconcile(const FBulletMoverDataStructBase& AuthorityState) const
 {
-	const FBulletMoverDefaultSyncState* AuthoritySyncState = static_cast<const FBulletMoverDefaultSyncState*>(&AuthorityState);
+	const FBulletUpdatedMotionState* AuthoritySyncState = static_cast<const FBulletUpdatedMotionState*>(&AuthorityState);
 	const float DistErrorTolerance = 5.f;	// JAH TODO: define these elsewhere as CVars or data asset settings
 
 	const bool bAreInDifferentSpaces = !((MovementBase.HasSameIndexAndSerialNumber(AuthoritySyncState->MovementBase)) && (MovementBaseBoneName == AuthoritySyncState->MovementBaseBoneName));
@@ -246,10 +246,10 @@ bool FBulletMoverDefaultSyncState::ShouldReconcile(const FBulletMoverDataStructB
 }
 
 
-void FBulletMoverDefaultSyncState::Interpolate(const FBulletMoverDataStructBase& From, const FBulletMoverDataStructBase& To, float Pct)
+void FBulletUpdatedMotionState::Interpolate(const FBulletMoverDataStructBase& From, const FBulletMoverDataStructBase& To, float Pct)
 {
-	const FBulletMoverDefaultSyncState* FromState = static_cast<const FBulletMoverDefaultSyncState*>(&From);
-	const FBulletMoverDefaultSyncState* ToState = static_cast<const FBulletMoverDefaultSyncState*>(&To);
+	const FBulletUpdatedMotionState* FromState = static_cast<const FBulletUpdatedMotionState*>(&From);
+	const FBulletUpdatedMotionState* ToState = static_cast<const FBulletUpdatedMotionState*>(&To);
 
 	// TODO: investigate replacing this threshold with a flag indicating that the state (or parts thereof) isn't intended to be interpolated
 	static constexpr float TeleportThreshold = 500.f * 500.f;
@@ -312,9 +312,9 @@ void FBulletMoverDefaultSyncState::Interpolate(const FBulletMoverDataStructBase&
 }
 
 
-void FBulletMoverDefaultSyncState::SetTransforms_WorldSpace(FVector WorldLocation, FRotator WorldOrient, FVector WorldVelocity, FVector WorldAngularVelocityDegrees, UPrimitiveComponent* Base, FName BaseBone)
+void FBulletUpdatedMotionState::SetTransforms_WorldSpace(FVector WorldLocation, FRotator WorldOrient, FVector WorldVelocity, FVector WorldAngularVelocityDegrees, UPrimitiveComponent* Base, FName BaseBone)
 {
-	TRACE_CPUPROFILER_EVENT_SCOPE(FBulletMoverDefaultSyncState::SetTransforms_WorldSpace);
+	TRACE_CPUPROFILER_EVENT_SCOPE(FBulletUpdatedMotionState::SetTransforms_WorldSpace);
 	if (SetMovementBase(Base, BaseBone))
 	{
 		UBulletBasedMovementUtils::TransformLocationToLocal(  MovementBasePos,  MovementBaseQuat, WorldLocation, OUT Location);
@@ -337,7 +337,7 @@ void FBulletMoverDefaultSyncState::SetTransforms_WorldSpace(FVector WorldLocatio
 }
 
 
-bool FBulletMoverDefaultSyncState::SetMovementBase(UPrimitiveComponent* Base, FName BaseBone)
+bool FBulletUpdatedMotionState::SetMovementBase(UPrimitiveComponent* Base, FName BaseBone)
 {
 	MovementBase = Base;
 	MovementBaseBoneName = BaseBone;
@@ -347,7 +347,7 @@ bool FBulletMoverDefaultSyncState::SetMovementBase(UPrimitiveComponent* Base, FN
 }
 
 
-bool FBulletMoverDefaultSyncState::UpdateCurrentMovementBase()
+bool FBulletUpdatedMotionState::UpdateCurrentMovementBase()
 {
 	bool bDidGetBaseTransform = false;
 
@@ -367,7 +367,7 @@ bool FBulletMoverDefaultSyncState::UpdateCurrentMovementBase()
 	return bDidGetBaseTransform;
 }
 
-bool FBulletMoverDefaultSyncState::IsNearlyEqual(const FBulletMoverDefaultSyncState& Other) const
+bool FBulletUpdatedMotionState::IsNearlyEqual(const FBulletUpdatedMotionState& Other) const
 {
 	const bool bHasSameBaseBaseInfo = (!MovementBase.IsValid() && !Other.MovementBase.IsValid()) ||
 											(MovementBase == Other.MovementBase && 
@@ -382,7 +382,7 @@ bool FBulletMoverDefaultSyncState::IsNearlyEqual(const FBulletMoverDefaultSyncSt
 			bHasSameBaseBaseInfo;
 }
 
-FVector FBulletMoverDefaultSyncState::GetLocation_WorldSpace() const
+FVector FBulletUpdatedMotionState::GetLocation_WorldSpace() const
 {
 	if (MovementBase.IsValid())
 	{
@@ -392,13 +392,13 @@ FVector FBulletMoverDefaultSyncState::GetLocation_WorldSpace() const
 	return Location; // if no base, assumed to be in world space
 }
 
-FVector FBulletMoverDefaultSyncState::GetLocation_BaseSpace() const
+FVector FBulletUpdatedMotionState::GetLocation_BaseSpace() const
 {
 	return Location;
 }
 
 
-FVector FBulletMoverDefaultSyncState::GetIntent_WorldSpace() const
+FVector FBulletUpdatedMotionState::GetIntent_WorldSpace() const
 {
 	if (MovementBase.IsValid())
 	{
@@ -408,12 +408,12 @@ FVector FBulletMoverDefaultSyncState::GetIntent_WorldSpace() const
 	return MoveDirectionIntent; // if no base, assumed to be in world space
 }
 
-FVector FBulletMoverDefaultSyncState::GetIntent_BaseSpace() const
+FVector FBulletUpdatedMotionState::GetIntent_BaseSpace() const
 {
 	return MoveDirectionIntent;
 }
 
-FVector FBulletMoverDefaultSyncState::GetVelocity_WorldSpace() const
+FVector FBulletUpdatedMotionState::GetVelocity_WorldSpace() const
 {
 	if (MovementBase.IsValid())
 	{
@@ -423,13 +423,13 @@ FVector FBulletMoverDefaultSyncState::GetVelocity_WorldSpace() const
 	return Velocity; // if no base, assumed to be in world space
 }
 
-FVector FBulletMoverDefaultSyncState::GetVelocity_BaseSpace() const
+FVector FBulletUpdatedMotionState::GetVelocity_BaseSpace() const
 {
 	return Velocity;
 }
 
 
-FRotator FBulletMoverDefaultSyncState::GetOrientation_WorldSpace() const
+FRotator FBulletUpdatedMotionState::GetOrientation_WorldSpace() const
 {
 	if (MovementBase.IsValid())
 	{
@@ -440,12 +440,12 @@ FRotator FBulletMoverDefaultSyncState::GetOrientation_WorldSpace() const
 }
 
 
-FRotator FBulletMoverDefaultSyncState::GetOrientation_BaseSpace() const
+FRotator FBulletUpdatedMotionState::GetOrientation_BaseSpace() const
 {
 	return Orientation;
 }
 
-FTransform FBulletMoverDefaultSyncState::GetTransform_WorldSpace() const
+FTransform FBulletUpdatedMotionState::GetTransform_WorldSpace() const
 {
 	if (MovementBase.IsValid())
 	{
@@ -455,12 +455,12 @@ FTransform FBulletMoverDefaultSyncState::GetTransform_WorldSpace() const
 	return FTransform(Orientation, Location);
 }
 
-FTransform FBulletMoverDefaultSyncState::GetTransform_BaseSpace() const
+FTransform FBulletUpdatedMotionState::GetTransform_BaseSpace() const
 {
 	return FTransform(Orientation, Location);
 }
 
-FVector FBulletMoverDefaultSyncState::GetAngularVelocityDegrees_WorldSpace() const
+FVector FBulletUpdatedMotionState::GetAngularVelocityDegrees_WorldSpace() const
 {
 	if (MovementBase.IsValid())
 	{
@@ -470,9 +470,63 @@ FVector FBulletMoverDefaultSyncState::GetAngularVelocityDegrees_WorldSpace() con
 	return AngularVelocityDegrees; // if no base, assumed to be in world space
 }
 
-FVector FBulletMoverDefaultSyncState::GetAngularVelocityDegrees_BaseSpace() const
+FVector FBulletUpdatedMotionState::GetAngularVelocityDegrees_BaseSpace() const
 {
 	return AngularVelocityDegrees;
+}
+
+// FBulletMoverTargetSyncState ///////////////////////////////////////////////////
+
+FBulletMoverDataStructBase* FBulletMoverTargetSyncState::Clone() const
+{
+	// TODO: ensure that this memory allocation jives with deletion method
+	FBulletMoverTargetSyncState* CopyPtr = new FBulletMoverTargetSyncState(*this);
+	return CopyPtr;
+}
+
+bool FBulletMoverTargetSyncState::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
+{
+	Super::NetSerialize(Ar, Map, bOutSuccess);
+	SerializePackedVector<10, 16>(TargetLinearVelocity, Ar);
+	SerializePackedVector<10, 16>(TargetAngularVelocity, Ar);
+	
+	bOutSuccess = true;
+	return true;
+}
+
+void FBulletMoverTargetSyncState::ToString(FAnsiStringBuilderBase& Out) const
+{
+	Super::ToString(Out);
+
+	Out.Appendf("Loc: X=%.2f Y=%.2f Z=%.2f\n", TargetLinearVelocity.X, TargetLinearVelocity.Y, TargetLinearVelocity.Z);
+	Out.Appendf("Intent: X=%.2f Y=%.2f Z=%.2f\n", TargetAngularVelocity.X, TargetAngularVelocity.Y, TargetAngularVelocity.Z);
+}
+
+bool FBulletMoverTargetSyncState::ShouldReconcile(const FBulletMoverDataStructBase& AuthorityState) const
+{
+	return false;
+}
+
+void FBulletMoverTargetSyncState::Interpolate(const FBulletMoverDataStructBase& From,
+	const FBulletMoverDataStructBase& To, float Pct)
+{
+	const FBulletMoverTargetSyncState* FromState = static_cast<const FBulletMoverTargetSyncState*>(&From);
+	const FBulletMoverTargetSyncState* ToState = static_cast<const FBulletMoverTargetSyncState*>(&To);
+	
+	TargetLinearVelocity			= FMath::Lerp(TargetLinearVelocity,		ToState->TargetLinearVelocity, Pct);
+	TargetAngularVelocity = FMath::Lerp(TargetAngularVelocity,		ToState->TargetAngularVelocity, Pct);
+}
+
+void FBulletMoverTargetSyncState::UpdateTargetVelocity(const FVector& InTargetLinearVelocity, const FVector& InTargetAngularVelocity)
+{
+	TargetAngularVelocity = InTargetAngularVelocity;
+	TargetLinearVelocity = InTargetLinearVelocity;
+}
+
+bool FBulletMoverTargetSyncState::IsNearlyEqual(const FBulletMoverTargetSyncState& Other) const
+{
+	return (TargetLinearVelocity-Other.TargetLinearVelocity).IsNearlyZero() &&
+		(TargetAngularVelocity-Other.TargetAngularVelocity).IsNearlyZero();
 }
 
 
@@ -493,27 +547,27 @@ FVector UBulletMoverDataModelBlueprintLibrary::GetMoveDirectionIntentFromInputs(
 	return Inputs.GetMoveInput_WorldSpace();
 }
 
-FVector UBulletMoverDataModelBlueprintLibrary::GetLocationFromSyncState(const FBulletMoverDefaultSyncState& SyncState)
+FVector UBulletMoverDataModelBlueprintLibrary::GetLocationFromSyncState(const FBulletUpdatedMotionState& SyncState)
 {
 	return SyncState.GetLocation_WorldSpace();
 }
 
-FVector UBulletMoverDataModelBlueprintLibrary::GetMoveDirectionIntentFromSyncState(const FBulletMoverDefaultSyncState& SyncState)
+FVector UBulletMoverDataModelBlueprintLibrary::GetMoveDirectionIntentFromSyncState(const FBulletUpdatedMotionState& SyncState)
 {
 	return SyncState.GetIntent_WorldSpace();
 }
 
-FVector UBulletMoverDataModelBlueprintLibrary::GetVelocityFromSyncState(const FBulletMoverDefaultSyncState& SyncState)
+FVector UBulletMoverDataModelBlueprintLibrary::GetVelocityFromSyncState(const FBulletUpdatedMotionState& SyncState)
 {
 	return SyncState.GetVelocity_WorldSpace();
 }
 
-FVector UBulletMoverDataModelBlueprintLibrary::GetAngularVelocityDegreesFromSyncState(const FBulletMoverDefaultSyncState& SyncState)
+FVector UBulletMoverDataModelBlueprintLibrary::GetAngularVelocityDegreesFromSyncState(const FBulletUpdatedMotionState& SyncState)
 {
 	return SyncState.GetAngularVelocityDegrees_WorldSpace();
 }
 
-FRotator UBulletMoverDataModelBlueprintLibrary::GetOrientationFromSyncState(const FBulletMoverDefaultSyncState& SyncState)
+FRotator UBulletMoverDataModelBlueprintLibrary::GetOrientationFromSyncState(const FBulletUpdatedMotionState& SyncState)
 {
 	return SyncState.GetOrientation_WorldSpace();
 }

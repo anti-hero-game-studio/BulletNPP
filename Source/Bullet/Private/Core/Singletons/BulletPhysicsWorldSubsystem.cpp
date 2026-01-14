@@ -16,6 +16,7 @@
 #include "Core/CollisionFilters/BulletOverlappingPairCache.h"
 #include "Core/ContactHandling/BulletContactGatherer.h"
 #include "Core/Interfaces/BulletPrimitiveComponentInterface.h"
+#include "GameFramework/PhysicsVolume.h"
 
 int32 DrawDebugShapes = 0;
 static FAutoConsoleVariableRef CVarDisableDataCopyInPlace(
@@ -533,6 +534,17 @@ int32 UBulletPhysicsWorldSubsystem::GetActorRootShapeId(const AActor* Actor) con
 	return GlobalShapeDescriptorDataCache[Actor].GetRootColliderId(); 
 }
 
+int32 UBulletPhysicsWorldSubsystem::FindShapeId(const UPrimitiveComponent* Target) const
+{
+	if (!Target) return INDEX_NONE;
+	if (!Target->GetOwner()) return INDEX_NONE;
+	if (GlobalShapeDescriptorDataCache.IsEmpty()) return INDEX_NONE;
+	if (!GlobalShapeDescriptorDataCache.Contains(Target->GetOwner())) return INDEX_NONE;
+	
+	const int32 BlockingId =  GlobalShapeDescriptorDataCache[Target->GetOwner()].Find(Target);
+	return BlockingId != INDEX_NONE ? BlockingId : GlobalShapeDescriptorDataCache[Target->GetOwner()].Find(Target, false);; 
+}
+
 bool UBulletPhysicsWorldSubsystem::IsBodyValid(const UPrimitiveComponent* Target) const
 {
 	if (!Target) return false;
@@ -630,6 +642,40 @@ const FCollisionResponseContainer& UBulletPhysicsWorldSubsystem::GetCollisionRes
 	return Desc.GetCollisionResponseContainer(Target); 
 }
 
+btRigidBody* UBulletPhysicsWorldSubsystem::GetRigidBody(const int32& Id) const
+{
+	btCollisionObjectArray& CollisionObjects = GetBulletWorld()->getCollisionObjectArray();
+	
+	if (CollisionObjects.size()<=Id)
+	{
+		UE_LOG(LogBullet, Error, TEXT("No Collision Object"));
+		return nullptr;
+	}
+	
+	if (!CollisionObjects[Id]) 
+	{
+		UE_LOG(LogBullet, Error, TEXT("Null Collision Object"));
+		return nullptr;
+	}
+
+	if (btRigidBody* Rb = btRigidBody::upcast(CollisionObjects[Id]))
+	{
+		return Rb;
+	}
+	
+	return nullptr;
+}
+
+btRigidBody* UBulletPhysicsWorldSubsystem::GetRigidBody(const UPrimitiveComponent* Target) const
+{
+	if (!IsBodyValid(Target)) return nullptr;
+	
+	const int32 BodyId = FindShapeId(Target);
+	if (BodyId == INDEX_NONE) return nullptr;
+	
+	return GetRigidBody(BodyId);
+}
+
 void UBulletPhysicsWorldSubsystem::BroadcastSymmetricHits(const FBulletHitEvent& Base)
 {
 	// Self (as stored)
@@ -710,6 +756,11 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, c
 	{
 		Body->setAngularFactor(btVector3(0, 0, 1));
 	}
+
+	if (Options.bHasGravityOverride)
+	{
+		Body->setGravity(BulletHelpers::ToBulletVector3(Options.GravityOverride));
+	}
 	
 	if (Options.bAutomaticallyActivate)
 	{
@@ -745,6 +796,11 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(USkeletalMeshCom
 	Body->setUserPointer(Skel);
 	Body->setActivationState(DISABLE_DEACTIVATION);
 	Body->setDeactivationTime(0);
+	
+	if (Options.bHasGravityOverride)
+	{
+		Body->setGravity(BulletHelpers::ToBulletVector3(Options.GravityOverride));
+	}
 	
 	const short DynGroup = btBroadphaseProxy::DefaultFilter;
 	short DynMask  = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter; // allow ghost overlaps
@@ -1000,6 +1056,19 @@ TArray<AActor*> UBulletPhysicsWorldSubsystem::GetOverlappingActors(AActor* Targe
 	}
 	
 	return OverlappingActors;
+}
+
+float UBulletPhysicsWorldSubsystem::GetGravity(const UPrimitiveComponent* Target) const
+{
+	if (!IsValid(Target)) return GetWorld()->GetGravityZ();
+	
+	const int32 ShapeId = FindShapeId(Target);
+	if (ShapeId == INDEX_NONE) return GetWorld()->GetGravityZ();
+	
+	const btRigidBody* Rb = GetRigidBody(ShapeId);
+	if (!Rb) return GetWorld()->GetGravityZ();
+	
+	return BulletHelpers::ToUnrealFloat(btScalar(Rb->getGravity().length()));
 }
 
 void UBulletPhysicsWorldSubsystem::StartDebugDrawer()

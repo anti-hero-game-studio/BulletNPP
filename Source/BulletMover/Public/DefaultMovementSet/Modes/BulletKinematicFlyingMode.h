@@ -37,7 +37,7 @@ protected:
 	UE_API virtual void OnRegistered(const FName ModeName) override;
 	UE_API virtual void OnUnregistered() override;
 
-	UE_API void CaptureFinalState(USceneComponent* UpdatedComponent, FBulletMovementRecord& Record, const FBulletMoverDefaultSyncState& StartSyncState, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, const float DeltaSeconds) const;
+	UE_API void CaptureFinalState(USceneComponent* UpdatedComponent, FBulletMovementRecord& Record, const FBulletUpdatedMotionState& StartSyncState, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState, const float DeltaSeconds) const;
 
 	TObjectPtr<const UBulletCommonLegacyMovementSettings> CommonLegacySettings;
 };

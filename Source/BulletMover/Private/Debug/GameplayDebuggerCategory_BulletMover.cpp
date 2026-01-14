@@ -291,7 +291,7 @@ void FGameplayDebuggerCategory_BulletMover::DrawInWorldInfo(AActor& DebugActor, 
 		if (MoverComp)
 		{
 			const FBulletMoverSyncState& LastState = MoverComp->GetSyncState();
-			const FBulletMoverDefaultSyncState* MoverState = LastState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+			const FBulletUpdatedMotionState* MoverState = LastState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 
 			if (MoverState)
 			{

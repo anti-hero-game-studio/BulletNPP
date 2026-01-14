@@ -65,7 +65,7 @@ void UBulletAsyncNavWalkingMode::GenerateMove_Implementation(const FBulletMoverT
 
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
 	const float DeltaSeconds = TimeStep.StepMs * 0.001f;
@@ -159,10 +159,10 @@ void UBulletAsyncNavWalkingMode::SimulationTick_Implementation(const FBulletSimu
 	FVector UpDirection = MoverComp->GetUpDirection();
 
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
-	FBulletMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+	FBulletUpdatedMotionState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 
 	const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
 	const FVector OrigMoveDelta = ProposedMove.LinearVelocity * DeltaSeconds;
@@ -661,7 +661,7 @@ void UBulletAsyncNavWalkingMode::OnUnregistered()
 	Super::OnUnregistered();
 }
 
-void UBulletAsyncNavWalkingMode::CaptureOutputState(const FBulletMoverDefaultSyncState& StartSyncState, const FVector& FinalLocation, const FRotator& FinalRotation, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData) const
+void UBulletAsyncNavWalkingMode::CaptureOutputState(const FBulletUpdatedMotionState& StartSyncState, const FVector& FinalLocation, const FRotator& FinalRotation, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState, FBulletMoverTickEndData& TickEndData) const
 {
 	UBulletMoverBlackboard* SimBlackboard = GetMoverComponent()->GetSimBlackboard_Mutable();
 

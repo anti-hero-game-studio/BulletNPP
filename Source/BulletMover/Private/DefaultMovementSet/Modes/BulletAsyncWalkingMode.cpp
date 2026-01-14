@@ -30,7 +30,7 @@ void UBulletAsyncWalkingMode::GenerateMove_Implementation(const FBulletMoverTick
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
 	if (!CommonLegacySettings.IsValid())
@@ -127,10 +127,10 @@ void UBulletAsyncWalkingMode::SimulationTick_Implementation(const FBulletSimulat
 	FBulletProposedMove ProposedMove = Params.ProposedMove;
 
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
-	FBulletMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+	FBulletUpdatedMotionState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 
 
 	const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
@@ -364,7 +364,7 @@ void UBulletAsyncWalkingMode::OnUnregistered()
 	Super::OnUnregistered();
 }
 
-void UBulletAsyncWalkingMode::CaptureFinalState(const FVector FinalLocation, const FRotator FinalRotation, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const
+void UBulletAsyncWalkingMode::CaptureFinalState(const FVector FinalLocation, const FRotator FinalRotation, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState) const
 {
 	FBulletRelativeBaseInfo PriorBaseInfo;
 

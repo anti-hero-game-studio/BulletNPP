@@ -58,7 +58,7 @@ bool FBulletTeleportEffect::ApplyMovementEffect(FBulletApplyMovementEffectParams
 		}
 #endif // !defined(BUILD_SHIPPING) || !BUILD_SHIPPING
 
-		FBulletMoverDefaultSyncState& OutputSyncState = OutputState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+		FBulletUpdatedMotionState& OutputSyncState = OutputState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 		OutputSyncState.SetTransforms_WorldSpace(UpdatedLocation,
 													UpdatedComponent->GetComponentRotation(),
 													OutputSyncState.GetVelocity_WorldSpace(),
@@ -158,9 +158,9 @@ bool FAsyncTeleportEffect::ApplyMovementEffect(FBulletApplyMovementEffectParams&
 			DrawDebugCapsule(OwnerActor->GetWorld(), TeleportLocation, OwnerActor->GetSimpleCollisionHalfHeight(), OwnerActor->GetSimpleCollisionRadius(), FQuat::Identity, FColor(100, 100, 255), false, ShowTeleportDiffsLifetimeSecs);
 		}
 
-		FBulletMoverDefaultSyncState& OutputSyncState = OutputState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+		FBulletUpdatedMotionState& OutputSyncState = OutputState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 
-		if (const FBulletMoverDefaultSyncState* StartingSyncState = ApplyEffectParams.StartState->SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>())
+		if (const FBulletUpdatedMotionState* StartingSyncState = ApplyEffectParams.StartState->SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>())
 		{
 			OutputSyncState.SetTransforms_WorldSpace(TeleportLocation,
 				TeleportRotation,
@@ -217,9 +217,9 @@ FJumpImpulseEffect::FJumpImpulseEffect()
 
 bool FJumpImpulseEffect::ApplyMovementEffect(FBulletApplyMovementEffectParams& ApplyEffectParams, FBulletMoverSyncState& OutputState)
 {
-	if (const FBulletMoverDefaultSyncState* SyncState = ApplyEffectParams.StartState->SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>())
+	if (const FBulletUpdatedMotionState* SyncState = ApplyEffectParams.StartState->SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>())
 	{
-		FBulletMoverDefaultSyncState& OutputSyncState = OutputState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+		FBulletUpdatedMotionState& OutputSyncState = OutputState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 		
 		const FVector UpDir = ApplyEffectParams.MoverComp->GetUpDirection();
 		const FVector ImpulseVelocity = UpDir * UpwardsSpeed;
@@ -296,7 +296,7 @@ FBulletApplyVelocityEffect::FBulletApplyVelocityEffect()
 
 bool FBulletApplyVelocityEffect::ApplyMovementEffect(FBulletApplyMovementEffectParams& ApplyEffectParams, FBulletMoverSyncState& OutputState)
 {
-	FBulletMoverDefaultSyncState& OutputSyncState = OutputState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+	FBulletUpdatedMotionState& OutputSyncState = OutputState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 	
 	OutputState.MovementMode = ForceMovementMode;
 	
@@ -309,7 +309,7 @@ bool FBulletApplyVelocityEffect::ApplyMovementEffect(FBulletApplyMovementEffectP
 	FVector Velocity = VelocityToApply;
 	if (bAdditiveVelocity)
 	{
-		if (const FBulletMoverDefaultSyncState* SyncState = ApplyEffectParams.StartState->SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>())
+		if (const FBulletUpdatedMotionState* SyncState = ApplyEffectParams.StartState->SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>())
 		{
 			Velocity += SyncState->GetVelocity_WorldSpace();
 		}

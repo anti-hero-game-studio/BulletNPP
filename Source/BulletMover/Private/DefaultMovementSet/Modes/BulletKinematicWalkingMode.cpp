@@ -28,7 +28,7 @@ void UBulletKinematicWalkingMode::GenerateMove_Implementation(const FBulletMover
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
 
@@ -122,10 +122,10 @@ void UBulletKinematicWalkingMode::SimulationTick_Implementation(const FBulletSim
 	}
 
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
-	FBulletMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+	FBulletUpdatedMotionState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 
 
 	const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
@@ -321,7 +321,7 @@ void UBulletKinematicWalkingMode::OnUnregistered()
 	Super::OnUnregistered();
 }
 
-void UBulletKinematicWalkingMode::CaptureFinalState(USceneComponent* UpdatedComponent, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const
+void UBulletKinematicWalkingMode::CaptureFinalState(USceneComponent* UpdatedComponent, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState) const
 {
 	FBulletRelativeBaseInfo PriorBaseInfo;
 

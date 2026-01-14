@@ -275,7 +275,7 @@ void UBulletMoverNetworkPredictionLiaisonComponent::BeginPlay()
 
 	if (StartingOutSync && StartingOutAux)
 	{
-		if (FBulletMoverDefaultSyncState* StartingSyncState = StartingOutSync->Collection.FindMutableDataByType<FBulletMoverDefaultSyncState>())
+		if (FBulletUpdatedMotionState* StartingSyncState = StartingOutSync->Collection.FindMutableDataByType<FBulletUpdatedMotionState>())
 		{
 			const FTransform UpdatedComponentTransform = MoverComp->GetUpdatedComponentTransform();
 			// if our location has changed between initialization and begin play (ex: Actors sharing an exact start location and one gets "pushed" to make them fit) lets write the new location to avoid any disagreements

@@ -145,7 +145,7 @@ struct TStructOpsTypeTraits< FBulletCharacterDefaultInputs > : public TStructOps
 
 // Data block containing basic sync state information
 USTRUCT(BlueprintType)
-struct FBulletMoverDefaultSyncState : public FBulletMoverDataStructBase
+struct FBulletUpdatedMotionState : public FBulletMoverDataStructBase
 {
 	GENERATED_BODY()
 protected:
@@ -187,7 +187,7 @@ protected:
 
 public:
 
-	FBulletMoverDefaultSyncState()
+	FBulletUpdatedMotionState()
 		: Location(ForceInitToZero)
 		, Orientation(ForceInitToZero)
 		, Velocity(ForceInitToZero)
@@ -200,9 +200,9 @@ public:
 	{
 	}
 
-	virtual ~FBulletMoverDefaultSyncState() {}
+	virtual ~FBulletUpdatedMotionState() {}
 
-	// @return newly allocated copy of this FBulletMoverDefaultSyncState. Must be overridden by child classes
+	// @return newly allocated copy of this FBulletUpdatedMotionState. Must be overridden by child classes
 	UE_API virtual FBulletMoverDataStructBase* Clone() const override;
 
 	UE_API virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override;
@@ -224,7 +224,7 @@ public:
 	UE_API bool UpdateCurrentMovementBase();
 
 	// Queries
-	bool IsNearlyEqual(const FBulletMoverDefaultSyncState& Other) const;
+	bool IsNearlyEqual(const FBulletUpdatedMotionState& Other) const;
 
 	UPrimitiveComponent* GetMovementBase() const { return MovementBase.Get(); }
 	FName GetMovementBaseBoneName() const { return MovementBaseBoneName; }
@@ -251,7 +251,65 @@ public:
 };
 
 template<>
-struct TStructOpsTypeTraits< FBulletMoverDefaultSyncState > : public TStructOpsTypeTraitsBase2< FBulletMoverDefaultSyncState >
+struct TStructOpsTypeTraits< FBulletUpdatedMotionState > : public TStructOpsTypeTraitsBase2< FBulletUpdatedMotionState >
+{
+	enum
+	{
+		WithNetSerializer = true,
+		WithCopy = true
+	};
+};
+
+
+// Data block containing basic sync state information
+USTRUCT(BlueprintType)
+struct FBulletMoverTargetSyncState : public FBulletMoverDataStructBase
+{
+	GENERATED_BODY()
+protected:
+	
+	// Linear velocity, units per second, relative to MovementBase if set, world space otherwise.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Mover)
+	FVector TargetLinearVelocity;
+
+	// Angular velocity, degrees per second, relative to MovementBase if set, world space otherwise.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Mover)
+	FVector TargetAngularVelocity;
+
+public:
+	
+	FBulletMoverTargetSyncState()
+		: TargetLinearVelocity(ForceInitToZero)
+		, TargetAngularVelocity(ForceInitToZero)
+	{
+	}
+
+	virtual ~FBulletMoverTargetSyncState() {}
+
+	// @return newly allocated copy of this FBulletUpdatedMotionState. Must be overridden by child classes
+	UE_API virtual FBulletMoverDataStructBase* Clone() const override;
+
+	UE_API virtual bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) override;
+
+	virtual UScriptStruct* GetScriptStruct() const override { return StaticStruct(); }
+
+	UE_API virtual void ToString(FAnsiStringBuilderBase& Out) const override;
+
+	UE_API virtual bool ShouldReconcile(const FBulletMoverDataStructBase& AuthorityState) const override;
+
+	UE_API virtual void Interpolate(const FBulletMoverDataStructBase& From, const FBulletMoverDataStructBase& To, float Pct) override;
+	
+	UE_API void UpdateTargetVelocity(const FVector& InTargetLinearVelocity, const FVector& InTargetAngularVelocity);
+	
+	// Queries
+	bool IsNearlyEqual(const FBulletMoverTargetSyncState& Other) const;
+	
+	UE_API FVector GetTargetVelocity_WorldSpace() const {return TargetLinearVelocity;};
+	UE_API FVector GetTargetAngularVelocity_WorldSpace() const { return TargetAngularVelocity; };
+};
+
+template<>
+struct TStructOpsTypeTraits< FBulletMoverTargetSyncState > : public TStructOpsTypeTraitsBase2< FBulletMoverTargetSyncState >
 {
 	enum
 	{
@@ -284,27 +342,27 @@ public:	// FBulletCharacterDefaultInputs
 	static UE_API FVector GetMoveDirectionIntentFromInputs(const FBulletCharacterDefaultInputs& Inputs);
 
 
-public:	// FBulletMoverDefaultSyncState
+public:	// FBulletUpdatedMotionState
 
 	/** Returns the location in world space */
 	UFUNCTION(BlueprintCallable, Category = Mover)
-	static UE_API FVector GetLocationFromSyncState(const FBulletMoverDefaultSyncState& SyncState);
+	static UE_API FVector GetLocationFromSyncState(const FBulletUpdatedMotionState& SyncState);
 
 	/** Returns the move direction intent, if any, in world space */
 	UFUNCTION(BlueprintCallable, Category = Mover)
-	static UE_API FVector GetMoveDirectionIntentFromSyncState(const FBulletMoverDefaultSyncState& SyncState);
+	static UE_API FVector GetMoveDirectionIntentFromSyncState(const FBulletUpdatedMotionState& SyncState);
 
 	/** Returns the velocity in world space */
 	UFUNCTION(BlueprintCallable, Category = Mover)
-	static UE_API FVector GetVelocityFromSyncState(const FBulletMoverDefaultSyncState& SyncState);
+	static UE_API FVector GetVelocityFromSyncState(const FBulletUpdatedMotionState& SyncState);
 
 	/** Returns the angular velocity in world space, in degrees per second */
 	UFUNCTION(BlueprintCallable, Category = Mover)
-	static UE_API FVector GetAngularVelocityDegreesFromSyncState(const FBulletMoverDefaultSyncState& SyncState);
+	static UE_API FVector GetAngularVelocityDegreesFromSyncState(const FBulletUpdatedMotionState& SyncState);
 
 	/** Returns the orientation in world space */
 	UFUNCTION(BlueprintCallable, Category = Mover)
-	static UE_API FRotator GetOrientationFromSyncState(const FBulletMoverDefaultSyncState& SyncState);
+	static UE_API FRotator GetOrientationFromSyncState(const FBulletUpdatedMotionState& SyncState);
 };
 
 #undef UE_API

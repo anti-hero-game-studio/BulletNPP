@@ -10,7 +10,7 @@
 void UBulletSimpleWalkingMode::GenerateMove_Implementation(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep,
                                                    FBulletProposedMove& OutProposedMove) const
 {
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 
 	if (CommonLegacySettings.Get() == nullptr || !StartingSyncState)
 	{

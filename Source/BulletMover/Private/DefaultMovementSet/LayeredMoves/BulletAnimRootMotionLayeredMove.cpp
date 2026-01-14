@@ -53,7 +53,7 @@ bool FBulletLayeredMove_AnimRootMotion::GenerateMove(const FBulletMoverTickStart
 
 	const float DeltaSeconds = TimeStep.StepMs / 1000.f;
 
-	const FBulletMoverDefaultSyncState* SyncState = SimState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* SyncState = SimState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 
 	if (SyncState == nullptr)
 	{

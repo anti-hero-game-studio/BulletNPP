@@ -103,6 +103,10 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Get All Overlapping Actors", meta=(DevelopementOnly))
 	TArray<AActor*> GetOverlappingActors(AActor* Target) const;
+	
+	
+	UFUNCTION(BlueprintPure, Category = "Bullet Physics|Objects")
+	float GetGravity(const UPrimitiveComponent* Target) const;
 
 	
 #pragma region SCENE QUERY
@@ -239,7 +243,6 @@ public:
 	
 	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletShapeOptions& Options);
 	
-	
 	btCollisionObject* GetStaticObject(int ID) const;
 	
 	
@@ -279,12 +282,13 @@ protected:
 	
 public:
 	
-	int32 GetActorRootShapeId(const AActor* Actor) const;
 	
 #pragma endregion
 	
 #pragma region HELPERS
 	
+	int32 GetActorRootShapeId(const AActor* Actor) const;
+	int32 FindShapeId(const UPrimitiveComponent* Target) const;
 	bool IsBodyValid(const UPrimitiveComponent* Target) const;
 	bool HasGhostBodyBeenCreated(const UPrimitiveComponent* Target) const;
 	bool HasRigidBodyBeenCreated(const UPrimitiveComponent* Target) const;
@@ -292,8 +296,9 @@ public:
 	bool IsGhostBodyActive(const UPrimitiveComponent* Target) const;
 	void SetRigidBodyActiveState(const UPrimitiveComponent* Target, bool Active) const;
 	const FCollisionResponseContainer& GetCollisionResponseContainer(const UPrimitiveComponent* Target) const;
-	
-	
+	btRigidBody* GetRigidBody(const int32& Id) const;
+	btRigidBody* GetRigidBody(const UPrimitiveComponent* Target) const;
+
 private:
 	
 	FCollisionResponseContainer DefaultCollisionResponseContainer;

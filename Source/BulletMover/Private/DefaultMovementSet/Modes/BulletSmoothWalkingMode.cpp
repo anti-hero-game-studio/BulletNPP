@@ -29,7 +29,7 @@ void UBulletSmoothWalkingMode::GenerateWalkMove_Implementation(FBulletMoverTickS
 		return;
 	}
 	
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	if (!ensure(StartingSyncState))
 	{
 		return;
@@ -41,7 +41,7 @@ void UBulletSmoothWalkingMode::GenerateWalkMove_Implementation(FBulletMoverTickS
 
 	// If the state was not there already we need to initialize some of the intermediate state to whatever we have as the current state to avoid 
 	// a discontinuity. Unfortunately there is no way currently to initialize the angular velocities or accelerations right now as these are not 
-	// carried between movement modes in FBulletMoverDefaultSyncState.
+	// carried between movement modes in FBulletUpdatedMotionState.
 	if (bSmoothWalkingStateAdded)
 	{
 		SpringState.SpringVelocity = InOutVelocity;

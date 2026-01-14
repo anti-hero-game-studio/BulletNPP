@@ -32,7 +32,7 @@ public:
 
 	/** Returns an additive angular velocity (degrees/second) based on the starting state and timestep. The vector points in the direction of the rotation axis */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category=Mover)
-	BULLETMOVER_API FVector GetTurn(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletMoverDefaultSyncState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard);
+	BULLETMOVER_API FVector GetTurn(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletUpdatedMotionState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard);
 };
 
 
@@ -59,7 +59,7 @@ public:
 	float RollRate = -1.f;
 
 
-	UE_API virtual FVector GetTurn_Implementation(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletMoverDefaultSyncState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard) override;
+	UE_API virtual FVector GetTurn_Implementation(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletUpdatedMotionState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard) override;
 };
 
 
@@ -77,7 +77,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Exact Damped Turning", meta = (ClampMin = "0.01", UIMin = "0", ForceUnits = "seconds"))
 	float HalfLifeSeconds = 0.15f;
 
-	UE_API virtual FVector GetTurn_Implementation(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletMoverDefaultSyncState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard) override;
+	UE_API virtual FVector GetTurn_Implementation(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletUpdatedMotionState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard) override;
 };
 
 

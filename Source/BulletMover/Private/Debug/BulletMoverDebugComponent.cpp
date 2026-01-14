@@ -155,7 +155,7 @@ void UBulletMoverDebugComponent::UpdateHistoryTrackingForFrame(const FBulletMove
 
 	if (!MostRecentSample || (CurrentSimTimeMs > MostRecentSample->SimTimeMs + MaxTimeBetweenSamplesMs))
 	{
-		const FBulletMoverDefaultSyncState* MoverState = SyncState->Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+		const FBulletUpdatedMotionState* MoverState = SyncState->Collection.FindDataByType<FBulletUpdatedMotionState>();
 
 		// TODO: Also need to cache samples based on other criteria such as changes in orientation, distance moves, acceleration changes, etc.
 

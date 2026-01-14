@@ -39,7 +39,7 @@ void UBulletAsyncFallingMode::GenerateMove_Implementation(const FBulletMoverTick
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
 	if (!CommonLegacySettings.IsValid())
@@ -161,10 +161,10 @@ void UBulletAsyncFallingMode::SimulationTick_Implementation(const FBulletSimulat
 	FBulletProposedMove ProposedMove = Params.ProposedMove;
 
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
-	FBulletMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+	FBulletUpdatedMotionState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 
 	const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
 	float PctTimeApplied = 0.f;
@@ -327,7 +327,7 @@ void UBulletAsyncFallingMode::ProcessLanded(const FBulletFloorCheckResult& Floor
 	}
 }
 
-void UBulletAsyncFallingMode::CaptureFinalState(const FBulletMoverDefaultSyncState* StartSyncState, const FVector FinalLocation, const FRotator FinalRotation, const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const
+void UBulletAsyncFallingMode::CaptureFinalState(const FBulletUpdatedMotionState* StartSyncState, const FVector FinalLocation, const FRotator FinalRotation, const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const
 {
 	UBulletMoverBlackboard* SimBlackboard = GetMoverComponent()->GetSimBlackboard_Mutable();
 

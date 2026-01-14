@@ -8,7 +8,7 @@
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletModularMovement)
 
 
-FVector ULinearTurnGenerator::GetTurn_Implementation(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletMoverDefaultSyncState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard)
+FVector ULinearTurnGenerator::GetTurn_Implementation(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletUpdatedMotionState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard)
 {
 	FVector AngularVelocityDpS(FVector::ZeroVector);
 
@@ -52,7 +52,7 @@ static float CalcExactDampedInterpolation(float CurrentVal, float TargetVal, flo
 	return FMath::Lerp(CurrentVal, TargetVal, 1.f - FMath::Pow(2.f, (-DeltaTime / HalflifeTime)));
 }
 
-FVector UExactDampedTurnGenerator::GetTurn_Implementation(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletMoverDefaultSyncState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard)
+FVector UExactDampedTurnGenerator::GetTurn_Implementation(FRotator TargetOrientation, const FBulletMoverTickStartData& FullStartState, const FBulletUpdatedMotionState& MoverState, const FBulletMoverTimeStep& TimeStep, const FBulletProposedMove& ProposedMove, UBulletMoverBlackboard* SimBlackboard)
 {
 	FVector AngularVelocityDpS(FVector::ZeroVector);
 

@@ -8,7 +8,7 @@
 #define UE_API BULLETMOVER_API
 
 struct FBulletMoverInputCmdContext;
-struct FBulletMoverDefaultSyncState;
+struct FBulletUpdatedMotionState;
 class UBulletCommonLegacyMovementSettings;
 
 /** MultiJump: layered move for handling multiple jumps without touching the ground i.e. a double jump.
@@ -52,7 +52,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Jumping")
 	double TimeOfLastJumpMS;
 
-	UE_API bool PerformJump(const FBulletMoverDefaultSyncState* SyncState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, FBulletProposedMove& OutProposedMove);
+	UE_API bool PerformJump(const FBulletUpdatedMotionState* SyncState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, FBulletProposedMove& OutProposedMove);
 };
 
 template<>

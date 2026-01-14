@@ -13,6 +13,7 @@
 #include "DefaultMovementSet/Settings/BulletCommonLegacyMovementSettings.h"
 
 #include "DrawDebugHelpers.h"
+#include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletPhysicsFallingMode)
@@ -40,7 +41,7 @@ void UBulletPhysicsFallingMode::GenerateMove_Implementation(const FBulletMoverTi
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
 	if (!CommonLegacySettings.IsValid())
@@ -158,114 +159,31 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 
 	UBulletMoverComponent* MoverComponent = GetMoverComponent();
 	const FBulletMoverTickStartData& StartState = Params.StartState;
-	USceneComponent* UpdatedComponent = Params.MovingComps.UpdatedComponent.Get();
-	FBulletProposedMove ProposedMove = Params.ProposedMove;
+	const UPrimitiveComponent* UpdatedComponent = Cast<UPrimitiveComponent>(Params.MovingComps.UpdatedComponent.Get());
+	
+	if (!UpdatedComponent) return;
+
+	const FBulletProposedMove ProposedMove = Params.ProposedMove;
 
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
-	FBulletMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
-
+	FBulletMoverTargetSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverTargetSyncState>();
+	
 	const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
-	float PctTimeApplied = 0.f;
 
-	FBulletMovementRecord MoveRecord;
-	MoveRecord.SetDeltaSeconds(DeltaSeconds);
+	UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>();
+	if (!Subsystem) return;
 	
-	UBulletMoverBlackboard* SimBlackboard = MoverComponent->GetSimBlackboard_Mutable();
+	// The physics simulation applies Z-only gravity acceleration via physics volumes, so we need to account for it here 
+	const FVector TargetVel = ProposedMove.LinearVelocity - Subsystem->GetGravity(UpdatedComponent) * FVector::UpVector;
+	const FVector DeltaLinearVelocity = (TargetVel - StartingSyncState->GetVelocity_WorldSpace()).GetClampedToMaxSize(TerminalVerticalSpeed) * DeltaSeconds;
+	const FVector DeltaAngularVelocity = (ProposedMove.AngularVelocityDegrees - StartingSyncState->GetAngularVelocityDegrees_WorldSpace()) * DeltaSeconds;
 
-	SimBlackboard->Invalidate(CommonBlackboard::LastFloorResult);	// falling = no valid floor
-	SimBlackboard->Invalidate(CommonBlackboard::LastFoundDynamicMovementBase);
-
-	OutputSyncState.MoveDirectionIntent = (ProposedMove.bHasDirIntent ? ProposedMove.DirectionIntent : FVector::ZeroVector);
-
-	// Use the orientation intent directly. If no intent is provided, use last frame's orientation. Note that we are assuming rotation changes can't fail. 
-	const FRotator StartingOrient = StartingSyncState->GetOrientation_WorldSpace();
-	const FRotator TargetOrient = UBulletMovementUtils::ApplyAngularVelocityToRotator(StartingOrient, ProposedMove.AngularVelocityDegrees, DeltaSeconds);
-
-	const FVector StartingFallingVelocity = StartingSyncState->GetVelocity_WorldSpace();
-
-	//FVector MoveDelta = 0.5f * (PriorFallingVelocity + ProposedMove.LinearVelocity) * DeltaSeconds; 	// TODO: revive midpoint integration
-	const FVector StartLocation = StartingSyncState->GetLocation_WorldSpace();
-	const FVector TargetLocation = StartLocation + (ProposedMove.LinearVelocity * DeltaSeconds);
-
-	const FQuat StartRotation = StartingOrient.Quaternion();
-	FQuat TargetRotation = TargetOrient.Quaternion();
-	if (CommonLegacySettings->bShouldRemainVertical)
-	{
-		TargetRotation = FRotationMatrix::MakeFromZX(MoverComponent->GetUpDirection(), TargetRotation.GetForwardVector()).ToQuat();
-	}
-
-
-	FHitResult SweepHit(1.f);
-
-	FVector LocationInProgress = StartLocation;
-	FQuat   RotationInProgress = StartRotation;
-
-	const FVector MoveDelta = TargetLocation - StartLocation;
-
-	const bool bWouldMove = true; /*UBulletAsyncMovementUtils::TestDepenetratingMove(Params.MovingComps, StartLocation, TargetLocation, StartRotation, TargetRotation, /* bShouldSweep #1# true, OUT SweepHit, IN OUT MoveRecord);*/
-
-	LocationInProgress = StartLocation + ((TargetLocation - StartLocation) * SweepHit.Time);
-	RotationInProgress = FQuat::Slerp(StartRotation, TargetRotation, SweepHit.Time);
-
-	// Compute final velocity based on how long we actually go until we get a hit.
-
-	FBulletFloorCheckResult LandingFloor;
-
-	// Handle impact, whether it's a landing surface or something to slide on
-	if (SweepHit.IsValidBlockingHit())
-	{
-		float LastMoveTimeSlice = DeltaSeconds;
-		float SubTimeTickRemaining = LastMoveTimeSlice * (1.f - SweepHit.Time);
-
-		PctTimeApplied += SweepHit.Time * (1.f - PctTimeApplied);
-
-		// Check for hitting a landing surface
-		if (UBulletAirMovementUtils::IsValidLandingSpot(Params.MovingComps, LocationInProgress,
-				SweepHit, CommonLegacySettings->FloorSweepDistance, CommonLegacySettings->MaxWalkSlopeCosine, CommonLegacySettings->bUseFlatBaseForFloorChecks, LandingFloor))
-		{
-			// Adjust height to float slightly above walkable floor
-			LocationInProgress = UBulletGroundMovementUtils::TestMoveToKeepMinHeightAboveFloor(Params.MovingComps, LocationInProgress, RotationInProgress, CommonLegacySettings->MaxWalkSlopeCosine, IN OUT LandingFloor, IN OUT MoveRecord);
-			CaptureFinalState(StartingSyncState, LocationInProgress, RotationInProgress.Rotator(), LandingFloor, DeltaSeconds, DeltaSeconds * PctTimeApplied, ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, IN OUT MoveRecord);
-			return;
-		}
-
-		
-		LandingFloor.HitResult = SweepHit;
-		SimBlackboard->Set(CommonBlackboard::LastFloorResult, LandingFloor);
-		
-		FBulletMoverOnImpactParams ImpactParams(DefaultModeNames::Falling, SweepHit, MoveDelta);
-		MoverComponent->HandleImpact(ImpactParams);
-
-		// We didn't land on a walkable surface, so let's try to slide along it
-		const float PctOfTimeUsedForSliding = UBulletAirMovementUtils::TestFallingMoveAlongHitSurface(
-			Params.MovingComps, TargetLocation-StartLocation, LocationInProgress, TargetRotation, 
-			/*bHandleImpact=*/true, CommonLegacySettings->FloorSweepDistance, CommonLegacySettings->MaxWalkSlopeCosine, CommonLegacySettings->bUseFlatBaseForFloorChecks,
-			IN OUT SweepHit, OUT LandingFloor, IN OUT MoveRecord);
-
-		if (PctOfTimeUsedForSliding > 0.f)
-		{
-			LocationInProgress = SweepHit.TraceStart + ((SweepHit.TraceEnd - SweepHit.TraceStart) * PctOfTimeUsedForSliding);
-			RotationInProgress = FQuat::Slerp(RotationInProgress, TargetRotation, PctOfTimeUsedForSliding);
-		}
-
-		PctTimeApplied += SweepHit.Time * (1.f - PctTimeApplied);
-
-		if (LandingFloor.IsWalkableFloor())
-		{
-			// Adjust height to float slightly above walkable floor
-			LocationInProgress = UBulletGroundMovementUtils::TestMoveToKeepMinHeightAboveFloor(Params.MovingComps, LocationInProgress, RotationInProgress, CommonLegacySettings->MaxWalkSlopeCosine, IN OUT LandingFloor, IN OUT MoveRecord);
-		}
-	}
-	else
-	{
-		// This indicates an unimpeded full move
-		PctTimeApplied = 1.f;
-	}
-	
-	CaptureFinalState(StartingSyncState, LocationInProgress, RotationInProgress.Rotator(), LandingFloor, DeltaSeconds, DeltaSeconds* PctTimeApplied,ProposedMove.AngularVelocityDegrees, OutputSyncState, OutputState, MoveRecord);
+	OutputState.MovementEndState.RemainingMs = 0.0f;
+	OutputState.MovementEndState.NextModeName = Params.StartState.SyncState.MovementMode;
+	OutputSyncState.UpdateTargetVelocity(DeltaLinearVelocity, DeltaAngularVelocity);
 }
 
 
@@ -328,7 +246,7 @@ void UBulletPhysicsFallingMode::ProcessLanded(const FBulletFloorCheckResult& Flo
 	}
 }
 
-void UBulletPhysicsFallingMode::CaptureFinalState(const FBulletMoverDefaultSyncState* StartSyncState, const FVector FinalLocation, const FRotator FinalRotation, const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const
+void UBulletPhysicsFallingMode::CaptureFinalState(const FBulletUpdatedMotionState* StartSyncState, const FVector& FinalLocation, const FRotator& FinalRotation, const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, FBulletMoverTargetSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const
 {
 	UBulletMoverBlackboard* SimBlackboard = GetMoverComponent()->GetSimBlackboard_Mutable();
 
@@ -352,23 +270,5 @@ void UBulletPhysicsFallingMode::CaptureFinalState(const FBulletMoverDefaultSyncS
 
 	FBulletRelativeBaseInfo MovementBaseInfo;
 	ProcessLanded(FloorResult, EffectiveVelocity, MovementBaseInfo, TickEndData);
-
-	if (MovementBaseInfo.HasRelativeInfo())
-	{
-		SimBlackboard->Set(CommonBlackboard::LastFoundDynamicMovementBase, MovementBaseInfo);
-
-		OutputSyncState.SetTransforms_WorldSpace( FinalLocation,
-												  FinalRotation,
-												  EffectiveVelocity,
-												  AngularVelocityDegrees,
-												  MovementBaseInfo.MovementBase.Get(), MovementBaseInfo.BoneName);
-	}
-	else
-	{
-		OutputSyncState.SetTransforms_WorldSpace( FinalLocation,
-												  FinalRotation,
-												  EffectiveVelocity,
-												  AngularVelocityDegrees,
-												  nullptr); // no movement base
-	}
+	OutputSyncState.UpdateTargetVelocity(EffectiveVelocity, AngularVelocityDegrees);
 }

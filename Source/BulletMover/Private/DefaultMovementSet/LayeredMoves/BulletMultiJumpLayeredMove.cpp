@@ -31,7 +31,7 @@ bool FBulletLayeredMove_MultiJump::WantsToJump(const FBulletMoverInputCmdContext
 bool FBulletLayeredMove_MultiJump::GenerateMove(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, UBulletMoverBlackboard* SimBlackboard, FBulletProposedMove& OutProposedMove)
 {
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* SyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* SyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(SyncState);
 
 	OutProposedMove.MixMode = MixMode;
@@ -115,7 +115,7 @@ void FBulletLayeredMove_MultiJump::AddReferencedObjects(FReferenceCollector& Col
 	Super::AddReferencedObjects(Collector);
 }
 
-bool FBulletLayeredMove_MultiJump::PerformJump(const FBulletMoverDefaultSyncState* SyncState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, FBulletProposedMove& OutProposedMove)
+bool FBulletLayeredMove_MultiJump::PerformJump(const FBulletUpdatedMotionState* SyncState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, FBulletProposedMove& OutProposedMove)
 {
 	TimeOfLastJumpMS = TimeStep.BaseSimTimeMs;
 	if (const TObjectPtr<const UBulletCommonLegacyMovementSettings> CommonLegacySettings = MoverComp->FindSharedSettings<UBulletCommonLegacyMovementSettings>())

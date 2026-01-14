@@ -24,7 +24,7 @@ void UBulletKinematicFlyingMode::GenerateMove_Implementation(const FBulletMoverT
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
 	const float DeltaSeconds = TimeStep.StepMs * 0.001f;
@@ -83,10 +83,10 @@ void UBulletKinematicFlyingMode::SimulationTick_Implementation(const FBulletSimu
 	}
 
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
-	FBulletMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+	FBulletUpdatedMotionState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 
 	const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
 
@@ -146,7 +146,7 @@ void UBulletKinematicFlyingMode::SimulationTick_Implementation(const FBulletSimu
 }
 
 // TODO: replace this function with simply looking at/collapsing the MovementRecord
-void UBulletKinematicFlyingMode::CaptureFinalState(USceneComponent* UpdatedComponent, FBulletMovementRecord& Record, const FBulletMoverDefaultSyncState& StartSyncState, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, const float DeltaSeconds) const
+void UBulletKinematicFlyingMode::CaptureFinalState(USceneComponent* UpdatedComponent, FBulletMovementRecord& Record, const FBulletUpdatedMotionState& StartSyncState, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState, const float DeltaSeconds) const
 {
 	const FVector FinalLocation = UpdatedComponent->GetComponentLocation();
 	const FVector FinalVelocity = Record.GetRelevantVelocity();

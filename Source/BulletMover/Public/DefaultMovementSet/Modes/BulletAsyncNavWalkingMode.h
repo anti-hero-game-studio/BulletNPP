@@ -129,7 +129,7 @@ protected:
 	UE_API virtual void OnRegistered(const FName ModeName) override;
 	UE_API virtual void OnUnregistered() override;
 
-	UE_API void CaptureOutputState(const FBulletMoverDefaultSyncState& StartSyncState, const FVector& FinalLocation, const FRotator& FinalRotation, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState, FBulletMoverTickEndData& OutputState) const;
+	UE_API void CaptureOutputState(const FBulletUpdatedMotionState& StartSyncState, const FVector& FinalLocation, const FRotator& FinalRotation, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState, FBulletMoverTickEndData& OutputState) const;
 
 	TWeakObjectPtr<const UBulletCommonLegacyMovementSettings> CommonLegacySettings;
  

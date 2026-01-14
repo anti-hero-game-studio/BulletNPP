@@ -131,7 +131,7 @@ bool FBulletLayeredMove_RootMotionAttribute::GenerateMove(const FBulletMoverTick
 
 	if (bDidAttrHaveRootMotion)
 	{
-		const FBulletMoverDefaultSyncState* SyncState = SimState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+		const FBulletUpdatedMotionState* SyncState = SimState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 		const FBulletCharacterDefaultInputs* InputCmd = SimState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
 
 		if (!bHasValidWarpingContext &&

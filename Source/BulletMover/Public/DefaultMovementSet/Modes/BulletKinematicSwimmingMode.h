@@ -211,7 +211,7 @@ protected:
 
 	UE_API virtual bool AttemptJump(const FBulletSimulationTickParams& Params, float UpwardsSpeed, FBulletMoverTickEndData& Output);
 
-	UE_API void CaptureFinalState(USceneComponent* UpdatedComponent, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, FBulletMoverDefaultSyncState& OutputSyncState) const;
+	UE_API void CaptureFinalState(USceneComponent* UpdatedComponent, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, FBulletUpdatedMotionState& OutputSyncState) const;
 
 	UE_API FBulletRelativeBaseInfo UpdateFloorAndBaseInfo(const FBulletFloorCheckResult& FloorResult) const;
 

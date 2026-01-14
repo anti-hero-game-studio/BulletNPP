@@ -768,7 +768,7 @@ protected:
 	
 	FBulletMoverDoubleBuffer<FBulletMoverSyncState> MoverSyncStateDoubleBuffer;
 	
-	const FBulletMoverDefaultSyncState* LastMoverDefaultSyncState = nullptr;
+	const FBulletUpdatedMotionState* LastMoverDefaultSyncState = nullptr;
 
 	FBulletMoverTimeStep CachedLastSimTickTimeStep;	// Saved timestep info from our last simulation tick, used during rollback handling. This will rewind during corrections.
 	FBulletMoverTimeStep CachedNewestSimTickTimeStep;	// Saved timestep info from the newest (farthest-advanced) simulation tick. This will not rewind during corrections.

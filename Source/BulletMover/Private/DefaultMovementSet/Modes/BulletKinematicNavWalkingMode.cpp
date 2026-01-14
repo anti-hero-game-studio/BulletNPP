@@ -40,7 +40,7 @@ void UBulletKinematicNavWalkingMode::GenerateMove_Implementation(const FBulletMo
 {
 	const UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
 	const float DeltaSeconds = TimeStep.StepMs * 0.001f;
@@ -138,10 +138,10 @@ void UBulletKinematicNavWalkingMode::SimulationTick_Implementation(const FBullet
 	}
 
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
-	const FBulletMoverDefaultSyncState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
 
-	FBulletMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();
+	FBulletUpdatedMotionState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 	
 	const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
 	const FVector OrigMoveDelta = ProposedMove.LinearVelocity * DeltaSeconds;
@@ -641,7 +641,7 @@ void UBulletKinematicNavWalkingMode::OnUnregistered()
 	Super::OnUnregistered();
 }
 
-void UBulletKinematicNavWalkingMode::CaptureFinalState(USceneComponent* UpdatedComponent, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const
+void UBulletKinematicNavWalkingMode::CaptureFinalState(USceneComponent* UpdatedComponent, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState) const
 {
 	UBulletMoverBlackboard* SimBlackboard = GetMoverComponent()->GetSimBlackboard_Mutable();
 

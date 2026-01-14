@@ -242,6 +242,11 @@ struct FBulletShapeOptions
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float Mass = 10.f;
 	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="ShapeType != EBulletShapeType::STATIC", EditConditionHides))
+	bool bHasGravityOverride = false;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="bHasGravityOverride && ShapeType != EBulletShapeType::STATIC", EditConditionHides))
+	FVector GravityOverride = FVector(0, 0, -980.f);
 	
 };
 

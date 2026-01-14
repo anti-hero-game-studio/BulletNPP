@@ -186,7 +186,7 @@ struct FBulletMoverInputCmdContext
 
 
 /** State we are evolving frame to frame and keeping in sync (frequently changing). It is composed of a collection of typed structs 
- *  that can be customized per project. Mover actors are required to have FBulletMoverDefaultSyncState as one of these structs.
+ *  that can be customized per project. Mover actors are required to have FBulletUpdatedMotionState as one of these structs.
  */
 USTRUCT(BlueprintType)
 struct FBulletMoverSyncState

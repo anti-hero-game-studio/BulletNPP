@@ -148,7 +148,7 @@ bool FStanceModifier::CanExpand(const UCharacterBulletMoverComponent* MoverComp)
 	FCollisionResponseParams ResponseParam;
 	UBulletMovementUtils::InitCollisionParams(UpdatedCompAsPrimitive, CapsuleParams, ResponseParam);
 
-	const FBulletMoverDefaultSyncState* SyncState = MoverComp->GetSyncState().Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* SyncState = MoverComp->GetSyncState().Collection.FindDataByType<FBulletUpdatedMotionState>();
 	
 	FVector PawnLocation = SyncState->GetLocation_WorldSpace();
 	FQuat PawnRot = SyncState->GetOrientation_WorldSpace().Quaternion();

@@ -50,7 +50,7 @@ protected:
 	UE_API virtual void OnRegistered(const FName ModeName) override; 
 	UE_API virtual void OnUnregistered() override;
 
-	UE_API void CaptureFinalState(const FVector& FinalLocation, const FRotator& FinalRotation, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletMoverDefaultSyncState& OutputSyncState) const;
+	UE_API void CaptureFinalState(const FVector& FinalLocation, const FRotator& FinalRotation, bool bDidAttemptMovement, const FBulletFloorCheckResult& FloorResult, const FBulletMovementRecord& Record, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState) const;
 
 	UE_API FBulletRelativeBaseInfo UpdateFloorAndBaseInfo(const FBulletFloorCheckResult& FloorResult) const;
 

@@ -25,7 +25,7 @@ FBulletLayeredMove_LinearVelocity::FBulletLayeredMove_LinearVelocity()
 
 bool FBulletLayeredMove_LinearVelocity::GenerateMove(const FBulletMoverTickStartData& SimState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, UBulletMoverBlackboard* SimBlackboard, FBulletProposedMove& OutProposedMove)
 { 
-	const FBulletMoverDefaultSyncState* SyncState = SimState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* SyncState = SimState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(SyncState);
 
 	const float DeltaSeconds = TimeStep.StepMs * 0.001f;
@@ -105,7 +105,7 @@ FBulletLayeredMove_JumpImpulseOverDuration::FBulletLayeredMove_JumpImpulseOverDu
 
 bool FBulletLayeredMove_JumpImpulseOverDuration::GenerateMove(const FBulletMoverTickStartData& SimState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, UBulletMoverBlackboard* SimBlackboard, FBulletProposedMove& OutProposedMove)
 {	
-	const FBulletMoverDefaultSyncState* SyncState = SimState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* SyncState = SimState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(SyncState);
 
 	const FVector UpDir = MoverComp->GetUpDirection();
@@ -175,7 +175,7 @@ FBulletLayeredMove_JumpTo::FBulletLayeredMove_JumpTo()
 
 bool FBulletLayeredMove_JumpTo::GenerateMove(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, UBulletMoverBlackboard* SimBlackboard, FBulletProposedMove& OutProposedMove)
 {
-	const FBulletMoverDefaultSyncState* SyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* SyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(SyncState);
 
 	if (DurationMs == 0)
@@ -507,7 +507,7 @@ FBulletLayeredMove_RadialImpulse::FBulletLayeredMove_RadialImpulse()
 
 bool FBulletLayeredMove_RadialImpulse::GenerateMove(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, const UBulletMoverComponent* MoverComp, UBulletMoverBlackboard* SimBlackboard, FBulletProposedMove& OutProposedMove)
 {
-	const FBulletMoverDefaultSyncState* SyncState = StartState.SyncState.Collection.FindDataByType<FBulletMoverDefaultSyncState>();
+	const FBulletUpdatedMotionState* SyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(SyncState);
 	
 	const FVector CharacterLocation = SyncState->GetLocation_WorldSpace();
