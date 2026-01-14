@@ -1,6 +1,0 @@
-# CMake generated Testfile for 
-# Source directory: F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3/src/Bullet3Serialize/Bullet2FileLoader
-# Build directory: F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/src/Bullet3Serialize/Bullet2FileLoader
-# 
-# This file includes the relevant testing commands required for 
-# testing this directory and lists subdirectories to be tested as well.

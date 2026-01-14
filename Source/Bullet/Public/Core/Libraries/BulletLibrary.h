@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "BulletMain.h"
+#include "Core/DataTypes/BulletTypes.h"
 
 
 // Bullet scale is 1=1m, UE is 1=1cm
@@ -104,82 +105,166 @@ public:
 	static bool IsAnyCollisionAllowed(const btCollisionObject* A, const btCollisionObject* B)
 	{
 		if (!A || !B) return true;
-
-		// Prefer storing USceneComponent* directly, or a stable handle.
-		const USceneComponent* CompA = static_cast<const USceneComponent*>(A->getUserPointer());
-		const USceneComponent* CompB = static_cast<const USceneComponent*>(B->getUserPointer());
-
-		if (!CompA || !CompB) return true;
-
-		// Your policy (example)
-		return CompA->GetCollisionResponseToComponent(const_cast<USceneComponent*>(CompB)) != ECR_Ignore;
+		return IsBlockingCollisionAllowed(A, B) || IsOverlappingCollisionAllowed(A, B);
 	}
 	
 	static bool IsAnyCollisionAllowed(const TEnumAsByte<ECollisionChannel>& Channel, const btCollisionObject* B)
 	{
 		if (!B) return true;
-
-		// Prefer storing USceneComponent* directly, or a stable handle.
-		const USceneComponent* CompB = static_cast<const USceneComponent*>(B->getUserPointer());
-
-		if (!CompB) return true;
-
+		
 		// Your policy (example)
-		return CompB->GetCollisionResponseToChannel(Channel) != ECR_Ignore;
+		return IsBlockingCollisionAllowed(Channel, B) || IsOverlappingCollisionAllowed(Channel, B);
 	}
 	
 	static bool IsBlockingCollisionAllowed(const TEnumAsByte<ECollisionChannel>& Channel, const btCollisionObject* B)
 	{
 		if (!B) return true;
+		
+		const FBulletUserData* UB = GetUserData(B);
 
-		// Prefer storing USceneComponent* directly, or a stable handle.
-		const USceneComponent* CompB = static_cast<const USceneComponent*>(B->getUserPointer());
+		// ObjectChannel must be 0..31
+		const uint32 ChanA = static_cast<uint32>(Channel) & 31u;
+		const uint32 ChanB = static_cast<uint32>(UB->ObjectChannel) & 31u;
 
-		if (!CompB) return true;
+		const uint32 BitA = 1u << ChanA;
+		const uint32 BitB = 1u << ChanB;
 
-		// Your policy (example)
-		return CompB->GetCollisionResponseToChannel(Channel) == ECR_Block;
+		// UE "blocking" convention for two-way interaction:
+		// A blocks B's channel AND B blocks A's channel.
+		const bool bBBlocksA = (UB->BlockMask & BitA) != 0;
+
+		return bBBlocksA;
 	}
 	
 	static bool IsBlockingCollisionAllowed(const btCollisionObject* A, const btCollisionObject* B)
 	{
 		if (!A || !B) return false;
 
-		// Prefer storing USceneComponent* directly, or a stable handle.
-		const USceneComponent* CompA = static_cast<const USceneComponent*>(A->getUserPointer());
-		const USceneComponent* CompB = static_cast<const USceneComponent*>(B->getUserPointer());
+		const FBulletUserData* UA = GetUserData(A);
+		const FBulletUserData* UB = GetUserData(B);
 
-		if (!CompA || !CompB) return false;
+		// If you are mid-transition and some objects still store USceneComponent*,
+		// choose a policy. Safest for gameplay is usually "allow" (or fall back to Super).
+		if (!UA || !UB)
+		{
+			return true; // or false, or "return Super" at the callsite
+		}
 
-		const ECollisionResponse Response = CompA->GetCollisionResponseToComponent(const_cast<USceneComponent*>(CompB));
-		// Your policy (example)
-		return  Response == ECR_Block;
+		// Optional: respect query/physics enabled flags.
+		// If this function is used for sweeps/queries, gate by query.
+		if (!UA->bQueryEnabled || !UB->bQueryEnabled)
+		{
+			return false;
+		}
+
+		// ObjectChannel must be 0..31
+		const uint32 ChanA = static_cast<uint32>(UA->ObjectChannel) & 31u;
+		const uint32 ChanB = static_cast<uint32>(UB->ObjectChannel) & 31u;
+
+		const uint32 BitA = 1u << ChanA;
+		const uint32 BitB = 1u << ChanB;
+
+		// UE "blocking" convention for two-way interaction:
+		// A blocks B's channel AND B blocks A's channel.
+		const bool bABlocksB = (UA->BlockMask & BitB) != 0;
+		const bool bBBlocksA = (UB->BlockMask & BitA) != 0;
+
+		return bABlocksB && bBBlocksA;
 	}
 	
 	static bool IsOverlappingCollisionAllowed(const btCollisionObject* A, const btCollisionObject* B)
 	{
-		if (!A || !B) return true;
+		if (!A || !B) return false;
 
-		// Prefer storing USceneComponent* directly, or a stable handle.
-		const USceneComponent* CompA = static_cast<const USceneComponent*>(A->getUserPointer());
-		const USceneComponent* CompB = static_cast<const USceneComponent*>(B->getUserPointer());
+		const FBulletUserData* UA = GetUserData(A);
+		const FBulletUserData* UB = GetUserData(B);
 
-		if (!CompA || !CompB) return true;
+		// If you are mid-transition and some objects still store USceneComponent*,
+		// choose a policy. Safest for gameplay is usually "allow" (or fall back to Super).
+		if (!UA || !UB)
+		{
+			return true; // or false, or "return Super" at the callsite
+		}
 
-		// Your policy (example)
-		return CompA->GetCollisionResponseToComponent(const_cast<USceneComponent*>(CompB)) == ECR_Overlap;
+		// Optional: respect query/physics enabled flags.
+		// If this function is used for sweeps/queries, gate by query.
+		if (!UA->bQueryEnabled || !UB->bQueryEnabled)
+		{
+			return false;
+		}
+
+		// ObjectChannel must be 0..31
+		const uint32 ChanA = static_cast<uint32>(UA->ObjectChannel) & 31u;
+		const uint32 ChanB = static_cast<uint32>(UB->ObjectChannel) & 31u;
+
+		const uint32 BitA = 1u << ChanA;
+		const uint32 BitB = 1u << ChanB;
+
+		// UE "overlapping" convention for two-way interaction:
+		// A blocks B's channel AND B blocks A's channel.
+		const bool bABlocksB = (UA->OverlapMask & BitB) != 0;
+		const bool bBBlocksA = (UB->OverlapMask & BitA) != 0;
+
+		return bABlocksB || bBBlocksA;
 	}
 	
 	static bool IsOverlappingCollisionAllowed(const TEnumAsByte<ECollisionChannel>& Channel, const btCollisionObject* B)
 	{
 		if (!B) return true;
+		
+		const FBulletUserData* UB = GetUserData(B);
 
-		// Prefer storing USceneComponent* directly, or a stable handle.
-		const USceneComponent* CompB = static_cast<const USceneComponent*>(B->getUserPointer());
+		// ObjectChannel must be 0..31
+		const uint32 ChanA = static_cast<uint32>(Channel) & 31u;
+		const uint32 ChanB = static_cast<uint32>(UB->ObjectChannel) & 31u;
 
-		if (!CompB) return true;
+		const uint32 BitA = 1u << ChanA;
+		const uint32 BitB = 1u << ChanB;
 
-		// Your policy (example)
-		return CompB->GetCollisionResponseToChannel(Channel) != ECR_Overlap;
+		// A blocks B's channel AND B blocks A's channel.
+		const bool bBBlocksA = (UB->OverlapMask & BitA) != 0;
+
+		return bBBlocksA;
+	}
+	
+	static void BuildResponseMasks(
+	const FCollisionResponseContainer& Responses,
+	uint32& OutBlockMask,
+	uint32& OutOverlapMask,
+	uint32& OutIgnoreMask)
+		{
+		OutBlockMask   = 0;
+		OutOverlapMask = 0;
+		OutIgnoreMask  = 0;
+
+		// UE supports up to 32 channels in ECollisionChannel (0..31)
+		for (int32 i = 0; i < 32; ++i)
+		{
+			const ECollisionChannel Channel = static_cast<ECollisionChannel>(i);
+
+			// Optional: restrict to object channels only
+			// if (!IsObjectChannel(Channel)) { continue; }
+
+			const ECollisionResponse R = Responses.GetResponse(Channel);
+
+			const uint32 Bit = (1u << i);
+			switch (R)
+			{
+			case ECR_Block:   OutBlockMask   |= Bit; break;
+			case ECR_Overlap: OutOverlapMask |= Bit; break;
+			default:          OutIgnoreMask  |= Bit; break; // ECR_Ignore
+			}
+		}
+	}
+	
+	// Helper: safely get FBulletUserData from a Bullet object
+	static FORCEINLINE const FBulletUserData* GetUserData(const btCollisionObject* Obj)
+	{
+		if (!Obj) return nullptr;
+		void* P = Obj->getUserPointer();
+		if (!P) return nullptr;
+
+		const FBulletUserData* UD = static_cast<const FBulletUserData*>(P);
+		return (UD->Magic == FBulletUserData::MagicValue) ? UD : nullptr;
 	}
 };

@@ -12,6 +12,8 @@ struct FBulletOverlapFilterCallback : public btOverlapFilterCallback
 	
 	virtual bool needBroadphaseCollision(btBroadphaseProxy* proxy0, btBroadphaseProxy* proxy1) const override
 	{
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_OVRLP_FILTER);
+		TRACE_CPUPROFILER_EVENT_SCOPE(FBulletOverlapFilterCallback::NeedBroadphaseCollision);
 		// Preserve Bullet’s standard group/mask filtering.
 		const bool bBulletMaskPass =
 			(proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0 &&

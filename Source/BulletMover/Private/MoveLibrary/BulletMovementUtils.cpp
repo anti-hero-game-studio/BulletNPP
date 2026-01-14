@@ -547,6 +547,7 @@ void UBulletMovementUtils::InitCollisionParams(const UPrimitiveComponent* Update
 
 bool UBulletMovementUtils::OverlapTest(const USceneComponent* UpdatedComponent, const UPrimitiveComponent* UpdatedPrimitive, const FVector& Location, const FQuat& RotationQuat, const ECollisionChannel CollisionChannel, const FCollisionShape& CollisionShape, const AActor* IgnoreActor)
 {
+	//TODO:@GreggoryAddison::BulletCollisions || Swap this to an overlap test from bullet
 	FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(MovementOverlapTest), false, IgnoreActor);
 	FCollisionResponseParams ResponseParam;
 	InitCollisionParams(UpdatedPrimitive, QueryParams, ResponseParam);

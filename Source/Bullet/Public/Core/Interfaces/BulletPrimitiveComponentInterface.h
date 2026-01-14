@@ -29,4 +29,5 @@ public:
 	virtual FBulletShapeOptions& GetShapeOptions() = 0;
 	
 	virtual const FCollisionResponseContainer& GetDefaultResponseContainer() const = 0;
+	//virtual ECollisionChannel GetDefaultCollisionChannel() const = 0;
 };

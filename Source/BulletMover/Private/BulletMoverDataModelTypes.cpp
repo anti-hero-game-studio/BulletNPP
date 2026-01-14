@@ -314,6 +314,7 @@ void FBulletMoverDefaultSyncState::Interpolate(const FBulletMoverDataStructBase&
 
 void FBulletMoverDefaultSyncState::SetTransforms_WorldSpace(FVector WorldLocation, FRotator WorldOrient, FVector WorldVelocity, FVector WorldAngularVelocityDegrees, UPrimitiveComponent* Base, FName BaseBone)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(FBulletMoverDefaultSyncState::SetTransforms_WorldSpace);
 	if (SetMovementBase(Base, BaseBone))
 	{
 		UBulletBasedMovementUtils::TransformLocationToLocal(  MovementBasePos,  MovementBaseQuat, WorldLocation, OUT Location);

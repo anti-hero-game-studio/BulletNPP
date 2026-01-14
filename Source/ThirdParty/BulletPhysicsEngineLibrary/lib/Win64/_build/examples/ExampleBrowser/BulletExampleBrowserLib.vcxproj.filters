@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\OpenGLExampleBrowser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\OpenGLGuiHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GL_ShapeDrawer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\CollisionShape2TriangleMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3Clock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\ChromeTraceUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3ResourcePath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\GraphingTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\GwenParameterInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\GwenProfileWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\GwenTextureWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\gwenUserInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\CollisionShape2TriangleMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3Clock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\ChromeTraceUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3ResourcePath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3ERPCFMHelper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\Utils\b3ReferenceFrameHelper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\GraphingTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\GwenParameterInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\GwenProfileWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\GwenTextureWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\gwenInternalData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\GwenGUISupport\gwenUserInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\bullet3\examples\ExampleBrowser\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{E8BEB7B9-1306-33B8-8C95-7C0C66EA2DEE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{A46EAA97-6C48-3EA6-9F3F-14051BCF4917}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -185,6 +185,8 @@ private:
 	TArray<btCapsuleShape*> BtCapsuleCollisionShapes;
 	btSequentialImpulseConstraintSolver* mt;
 	
+	TArray<FBulletUserData*> BtUserData;
+	
 	// Structure to hold re-usable ConvexHull shapes based on origin BodySetup / subindex / scale
 	struct ConvexHullShapeHolder
 	{
@@ -207,6 +209,8 @@ private:
 	TArray<CachedDynamicShapeData> CachedDynamicShapes;
 
 	TArray<btRigidBody*> BtRigidBodies;
+	TArray<btGhostObject*> BtGhostBodies;
+	TArray<btCollisionObject*> BtStaticBodies;
 	TArray<btBvhTriangleMeshShape*> ComplexShapes;
 	
 		
@@ -253,6 +257,14 @@ private:
 	void ExtractPhysicsGeometry(UPrimitiveComponent* PrimitiveComponent, const FTransform& XformSoFar, UBodySetup* BodySetup, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
 
 	const UBulletPhysicsWorldSubsystem::CachedDynamicShapeData& GetCachedDynamicShapeData(AActor* Actor, float Mass);
+	
+	void CleanUpBulletWorld();
+	
+	TArray<btBoxShape*> BoxCollisionShapes;
+	TArray<btSphereShape*> SphereCollisionShapes;
+	TArray<btCapsuleShape*> CapsuleCollisionShapes;
+	TArray<btConvexHullShape*> ConvexHullCollisionShapes;
+	
 #pragma endregion
 	
 

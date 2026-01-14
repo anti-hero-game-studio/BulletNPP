@@ -6,121 +6,168 @@ using System.IO;
 using System.Text;
 using UnrealBuildTool;
 
-
-// A bit messy, but it works
-
+// Bullet third-party build + link module
 public class BulletPhysicsEngineLibrary : ModuleRules
 {
-
 	private bool BuildBullet(string BuildType)
 	{
+		// Paths
+		string ThirdPartyBulletPath = Path.Combine(ModuleDirectory, "bullet3");         // Bullet source root (CMakeLists.txt)
+		string ModulePath           = ModuleDirectory;                                  // Working dir for process
+		string BuildRootDir         = BulletBuildUtils.GetBulletBuildRootDir(ModuleDirectory, Target.Platform); // e.g. .../lib/Win64/_build
+		string ConfigName           = BulletBuildUtils.GetBuildType(BuildType);         // Debug / Release / RelWithDebInfo
+		string LibOutputPath        = BulletBuildUtils.GetBulletLibOutputDir(ModuleDirectory, Target.Platform, BuildType); // .../lib/Win64/Release
 
-		string ThirdPartyBulletPath = Path.Combine(ModuleDirectory, "bullet3");
-		string ModulePath = Path.Combine( ModuleDirectory, "bullet3");
-		string BulletBuildDir = BuildUtils.GetBulletBuildDir(ModuleDirectory, Target.Platform);
-		string LibOutputPath = Path.Combine(BulletBuildDir, BuildUtils.GetBuildType(BuildType));
+		Console.WriteLine("Bullet thirdparty directory: " + ThirdPartyBulletPath);
+		Console.WriteLine("Bullet build root: " + BuildRootDir);
+		Console.WriteLine("Bullet output libs: " + LibOutputPath);
+		Console.WriteLine("Bullet config: " + ConfigName);
 
+		Directory.CreateDirectory(BuildRootDir);
+		Directory.CreateDirectory(LibOutputPath);
 
-		System.Console.WriteLine("Bullet thirdparty directory: " + ThirdPartyBulletPath);
-
+		// CMake configure options
 		var cmakeOptions = "";
-		cmakeOptions += " -DUSE_DOUBLE_PRECISION=1 "; 
-		//Don't forget to take out the definition
-		// #define BT_USE_DOUBLE_PRECISION in BulletMain.h if you disable DOUBLE_PRECISION
-		// TODO: Too lazy to add it as a definition here.
-		cmakeOptions += " -DINSTALL_LIBS=0 "; 
-		cmakeOptions += " -DINSTALL_EXTRA_LIBS=0 "; 
-		cmakeOptions += " -DLIBRARY_OUTPUT_PATH=\""+LibOutputPath + "\""; 
-		cmakeOptions += " -DCMAKE_BUILD_TYPE="+BuildUtils.GetBuildType(BuildType);
+		cmakeOptions += " -DUSE_DOUBLE_PRECISION=1";
+		cmakeOptions += " -DINSTALL_LIBS=0";
+		cmakeOptions += " -DINSTALL_EXTRA_LIBS=0";
+
+		// IMPORTANT: Multi-config generators (Visual Studio) ignore CMAKE_BUILD_TYPE.
+		// We still set it for single-config generators, and we ALSO set per-config output dirs.
+		cmakeOptions += " -DCMAKE_BUILD_TYPE=" + ConfigName;
+
+		// Ensure static libs land exactly where UBT will link from.
+		// For static libs, the correct variable is CMAKE_ARCHIVE_OUTPUT_DIRECTORY (+ per-config variants).
+		cmakeOptions += " -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=\"" + LibOutputPath + "\"";
+		cmakeOptions += " -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=\"" + LibOutputPath + "\"";
+		cmakeOptions += " -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=\"" + LibOutputPath + "\"";
+
+		// Per-config overrides (critical on Windows / multi-config generators).
+		string cfgUpper = ConfigName.ToUpperInvariant(); // RELEASE / DEBUG / RELWITHDEBINFO
+		cmakeOptions += " -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_" + cfgUpper + "=\"" + LibOutputPath + "\"";
+		cmakeOptions += " -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_" + cfgUpper + "=\"" + LibOutputPath + "\"";
+		cmakeOptions += " -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_" + cfgUpper + "=\"" + LibOutputPath + "\"";
 
 		if (Target.Platform == UnrealTargetPlatform.Win64)
 		{
+			// Force generator + architecture so CMake doesn't guess incorrectly
+			cmakeOptions = " -G \"Visual Studio 17 2022\" -A x64 " + cmakeOptions;
+			// Prefer DLL runtime; align with UE defaults (commonly /MD).
 			cmakeOptions += " -DUSE_MSVC_RUNTIME_LIBRARY_DLL=1";
 			cmakeOptions += " -DUSE_MSVC_RELEASE_RUNTIME_ALWAYS=1";
 		}
-		else if (Target.Platform == UnrealTargetPlatform.Mac)
-		{
-			//?
-		}
 		else if (Target.Platform == UnrealTargetPlatform.Linux)
 		{
-			cmakeOptions += " -DCMAKE_POSITION_INDEPENDENT_CODE=1 ";
-			cmakeOptions += " -DBUILD_SHARED_LIBS=0 "; 
-			cmakeOptions += " -DCMAKE_CXX_COMPILER=/usr/bin/clang++ "; 
-			cmakeOptions += " -DCMAKE_C_COMPILER=/usr/bin/clang "; 
-
-		}else {
-			System.Console.WriteLine("[ERROR] You are trying to build Bullet for a not yet supported platform: `" +
-					Target.Platform);
+			cmakeOptions += " -DCMAKE_POSITION_INDEPENDENT_CODE=1";
+			cmakeOptions += " -DBUILD_SHARED_LIBS=0";
+			cmakeOptions += " -DCMAKE_CXX_COMPILER=/usr/bin/clang++";
+			cmakeOptions += " -DCMAKE_C_COMPILER=/usr/bin/clang";
+		}
+		else if (Target.Platform == UnrealTargetPlatform.Mac)
+		{
+			// Add mac-specific options here if needed
+		}
+		else
+		{
+			Console.WriteLine("[ERROR] Unsupported platform for Bullet build: " + Target.Platform);
 			return false;
 		}
 
-
+		// Configure (generate project files)
 		var generateCommand = "";
-		generateCommand += BuildUtils.GetCMakeExe() + " ";
+		generateCommand += BulletBuildUtils.GetCMakeExe() + " ";
 		generateCommand += " -S\"" + ThirdPartyBulletPath + "\" ";
-		generateCommand += "-B\"" + BulletBuildDir + "\" ";
+		generateCommand += " -B\"" + BuildRootDir + "\" ";
 		generateCommand += cmakeOptions;
-		var configureCode = BuildUtils.ExecuteCommandSync(generateCommand,Path.GetFullPath(ModulePath));
+
+		var configureCode = BulletBuildUtils.ExecuteCommandSync(generateCommand, Path.GetFullPath(ModulePath));
 		if (configureCode != 0)
 		{
-			System.Console.WriteLine("Bullet lib configure CMake project failed with code: " + configureCode);
+			Console.WriteLine("Bullet CMake configure failed with code: " + configureCode);
 			return false;
 		}
 
+		// Build
 		var buildCommand = "";
-		buildCommand += BuildUtils.GetCMakeExe() + " ";
-		buildCommand += " --build \"" + BulletBuildDir + "\" ";
+		buildCommand += BulletBuildUtils.GetCMakeExe() + " ";
+		buildCommand += " --build \"" + BuildRootDir + "\" ";
+
+		// Critical on Win64 (multi-config): explicitly select config
+		if (Target.Platform == UnrealTargetPlatform.Win64)
+		{
+			buildCommand += " --config " + ConfigName + " ";
+		}
+
 		buildCommand += " --target ";
 		string[] libraryNames = { "BulletCollision", "BulletDynamics", "LinearMath" };
 		foreach (string libraryName in libraryNames)
 		{
-			buildCommand += "" + libraryName + " ";
+			buildCommand += libraryName + " ";
 		}
 
-		buildCommand += " -j " + System.Environment.ProcessorCount + " ";
+		buildCommand += " -j " + Environment.ProcessorCount + " ";
 
-
-		var buildExitCode = BuildUtils.ExecuteCommandSync (buildCommand, Path.GetFullPath(ModulePath));
+		var buildExitCode = BulletBuildUtils.ExecuteCommandSync(buildCommand, Path.GetFullPath(ModulePath));
 		if (buildExitCode != 0)
 		{
-			System.Console.WriteLine("Bullet lib build failed with code: " + buildExitCode);
+			Console.WriteLine("Bullet build failed with code: " + buildExitCode);
 			return false;
 		}
 
+		// Sanity check: ensure expected libs exist where UBT will link them from
+		string libExt = (Target.Platform == UnrealTargetPlatform.Win64) ? ".lib" : ".a";
+		string prefix = (Target.Platform == UnrealTargetPlatform.Win64) ? "" : "lib";
+
+		foreach (string libraryName in libraryNames)
+		{
+			string libPath = Path.Combine(LibOutputPath, prefix + libraryName + libExt);
+			if (!File.Exists(libPath))
+			{
+				Console.WriteLine("[ERROR] Expected Bullet lib not found: " + libPath);
+				return false;
+			}
+		}
+
 		return true;
-
 	}
-
 
 	public BulletPhysicsEngineLibrary(ReadOnlyTargetRules Target) : base(Target)
 	{
-
 		Type = ModuleType.External;
 
-		bool bDebug = Target.Configuration == UnrealTargetConfiguration.Debug || Target.Configuration == UnrealTargetConfiguration.DebugGame;
+		bool bDebug = Target.Configuration == UnrealTargetConfiguration.Debug ||
+		              Target.Configuration == UnrealTargetConfiguration.DebugGame;
 		bool bDevelopment = Target.Configuration == UnrealTargetConfiguration.Development;
 
-		string BuildFolder="";
-		string BuildSuffix="";
+		string BuildFolder = "";
+		string BuildSuffix = "";
 
 		if (bDebug)
 		{
 			BuildFolder = "Debug";
-			BuildSuffix = "_Debug";
+			BuildSuffix = "_Debug"; // NOTE: If your Bullet build does not append suffixes, keep this empty.
 			BuildBullet("Debug");
 		}
 		else if (bDevelopment)
 		{
+			// Keep RelWithDebInfo path for later, as requested:
+			/*
 			BuildSuffix = "_RelWithDebInfo";
 			BuildFolder = "RelWithDebInfo";
 			BuildBullet("Development");
+
 			if (Target.Platform == UnrealTargetPlatform.Win64)
 			{
-				//FIXME: I don't know, maybe...
-				BuildFolder = Path.Combine("RelWithDebInfo","Debug");
-				BuildSuffix = "_Debug";
+				// Some generators place libs under nested config folders; this file avoids that by forcing output dirs.
+				BuildFolder = "RelWithDebInfo";
+				BuildSuffix = "";
 			}
+			*/
+
+			// For now, test pure Release performance:
+			BuildFolder = "Release";
+			BuildSuffix = "";
+			BuildBullet("Release");
 		}
 		else
 		{
@@ -129,49 +176,55 @@ public class BulletPhysicsEngineLibrary : ModuleRules
 			BuildBullet("Release");
 		}
 
-		string BuildPlatForm = "Win64";
+		string BuildPlatform = "Win64";
 		string LibExtension = ".lib";
 		string BuildPrefix = "";
 
 		if (Target.Platform == UnrealTargetPlatform.Linux)
 		{
-			BuildPlatForm = "Linux";
+			BuildPlatform = "Linux";
+			LibExtension = ".a";
+			BuildPrefix = "lib";
+			BuildSuffix = ""; // Bullet static libs typically do not suffix names on Linux
+		}
+		else if (Target.Platform == UnrealTargetPlatform.Mac)
+		{
+			BuildPlatform = "Mac";
 			LibExtension = ".a";
 			BuildPrefix = "lib";
 			BuildSuffix = "";
 		}
 
-		// Library path
-		string LibrariesPath = Path.Combine(ModuleDirectory, "lib", BuildPlatForm, BuildFolder);
+		// Where this Build.cs will link from (must match LibOutputPath produced by BuildBullet)
+		string LibrariesPath = Path.Combine(ModuleDirectory, "lib", BuildPlatform, BuildFolder);
 
 		string[] libraryNames = { "BulletCollision", "BulletDynamics", "LinearMath" };
-
 		foreach (string libraryName in libraryNames)
 		{
-			PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, BuildPrefix + libraryName + BuildSuffix + LibExtension));
+			PublicAdditionalLibraries.Add(
+				Path.Combine(LibrariesPath, BuildPrefix + libraryName + BuildSuffix + LibExtension)
+			);
 		}
 
-		// Include path (I'm just using the source here since Bullet has mixed src & headers)
-		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "bullet3/src"));
+		// Include path (Bullet uses mixed headers + sources)
+		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "bullet3", "src"));
 		PublicDefinitions.Add("WITH_BULLET_BINDING=1");
-
 	}
 }
 
-
-// from UE4CMAKE:  https://github.com/caseymcc/UE4CMake/blob/main/Source/CMakeTarget.Build.cs
-public class BuildUtils
+// Helpers (kept internal + uniquely named to avoid rules-assembly collisions)
+internal static class BulletBuildUtils
 {
 	public static Tuple<string, string> GetExecuteCommandSync()
 	{
 		string cmd = "";
 		string options = "";
 
-		if ((BuildHostPlatform.Current.Platform == UnrealTargetPlatform.Win64)
+		if (BuildHostPlatform.Current.Platform == UnrealTargetPlatform.Win64
 #if !UE_5_0_OR_LATER
-				|| (BuildHostPlatform.Current.Platform == UnrealTargetPlatform.Win32)
-#endif//!UE_5_0_OR_LATER
-		  )
+			|| BuildHostPlatform.Current.Platform == UnrealTargetPlatform.Win32
+#endif
+		)
 		{
 			cmd = "cmd.exe";
 			options = "/c ";
@@ -181,10 +234,11 @@ public class BuildUtils
 			cmd = "bash";
 			options = "-c ";
 		}
+
 		return Tuple.Create(cmd, options);
 	}
 
-	public static int ExecuteCommandSync(string Command, string MModulePath)
+	public static int ExecuteCommandSync(string Command, string WorkingDir)
 	{
 		var cmdInfo = GetExecuteCommandSync();
 
@@ -201,23 +255,25 @@ public class BuildUtils
 			UseShellExecute = false,
 			RedirectStandardError = true,
 			RedirectStandardOutput = true,
-			WorkingDirectory = MModulePath
+			WorkingDirectory = WorkingDir
 		};
 
 		StringBuilder outputString = new StringBuilder();
-		Process p = Process.Start(processInfo);
-
-		p.OutputDataReceived += (sender, args) => { outputString.Append(args.Data); Console.WriteLine(args.Data); };
-		p.ErrorDataReceived += (sender, args) => { outputString.Append(args.Data); Console.WriteLine(args.Data); };
-		p.BeginOutputReadLine();
-		p.BeginErrorReadLine();
-		p.WaitForExit();
-
-		if (p.ExitCode != 0)
+		using (Process p = Process.Start(processInfo))
 		{
-			Console.WriteLine(outputString);
+			p.OutputDataReceived += (sender, args) => { if (args.Data != null) { outputString.AppendLine(args.Data); Console.WriteLine(args.Data); } };
+			p.ErrorDataReceived += (sender, args) => { if (args.Data != null) { outputString.AppendLine(args.Data); Console.WriteLine(args.Data); } };
+			p.BeginOutputReadLine();
+			p.BeginErrorReadLine();
+			p.WaitForExit();
+
+			if (p.ExitCode != 0)
+			{
+				Console.WriteLine(outputString.ToString());
+			}
+
+			return p.ExitCode;
 		}
-		return p.ExitCode;
 	}
 
 	private static bool IsUnixPlatform(UnrealTargetPlatform Platform)
@@ -228,36 +284,49 @@ public class BuildUtils
 	public static string GetCMakeExe()
 	{
 		string program = "cmake";
-
-		if ((BuildHostPlatform.Current.Platform == UnrealTargetPlatform.Win64)
+		if (BuildHostPlatform.Current.Platform == UnrealTargetPlatform.Win64
 #if !UE_5_0_OR_LATER
-				|| (BuildHostPlatform.Current.Platform == UnrealTargetPlatform.Win32)
-#endif//!UE_5_0_OR_LATER
-		  )
+			|| BuildHostPlatform.Current.Platform == UnrealTargetPlatform.Win32
+#endif
+		)
 		{
 			program += ".exe";
 		}
 		return program;
 	}
 
-	public static string GetBulletBuildDir(string ModuleDirectory, UnrealBuildTool.UnrealTargetPlatform Platform)
+	// Build root contains CMake cache + generated project files; keep it separate from output libs.
+	public static string GetBulletBuildRootDir(string ModuleDirectory, UnrealTargetPlatform Platform)
 	{
-
 		if (Platform == UnrealTargetPlatform.Win64)
 		{
-			return Path.Combine(ModuleDirectory, "lib", "Win64");
+			return Path.Combine(ModuleDirectory, "lib", "Win64", "_build");
 		}
 		else if (Platform == UnrealTargetPlatform.Mac)
 		{
-			return Path.Combine(ModuleDirectory, "lib", "Mac");
+			return Path.Combine(ModuleDirectory, "lib", "Mac", "_build");
 		}
 		else if (Platform == UnrealTargetPlatform.Linux)
 		{
-			return Path.Combine(ModuleDirectory, "lib", "Linux");
+			return Path.Combine(ModuleDirectory, "lib", "Linux", "_build");
 		}
-		return "invalid platform";
+		return Path.Combine(ModuleDirectory, "lib", "Unknown", "_build");
 	}
 
+	// Output directory that UBT will link from: .../lib/<Platform>/<Config>
+	public static string GetBulletLibOutputDir(string ModuleDirectory, UnrealTargetPlatform Platform, string BuildType)
+	{
+		string plat =
+			(Platform == UnrealTargetPlatform.Win64) ? "Win64" :
+			(Platform == UnrealTargetPlatform.Linux) ? "Linux" :
+			(Platform == UnrealTargetPlatform.Mac)   ? "Mac"   :
+			"Unknown";
+
+		string configFolder = GetBuildType(BuildType); // Debug/Release/RelWithDebInfo
+		return Path.Combine(ModuleDirectory, "lib", plat, configFolder);
+	}
+
+	// Maps your BuildType token to a CMake config name
 	public static string GetBuildType(string BuildType)
 	{
 		switch (BuildType)
@@ -266,9 +335,9 @@ public class BuildUtils
 				return "Debug";
 			case "Development":
 				return "RelWithDebInfo";
+			case "Release":
+				return "Release";
 		}
 		return "Release";
 	}
-
 }
-

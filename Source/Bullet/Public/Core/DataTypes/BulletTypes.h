@@ -244,3 +244,23 @@ struct FBulletShapeOptions
 	
 	
 };
+
+
+struct FBulletUserData
+{
+	static constexpr uint32 MagicValue = 0xB011E7DA; // any constant you like
+
+	uint32 Magic = MagicValue;
+
+	// For hit construction/gameplay (not used by collision filtering)
+	USceneComponent* Component = nullptr;
+
+	// Collision policy data used in hot paths
+	uint8  ObjectChannel = 0;    // 0..31 (ECollisionChannel as uint8)
+	uint8  bQueryEnabled = 1;    // optional
+	uint8  bPhysicsEnabled = 1;  // optional
+	uint8  Pad = 0;
+
+	uint32 BlockMask = 0;        // bits for channels this blocks
+	uint32 OverlapMask = 0;      // bits for channels this overlaps (optional)c.)
+};

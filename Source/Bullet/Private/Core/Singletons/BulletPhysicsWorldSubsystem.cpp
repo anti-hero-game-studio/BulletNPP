@@ -60,10 +60,7 @@ void UBulletPhysicsWorldSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 
 void UBulletPhysicsWorldSubsystem::OnWorldEndPlay(UWorld& InWorld)
 {
-	if (BtWorld)
-	{
-		BtWorld->getPairCache()->setOverlapFilterCallback(nullptr);
-	}
+	CleanUpBulletWorld();
 	Super::OnWorldEndPlay(InWorld);
 }
 
@@ -108,6 +105,8 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 		bool bShouldCreateGhostCollider = false;
 		bool bShouldCreateBlockCollider = false;
 		bool IsBlockingAnyTraceChannel = false;
+		
+		FBulletUserData* UserData = new  FBulletUserData();
 
 		if (UPrimitiveComponent* P = Descriptor.Shapes.Last().Shape.Get())
 		{
@@ -115,6 +114,11 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 			if (!I) return;
 			
 			const FCollisionResponseContainer& ResponseContainer = I->GetDefaultResponseContainer();
+			
+			uint32 IgnoreMask;
+			BulletHelpers->BuildResponseMasks(ResponseContainer, UserData->BlockMask, UserData->OverlapMask, IgnoreMask);
+			UserData->ObjectChannel = (uint8)P->GetCollisionObjectType();
+			
 			const UCollisionProfile* Profile = UCollisionProfile::Get();
 			for (int i = 0; i < 32; i++)
 			{
@@ -146,14 +150,17 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 				P->SetGenerateOverlapEvents(false);
 			}
 			
+			UserData->Component = Descriptor.Shapes.Last().Shape.Get();
 			Descriptor.Shapes.Last().CollisionResponses = ResponseContainer;
+			
+			BtUserData.Add(UserData);
 		}
 		
 		if (Options.ShapeType == EBulletShapeType::DYNAMIC || Options.ShapeType == EBulletShapeType::KINEMATIC)
 		{
 			if (btCollisionObject* CollisionObject = AddRigidBodyCollider(Target, RelTransform, Shape, Options))
 			{
-				CollisionObject->setUserPointer(Descriptor.Shapes.Last().Shape.Get());
+				CollisionObject->setUserPointer(UserData);
 				Descriptor.Shapes.Last().Id.BlockingShapeWorldArrayIndex = CollisionObject->getWorldArrayIndex();
 				Descriptor.Shapes.Last().BlockingCollider = CollisionObject;
 			}
@@ -164,7 +171,7 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 			{
 				if (btCollisionObject* CollisionObject = AddStaticCollider(Shape, FinalXform, Options.Friction, Options.Restitution, Target))
 				{
-					CollisionObject->setUserPointer(Descriptor.Shapes.Last().Shape.Get());
+					CollisionObject->setUserPointer(UserData);
 					Descriptor.Shapes.Last().Id.BlockingShapeWorldArrayIndex = CollisionObject->getWorldArrayIndex();
 					Descriptor.Shapes.Last().BlockingCollider = CollisionObject;
 				}
@@ -177,7 +184,7 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 		{
 			if (btGhostObject* CollisionObject = AddGhostCollider(Shape, FinalXform, Target, IsBlockingAnyTraceChannel))
 			{
-				CollisionObject->setUserPointer(Descriptor.Shapes.Last().Shape.Get());
+				CollisionObject->setUserPointer(UserData);
 				Descriptor.Shapes.Last().Id.OverlappingShapeWorldArrayIndex = CollisionObject->getWorldArrayIndex();
 				Descriptor.Shapes.Last().OverlappingCollider = CollisionObject;
 			}
@@ -194,6 +201,8 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 
 btCollisionShape* UBulletPhysicsWorldSubsystem::GetBoxCollisionShape(const FVector& Dimensions)
 {
+	
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::GetBoxCollisionShape);
 	// Simple brute force lookup for now, probably doesn't need anything more clever
 	btVector3 HalfSize = BulletHelpers::ToBulletVector3(Dimensions * 0.5);
 	for (auto&& S : BtBoxCollisionShapes)
@@ -210,7 +219,7 @@ btCollisionShape* UBulletPhysicsWorldSubsystem::GetBoxCollisionShape(const FVect
 	// Not found, create
 	auto S = new btBoxShape(HalfSize);
 	// Get rid of margins, just cause issues for me
-	S->setMargin(0);
+	S->setMargin(btScalar(0.02f));
 	BtBoxCollisionShapes.Add(S);
 
 	return S;
@@ -219,6 +228,7 @@ btCollisionShape* UBulletPhysicsWorldSubsystem::GetBoxCollisionShape(const FVect
 
 btCollisionShape* UBulletPhysicsWorldSubsystem::GetSphereCollisionShape(float Radius)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::GetSphereCollisionShape);
 	// Simple brute force lookup for now, probably doesn't need anything more clever
 	btScalar Rad = BulletHelpers::ToBulletFloat(Radius);
 	for (auto&& S : BtSphereCollisionShapes)
@@ -242,6 +252,7 @@ btCollisionShape* UBulletPhysicsWorldSubsystem::GetSphereCollisionShape(float Ra
 
 btCollisionShape* UBulletPhysicsWorldSubsystem::GetCapsuleCollisionShape(float Radius, float Height)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::GetCapsuleCollisionShape);
 	// Simple brute force lookup for now, probably doesn't need anything more clever
 	btScalar R = BulletHelpers::ToBulletFloat(Radius);
 	btScalar H = BulletHelpers::ToBulletFloat(Height);
@@ -267,6 +278,8 @@ btCollisionShape* UBulletPhysicsWorldSubsystem::GetCapsuleCollisionShape(float R
 
 btBvhTriangleMeshShape* UBulletPhysicsWorldSubsystem::GetComplexShape(const FTransform& CurrentTransform, UStaticMesh* Mesh)
 {
+	
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::GetComplexShape);
 	/* Note that Mesh->ComplexCollisionMesh is WITH_EDITORONLY_DATA so not available at runtime
 	   Looks like we have to access LODForCollision, RenderData->LODResources
 	   So they use a mesh LOD for collision for complex shapes, never drawn usually?*/
@@ -448,6 +461,78 @@ const UBulletPhysicsWorldSubsystem::CachedDynamicShapeData& UBulletPhysicsWorldS
 
 	return CachedDynamicShapes.Last();
 
+}
+
+void UBulletPhysicsWorldSubsystem::CleanUpBulletWorld()
+{
+	if (BtWorld)
+	{
+		BtWorld->getPairCache()->setOverlapFilterCallback(nullptr);
+	}
+	
+	for (int i = BtWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	{
+		btCollisionObject* obj = BtWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+		if (body && body->getMotionState())
+		{
+			delete body->getMotionState();
+		}
+		BtWorld->removeCollisionObject(obj);
+		delete obj;
+	}
+	
+	// delete collision shapes
+	for (int i = 0; i < BtBoxCollisionShapes.Num(); i++)
+		delete BtBoxCollisionShapes[i];
+	BtBoxCollisionShapes.Empty();
+	for (int i = 0; i < BtSphereCollisionShapes.Num(); i++)
+		delete BtSphereCollisionShapes[i];
+	BtSphereCollisionShapes.Empty();
+	for (int i = 0; i < BtCapsuleCollisionShapes.Num(); i++)
+		delete BtCapsuleCollisionShapes[i];
+	BtCapsuleCollisionShapes.Empty();
+	for (int i = 0; i < BtConvexHullCollisionShapes.Num(); i++)
+		delete BtConvexHullCollisionShapes[i].Shape;
+	BtConvexHullCollisionShapes.Empty();
+	for (int i = 0; i < CachedDynamicShapes.Num(); i++)
+	{
+		// Only delete if this is a compound shape, otherwise it's an alias to other simple arrays
+		if (CachedDynamicShapes[i].bIsCompound)
+			delete CachedDynamicShapes[i].Shape;
+	}
+	CachedDynamicShapes.Empty();
+	for (int i = 0; i < ComplexShapes.Num(); ++i)
+	{
+		delete ComplexShapes[i];
+	}
+	ComplexShapes.Empty();
+	
+	for (int i = 0; i < BtUserData.Num(); i++)
+	{
+		delete BtUserData[i];
+	}
+	BtUserData.Empty();
+	
+
+	delete BtWorld;
+	delete BtConstraintSolver;
+	delete BtBroadphase;
+	delete BtCollisionDispatcher;
+	delete BtCollisionConfig;
+	delete BtDebugDraw; // I haven't talked about this yet, later
+
+	BtWorld = nullptr;
+	BtConstraintSolver = nullptr;
+	BtBroadphase = nullptr;
+	BtCollisionDispatcher = nullptr;
+	BtCollisionConfig = nullptr;
+	BtDebugDraw = nullptr;
+
+	// Clear our type-specific arrays (duplicate refs)
+	BtRigidBodies.Empty();
+	BtStaticBodies.Empty();
+	BtGhostBodies.Empty();
 }
 
 FUnrealShapeDescriptor UBulletPhysicsWorldSubsystem::GetShapeDescriptorData(const AActor* Actor) const
@@ -657,7 +742,9 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, c
 		Body->setDeactivationTime(0.f);
 	}
 	
-	BtWorld->addRigidBody(Body);
+	const short DynGroup = btBroadphaseProxy::DefaultFilter;
+	const short DynMask  = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::SensorTrigger; // allow ghost overlaps
+	BtWorld->addRigidBody(Body, DynGroup, DynMask);
 	BtRigidBodies.Add(Body);
 	return Body;
 }
@@ -674,7 +761,11 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(USkeletalMeshCom
 	Body->setUserPointer(Skel);
 	Body->setActivationState(DISABLE_DEACTIVATION);
 	Body->setDeactivationTime(0);
-	BtWorld->addRigidBody(Body);
+	
+	const short DynGroup = btBroadphaseProxy::DefaultFilter;
+	const short DynMask  = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::SensorTrigger; // allow ghost overlaps
+	BtWorld->addRigidBody(Body, DynGroup, DynMask);
+	
 	BtRigidBodies.Add(Body);
 	return Body;
 }
@@ -692,7 +783,8 @@ btCollisionObject* UBulletPhysicsWorldSubsystem::AddStaticCollider(btCollisionSh
 	Obj->setFriction(Friction);
 	Obj->setRestitution(Restitution);
 	Obj->setActivationState(DISABLE_DEACTIVATION);
-	BtWorld->addCollisionObject(Obj);
+	BtWorld->addCollisionObject(Obj, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::DefaultFilter);
+	BtStaticBodies.Add(Obj);
 	return Obj;
 }
 
@@ -703,11 +795,16 @@ btGhostObject* UBulletPhysicsWorldSubsystem::AddGhostCollider(btCollisionShape* 
 	Ghost->setCollisionShape(Shape);
 	if (!bIsBlockingAnyTraceChannel)
 	{
-		Ghost->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+		// No physical response, overlap only
+		Ghost->setCollisionFlags(Ghost->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
 	}
 	Ghost->setWorldTransform(BulletHelpers::ToBulletTransform(Transform, UE_WORLD_ORIGIN));
-	BtWorld->addCollisionObject(Ghost);
 	
+	const short GhostGroup = btBroadphaseProxy::SensorTrigger; // built-in
+	const short GhostMask  = btBroadphaseProxy::DefaultFilter; // only dynamic/default
+
+	BtWorld->addCollisionObject(Ghost, GhostGroup, GhostMask);
+	BtGhostBodies.Add(Ghost);
 	
 	return Ghost;
 }
@@ -748,6 +845,7 @@ void UBulletPhysicsWorldSubsystem::GetPhysicsState(int ID, FTransform& Transform
 
 void UBulletPhysicsWorldSubsystem::GetMotionState(int Id, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::GetMotionState);
 	if (Id == INDEX_NONE) return; 
 	
 	btCollisionObjectArray& CollisionObjects = GetBulletWorld()->getCollisionObjectArray();
@@ -897,10 +995,11 @@ TArray<AActor*> UBulletPhysicsWorldSubsystem::GetOverlappingActors(AActor* Targe
 		for (int i = 0; i < O->getNumOverlappingObjects(); ++i)
 		{
 			if (!O->getOverlappingObject(i)->getUserPointer()) continue;
-			if (const USceneComponent* OverlappedActor = static_cast<USceneComponent*>(O->getOverlappingObject(i)->getUserPointer()))
+			if (const FBulletUserData* OverlappedActor = static_cast<FBulletUserData*>(O->getOverlappingObject(i)->getUserPointer()))
 			{
-				if (!OverlappedActor->GetOwner()) continue;
-				OverlappingActors.Add(OverlappedActor->GetOwner());
+				if (!OverlappedActor->Component) continue;
+				if (!OverlappedActor->Component->GetOwner()) continue;
+				OverlappingActors.Add(OverlappedActor->Component->GetOwner());
 			}
 		}
 	}
@@ -1010,11 +1109,14 @@ TArray<FHitResult> UBulletPhysicsWorldSubsystem::SweepBoxMultiByChannel(const FV
 
 int32 UBulletPhysicsWorldSubsystem::LineTraceSingle(const FVector& Start, const FVector& End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::LineTraceSingle);
+	
 	if (!BtWorld) 
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UBulletSubsystem::RayTest: loaded wihout a bullet world't work"));
 		return INDEX_NONE;
 	} 
+	
 
 	
 	btVector3 FromV = BulletHelpers::ToBulletPosition(Start, FVector(0));
@@ -1072,6 +1174,8 @@ int32 UBulletPhysicsWorldSubsystem::LineTraceSingle(const FVector& Start, const 
 TArray<int32> UBulletPhysicsWorldSubsystem::LineTraceMulti(const FVector& Start, const FVector& End, const TEnumAsByte<ECollisionChannel> Channel, 
 	const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& OutHits)
 {
+	
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::LineTraceMulti);
 	TArray<int32> Results;
 	
 	if (!BtWorld) 
@@ -1147,6 +1251,7 @@ TArray<int32> UBulletPhysicsWorldSubsystem::LineTraceMulti(const FVector& Start,
 int32 UBulletPhysicsWorldSubsystem::SweepTraceSingle(const FCollisionShape& Shape, const FVector& Start, const FVector& End, 
 	const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::SweepTraceSingle);
 	if (!BtWorld) {
 		UE_LOG(LogTemp, Warning, TEXT("UBulletSubsystem::RayTestSingle: loaded without a bullet wouldn't work"));
 		return INDEX_NONE;
@@ -1239,6 +1344,8 @@ TArray<int32> UBulletPhysicsWorldSubsystem::SweepTraceMulti(const FCollisionShap
 	const FVector& End, const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel,
 	const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& OutHits)
 {
+	
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::SweepTraceMulti);
 	TArray<int32> Results;
 	if (!BtWorld) {
 		UE_LOG(LogTemp, Warning, TEXT("UBulletSubsystem::RayTestSingle: loaded without a bullet wouldn't work"));
@@ -1293,11 +1400,6 @@ TArray<int32> UBulletPhysicsWorldSubsystem::SweepTraceMulti(const FCollisionShap
 	}
 	
 	FRotator FinalRot = Rotation.Rotator();
-	if (Shape.IsCapsule())
-	{
-		FinalRot += FRotator(0, 0, -90.f);
-	}
-	
 	btTransform FromTransform = BulletHelpers::ToBulletTransform(FTransform(FinalRot, Start), UE_WORLD_ORIGIN);
 	btTransform ToTransform = BulletHelpers::ToBulletTransform(FTransform(FinalRot, FinalEnd), UE_WORLD_ORIGIN);
 
@@ -1322,6 +1424,7 @@ TArray<int32> UBulletPhysicsWorldSubsystem::SweepTraceMulti(const FCollisionShap
 			}
 		}
 	}
+	
 		
 	btAllNotMeConvexResultCallback RayCallback(&CollisionArray, FromTransform.getOrigin(), ToTransform.getOrigin(), Channel);
 	
@@ -1338,11 +1441,11 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::Cl
 	
 	
 	AActor* HitActor = nullptr;
-	if (Result.hasHit())
+	if (Result.hasHit() && Result.m_collisionObject->getUserPointer())
 	{
-		if (const USceneComponent* SceneComponent = static_cast<USceneComponent*>(Result.m_collisionObject->getUserPointer()))
+		if (const FBulletUserData* SceneComponent = static_cast<FBulletUserData*>(Result.m_collisionObject->getUserPointer()))
 		{
-			HitActor = SceneComponent->GetOwner();
+			HitActor = SceneComponent->Component && SceneComponent->Component->GetOwner() ? SceneComponent->Component->GetOwner() : nullptr;
 		}
 	}
 	
@@ -1373,6 +1476,8 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::Cl
 
 void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::ClosestConvexResultCallback& Result, FHitResult& OutHit) const
 {
+	
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::ConstructHitResult);
 	UPhysicalMaterial* UEMat = nullptr;
 
 	const FVector HitLocation = BulletHelpers::ToUnrealPosition(Result.m_hitPointWorld, UE_WORLD_ORIGIN);
@@ -1380,11 +1485,11 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::Cl
 	const FVector From = BulletHelpers::ToUnrealPosition(Result.m_convexFromWorld, UE_WORLD_ORIGIN);
 	
 	AActor* HitActor = nullptr;
-	if (Result.hasHit())
+	if (Result.hasHit() && Result.m_hitCollisionObject->getUserPointer())
 	{
-		if (const USceneComponent* SceneComponent = static_cast<USceneComponent*>(Result.m_hitCollisionObject->getUserPointer()))
+		if (const FBulletUserData* SceneComponent = static_cast<FBulletUserData*>(Result.m_hitCollisionObject->getUserPointer()))
 		{
-			HitActor = SceneComponent->GetOwner();
+			HitActor = SceneComponent->Component && SceneComponent->Component->GetOwner() ? SceneComponent->Component->GetOwner() : nullptr;
 		}
 	}
 	
@@ -1413,7 +1518,7 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::Cl
 
 void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeRaycastResultCallback& Result, TArray<FHitResult>& OutHits) const
 {
-
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::ConstructHitResults);
 	const FVector From = BulletHelpers::ToUnrealPosition(Result.m_rayFromWorld, UE_WORLD_ORIGIN);
 	for (int i = 0; i < Result.m_collisionObjects.size(); ++i)
 	{
@@ -1430,11 +1535,11 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeRaycastRes
 	
 	
 		AActor* HitActor = nullptr;
-		if (Result.hasHit())
+		if (Result.hasHit() && HitObject->getUserPointer())
 		{
-			if (const USceneComponent* SceneComponent = static_cast<USceneComponent*>(HitObject->getUserPointer()))
+			if (const FBulletUserData* SceneComponent = static_cast<FBulletUserData*>(HitObject->getUserPointer()))
 			{
-				HitActor = SceneComponent->GetOwner();
+				HitActor = SceneComponent->Component && SceneComponent->Component->GetOwner() ? SceneComponent->Component->GetOwner() : nullptr;
 			}
 		}
 	
@@ -1469,6 +1574,8 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeRaycastRes
 void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeConvexResultCallback& Result,
 	TArray<FHitResult>& OutHits) const
 {
+	
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::ConstructHitResults);
 	const FVector From = BulletHelpers::ToUnrealPosition(Result.m_rayFromWorld, UE_WORLD_ORIGIN);
 	for (int i = 0; i < Result.m_collisionObjects.size(); ++i)
 	{
@@ -1485,11 +1592,11 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeConvexResu
 	
 	
 		AActor* HitActor = nullptr;
-		if (Result.hasHit())
+		if (Result.hasHit() && HitObject->getUserPointer())
 		{
-			if (const USceneComponent* SceneComponent = static_cast<USceneComponent*>(HitObject->getUserPointer()))
+			if (const FBulletUserData* SceneComponent = static_cast<FBulletUserData*>(HitObject->getUserPointer()))
 			{
-				HitActor = SceneComponent->GetOwner();
+				HitActor = SceneComponent->Component && SceneComponent->Component->GetOwner() ? SceneComponent->Component->GetOwner() : nullptr;
 			}
 		}
 	
@@ -1524,6 +1631,7 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeConvexResu
 int32 UBulletPhysicsWorldSubsystem::SweepTraceInternal(const btTransform& From, const btTransform& To, 
 	const btCollisionShape* Collider, btClosestNotMeConvexResultCallback& Result, FHitResult& OutHit) const
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::SweepTraceInternal);
 	BtWorld->convexSweepTest
 	(
 		static_cast<const btConvexShape*>(Collider),
@@ -1539,6 +1647,8 @@ int32 UBulletPhysicsWorldSubsystem::SweepTraceInternal(const btTransform& From, 
 
 TArray<int32> UBulletPhysicsWorldSubsystem::SweepTraceInternal(const btTransform& From, const btTransform& To, const btCollisionShape* Collider, btAllNotMeConvexResultCallback& Result, TArray<FHitResult>& OutHits) const
 {
+	
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::SweepTraceInternal);
 	BtWorld->convexSweepTest
 	(
 		static_cast<const btConvexShape*>(Collider),

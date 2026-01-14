@@ -52,6 +52,8 @@ struct btAllNotMeConvexResultCallback : public btCollisionWorld::ConvexResultCal
 
 	virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
 	{
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_CONVX_RESULT_ADD);
+		TRACE_CPUPROFILER_EVENT_SCOPE(btAllNotMeConvexResultCallback::AddSingleResult);
 		
 		for (int i = 0; i < Me->size(); ++i)
 		{

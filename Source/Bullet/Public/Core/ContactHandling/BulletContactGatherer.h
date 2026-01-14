@@ -191,6 +191,7 @@ private:
 public:
 	void Gather(btDynamicsWorld* World)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(FBulletContactGatherer::Gather);
 		OutEvents.Reset();
 		if (!World) return;
 

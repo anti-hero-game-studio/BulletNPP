@@ -5,6 +5,7 @@
 #include "MoveLibrary/BulletMovementUtils.h"
 #include "BulletMoverComponent.h"
 #include "BulletMoverLog.h"
+#include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 #include "Engine/World.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletAsyncMovementUtils)
@@ -350,13 +351,15 @@ bool UBulletAsyncMovementUtils::TestMoveComponent_Internal(const FBulletMovingCo
 	UWorld* const MyWorld = UpdatedPrimitive->GetWorld();
 	if (MyWorld && bCollisionEnabled && (DeltaSizeSq > 0.f))
 	{
+		UBulletPhysicsWorldSubsystem* Subsystem = MyWorld->GetSubsystem<UBulletPhysicsWorldSubsystem>();
+		if (!Subsystem) return false;
+		
 		TArray<FHitResult> AllHits;
 
 		TGuardValue<bool> GuardIgnoreTouches(CollisionParams.QueryParams.bIgnoreTouches, true);
 
-		//TODO:@GreggoryAddison::BulletCollisions || Swap this out for a trace using a bullet shape.
-		const bool bHadBlockingHit = MyWorld->SweepMultiByChannel(AllHits, TraceStart, TraceEnd, InitialRotationQuat, 
-			CollisionParams.Channel, CollisionParams.Shape, CollisionParams.QueryParams, CollisionParams.ResponseParams);
+		TArray<int32> HitBodies = Subsystem->SweepTraceMulti(CollisionParams.Shape, TraceStart, TraceEnd, InitialRotationQuat, CollisionParams.Channel, {MovingComps.UpdatedComponent->GetOwner()}, AllHits);
+		const bool bHadBlockingHit = HitBodies.Num() > 0 || AllHits.Num() > 0;
 
 		if (AllHits.Num() > 0)
 		{

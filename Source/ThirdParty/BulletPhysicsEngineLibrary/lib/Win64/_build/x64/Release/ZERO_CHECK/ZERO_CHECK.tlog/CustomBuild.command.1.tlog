@@ -1,0 +1,10 @@
+^F:\UNREALPROJECTS\ANTIHERO\BULLETPHYSICS\PLUGINS\BULLETNPP\SOURCE\THIRDPARTY\BULLETPHYSICSENGINELIBRARY\LIB\WIN64\_BUILD\CMAKEFILES\53B946BF03F41ABFBA07E0FBAEEEF021\GENERATE.STAMP.RULE
+setlocal
+D:\CMake\bin\cmake.exe -SF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/bullet3 -BF:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/_build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file F:/UnrealProjects/AntiHero/BulletPhysics/Plugins/BulletNPP/Source/ThirdParty/BulletPhysicsEngineLibrary/lib/Win64/_build/BULLET_PHYSICS.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

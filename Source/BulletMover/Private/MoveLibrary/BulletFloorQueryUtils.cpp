@@ -177,8 +177,6 @@ bool UBulletFloorQueryUtils::FloorSweepTest(const FBulletMovingComponentSet& Mov
 
 		// First test with the box rotated so the corners are along the major axes (ie rotated 45 degrees).
 		const FQuat Rotate45LocalYaw = FQuat::MakeFromEuler(FVector(0.0f, 0.0f, 45.0f));
-
-		//TODO:@GreggoryAddison::BulletCollisions || Swap this out for a trace using a bullet shape.
 		
 		Subsystem->SweepTraceSingle(BoxShape, Start, End, (UpDirOrientation * Rotate45LocalYaw), ECC_Visibility, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
 		bBlockingHit = OutHit.bBlockingHit;

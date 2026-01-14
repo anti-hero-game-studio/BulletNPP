@@ -708,6 +708,7 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 
 void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::PostPhysicsTick);
 	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
 		FBulletMoverDefaultSyncState& FinalState = SimOutput.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverDefaultSyncState>();

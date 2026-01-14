@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="F:\UnrealProjects\AntiHero\BulletPhysics\Plugins\BulletNPP\Source\ThirdParty\BulletPhysicsEngineLibrary\lib\Win64\_build\CMakeFiles\e5356176d25544343883b879fa33ef7f\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{2D16B74A-2D90-3540-A5FA-DF9003759E79}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

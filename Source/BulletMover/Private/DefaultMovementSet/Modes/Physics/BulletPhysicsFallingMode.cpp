@@ -205,7 +205,7 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 
 	const FVector MoveDelta = TargetLocation - StartLocation;
 
-	const bool bWouldMove = UBulletAsyncMovementUtils::TestDepenetratingMove(Params.MovingComps, StartLocation, TargetLocation, StartRotation, TargetRotation, /* bShouldSweep */ true, OUT SweepHit, IN OUT MoveRecord);
+	const bool bWouldMove = true; /*UBulletAsyncMovementUtils::TestDepenetratingMove(Params.MovingComps, StartLocation, TargetLocation, StartRotation, TargetRotation, /* bShouldSweep #1# true, OUT SweepHit, IN OUT MoveRecord);*/
 
 	LocationInProgress = StartLocation + ((TargetLocation - StartLocation) * SweepHit.Time);
 	RotationInProgress = FQuat::Slerp(StartRotation, TargetRotation, SweepHit.Time);

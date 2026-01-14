@@ -21,7 +21,12 @@ public:
 	virtual bool needsCollision(const btCollisionObject* body0, const btCollisionObject* body1) override
 	{
 	
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_COLLISION_DISPATCHER);
+		TRACE_CPUPROFILER_EVENT_SCOPE(FUnrealCollisionDispatcher::NeedCollision);
+		
 		const bool Super = btCollisionDispatcher::needsCollision(body0, body1);
+		
+		if (!Super) return false;
 	
 		if (!body0 || !body1) return Super;
 
