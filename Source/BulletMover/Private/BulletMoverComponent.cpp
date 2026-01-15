@@ -178,6 +178,8 @@ void UBulletMoverComponent::InitializeComponent()
 	MoverSyncStateDoubleBuffer.SetBufferedData(DefaultMoverSyncState);
 	CachedLastUsedInputCmd = CachedLastProducedInputCmd;
 	LastMoverDefaultSyncState = MoverSyncStateDoubleBuffer.GetReadable().Collection.FindDataByType<FBulletUpdatedMotionState>();
+	
+	
 }
 
 
@@ -305,6 +307,8 @@ void UBulletMoverComponent::BeginPlay()
 	{
 		OnModifyContactsDelegateHandle = Subsystem->OnModifyContacts.AddUObject(this, &ThisClass::OnModifyContacts);
 	}
+
+	
 	
 	FindDefaultUpdatedComponent();
 	ensureMsgf(UpdatedComponent != nullptr, TEXT("No root component found on %s. Simulation initialization will most likely fail."), *GetPathNameSafe(GetOwner()));
@@ -379,6 +383,18 @@ void UBulletMoverComponent::BeginPlay()
 	{
 		EventSchedulingMinDelaySeconds = BackendLiaisonComp->GetEventSchedulingMinDelaySeconds();
 	}
+	
+	
+	if (const UBulletNetworkPredictionWorldManager* M = GetWorld()->GetSubsystem<UBulletNetworkPredictionWorldManager>())
+	{
+		bIsClientUsingSmoothing = M->GetSettings().bEnableFixedTickSmoothing;
+		if ( bIsClientUsingSmoothing && PrimaryVisualComponent)
+		{
+			PrimaryVisualComponent->SetUsingAbsoluteLocation(true);
+			PrimaryVisualComponent->SetUsingAbsoluteRotation(true);
+			PrimaryVisualComponent->SetUsingAbsoluteScale(true);
+		}
+	}
 }
 
 void UBulletMoverComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -403,13 +419,24 @@ void UBulletMoverComponent::UnbindProcessGeneratedMovement()
 void UBulletMoverComponent::ProduceInput(const int32 DeltaTimeMS, FBulletMoverInputCmdContext* Cmd)
 {
 	Cmd->Collection.Empty();
-	
-	for (TObjectPtr<UObject> InputProducerComponent : InputProducers)
+
+	if (!bIgnoreAnyInputProducer)
 	{
-		if (IsValid(InputProducerComponent))
+		for (TObjectPtr<UObject> InputProducerComponent : InputProducers)
 		{
-			IBulletMoverInputProducerInterface::Execute_ProduceInput(InputProducerComponent, DeltaTimeMS, IN OUT *Cmd);
+			if (IsValid(InputProducerComponent))
+			{
+				if (!bGatherInputFromAllInputProducerComponents && InputProducer != GetOwner())
+				{
+					continue;
+				}
+				IBulletMoverInputProducerInterface::Execute_ProduceInput(InputProducerComponent, DeltaTimeMS, IN OUT *Cmd);
+			}
 		}
+	}
+	else
+	{
+		Cmd->Collection.FindOrAddDataByType<FBulletCharacterDefaultInputs>();
 	}
 
 	CachedLastProducedInputCmd = *Cmd;
@@ -426,12 +453,12 @@ void UBulletMoverComponent::RestoreFrame(const FBulletMoverSyncState* SyncState,
 
 void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
 {
-	const FBulletUpdatedMotionState* MoverState = SyncState->Collection.FindDataByType<FBulletUpdatedMotionState>();
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::FinalizeFrame);
 
 	// TODO: Revisit this location check -- it seems simplistic now that we have composable state. Consider supporting a version that allows each sync state data struct a chance to react.
 	// The component will often be in the "right place" already on FinalizeFrame, so a comparison check makes sense before setting it.
 	
-	if (MoverState)
+	if (const FBulletUpdatedMotionState* MoverState = SyncState->Collection.FindDataByType<FBulletUpdatedMotionState>())
 	{
 		const FRotator& ComponentRot =  UpdatedComponent->GetComponentQuat().Rotator();
 		const FRotator& StateRot = MoverState->GetOrientation_WorldSpace();
@@ -443,17 +470,23 @@ void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState
 		{
 			SetFrameStateFromContext(SyncState, AuxState, /* rebase? */ false);
 		}
-	}
-	else
-	{
-		UpdateCachedFrameState(SyncState, AuxState);
+		else
+		{
+			UpdateCachedFrameState(SyncState, AuxState);
+		}
 	}
 
-	if (PrimaryVisualComponent)
+
+	// Only allow the server to move this component or the client if they are not smoothing. This removes the double call to update the component
+	if (!bIsClientUsingSmoothing || (GetOwner()->HasAuthority() && !GetOwner()->HasLocalNetOwner()) || GetNetMode() == NM_DedicatedServer)
 	{
-		if (!PrimaryVisualComponent->GetRelativeTransform().Equals(BaseVisualComponentTransform))
+		if (PrimaryVisualComponent)
 		{
-			PrimaryVisualComponent->SetRelativeTransform(BaseVisualComponentTransform);
+			TRACE_CPUPROFILER_EVENT_SCOPE(PrimaryVisualComponent::SetRelativeTransform);
+			if (!PrimaryVisualComponent->GetRelativeTransform().Equals(BaseVisualComponentTransform))
+			{
+				PrimaryVisualComponent->SetRelativeTransform(BaseVisualComponentTransform);
+			}
 		}
 	}
 	
@@ -1027,6 +1060,7 @@ void UBulletMoverComponent::PreSimulationTick(const FBulletMoverTimeStep& TimeSt
 
 void UBulletMoverComponent::UpdateCachedFrameState(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::UpdateCachedFrameState);
 	// TODO integrate dirty tracking
 	FBulletMoverSyncState& BufferedSyncState = MoverSyncStateDoubleBuffer.GetWritable();
 	BufferedSyncState = *SyncState;
@@ -1041,6 +1075,7 @@ void UBulletMoverComponent::UpdateCachedFrameState(const FBulletMoverSyncState* 
 
 void UBulletMoverComponent::SetFrameStateFromContext(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState, bool bRebaseBasedState)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::SetFrameStateFromContext);
 	UpdateCachedFrameState(SyncState, AuxState);
 
 	if (FBulletUpdatedMotionState* MoverState = const_cast<FBulletUpdatedMotionState*>(LastMoverDefaultSyncState))

@@ -30,6 +30,13 @@ void UBulletBoxComponent::BeginPlay()
 	
 }
 
+bool UBulletBoxComponent::UpdateOverlapsImpl(const TOverlapArrayView* PendingOverlaps, bool bDoNotifies, const TOverlapArrayView* OverlapsAtEndLocation)
+{
+	if (!ShapeOptions.bGenerateOverlapEventsInChaos) return true;
+	
+	return Super::UpdateOverlapsImpl(PendingOverlaps, bDoNotifies, OverlapsAtEndLocation);
+}
+
 
 // Called every frame
 void UBulletBoxComponent::TickComponent(float DeltaTime, ELevelTick TickType,

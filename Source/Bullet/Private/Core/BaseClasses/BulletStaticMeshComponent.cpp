@@ -124,4 +124,11 @@ const FCollisionResponseContainer& UBulletStaticMeshComponent::GetCollisionRespo
 	return Subsystem->GetCollisionResponseContainer(this);
 }
 
+bool UBulletStaticMeshComponent::UpdateOverlapsImpl(const TOverlapArrayView* PendingOverlaps, bool bDoNotifies, const TOverlapArrayView* OverlapsAtEndLocation)
+{
+	if (!ShapeOptions.bGenerateOverlapEventsInChaos) return true;
+	
+	return Super::UpdateOverlapsImpl(PendingOverlaps, bDoNotifies, OverlapsAtEndLocation);
+}
+
 

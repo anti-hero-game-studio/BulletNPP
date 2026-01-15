@@ -218,8 +218,8 @@ void UBulletPhysicsWalkingMode::SimulationTick_Implementation(const FBulletSimul
 		const btCollisionObject* GroundParticle = Subsystem->GetCollisionBody(FloorResult.HitResult);
 		if (!GroundParticle) return;
 		
-		const btRigidBody* GroundBody = btRigidBody::upcast(GroundParticle);
-		if (!GroundBody) return;
+		const btRigidBody* MovingParticle = Subsystem->GetRigidBody(MoverComp->GetUpdatedComponent<UPrimitiveComponent>());
+		if (!MovingParticle) return;
 		
 		const float InitialHeightAboveFloor = FloorResult.FloorDist - GetTargetHeight();
 
@@ -230,8 +230,8 @@ void UBulletPhysicsWalkingMode::SimulationTick_Implementation(const FBulletSimul
 		// Also remove the gravity that will be applied by the physics simulation.
 		// This is so that the gravity in this mode will be consistent with the gravity
 		// set on the mover, not the default physics gravity
-		const FVector ProjectedVelocity = StartingSyncState->GetVelocity_WorldSpace() + BulletHelpers::ToUnrealDirection(GroundBody->getGravity()) * DeltaSeconds;
-		FVector TargetVelocity = ProjectedVelocity - BulletHelpers::ToUnrealFloat(GroundBody->getGravity().length()) * FVector::UpVector * DeltaSeconds;
+		const FVector ProjectedVelocity = StartingSyncState->GetVelocity_WorldSpace() + BulletHelpers::ToUnrealDirection(MovingParticle->getGravity()) * DeltaSeconds;
+		FVector TargetVelocity = ProjectedVelocity - BulletHelpers::ToUnrealFloat(MovingParticle->getGravity().length()) * FVector::UpVector * DeltaSeconds;
 
 		// If we have movement intent and not moving straight up/down then use the proposed move plane velocity
 		// otherwise just fall with gravity
@@ -244,32 +244,34 @@ void UBulletPhysicsWalkingMode::SimulationTick_Implementation(const FBulletSimul
 		{
 			const FVector ProposedMovePlaneVelocity = ProposedMove.LinearVelocity - ProposedMove.LinearVelocity.ProjectOnToNormal(GroundNormal);
 
-			// If there is velocity intent in the normal direction then use the velocity from the proposed move. Otherwise
-			// retain the previous vertical velocity
-			FVector ProposedNormalVelocity = ProposedMove.LinearVelocity - ProposedMovePlaneVelocity;
-			if (ProposedNormalVelocity.SizeSquared() > UE_KINDA_SMALL_NUMBER)
-			{
-				TargetVelocity += ProposedNormalVelocity - TargetVelocity.ProjectOnToNormal(GroundNormal);
-				bNormalVelocityIntent = true;
-			}
+			// Preserve whatever normal/vertical velocity you decided earlier,
+			// but overwrite the tangential (ground plane) component with the proposed move.
+			TargetVelocity = ProposedMovePlaneVelocity + TargetVelocity.ProjectOnToNormal(GroundNormal);
 
-			TargetPosition += ProposedMovePlaneVelocity * DeltaSeconds;
+			// Optional: if you want motion relative to moving ground, add ground velocity:
+			// TargetVelocity = ProjectedGroundVelocity + ProposedMovePlaneVelocity
+			//               + TargetVelocity.ProjectOnToNormal(GroundNormal);
 		}
 
+		
+		const btRigidBody* GroundBody = btRigidBody::upcast(GroundParticle);
 		FVector ProjectedGroundVelocity = UBulletPhysicsGroundMovementUtils::ComputeLocalGroundVelocity_Internal(this, StartingSyncState->GetLocation_WorldSpace(), FloorResult);
-		const float BodyGravity = BulletHelpers::ToUnrealFloat(GroundBody->getGravity().length());
-		if (FMath::Abs(BodyGravity) > 0)
+		if (GroundBody && GroundBody->getMotionState())
 		{
-			// This might not be correct if different physics objects have different gravity but is saves having to go
-			// to the component to get the gravity on the physics volume.
-			ProjectedGroundVelocity += BodyGravity * UpDirection * DeltaSeconds;
+			const float BodyGravity = BulletHelpers::ToUnrealFloat(GroundBody->getGravity().length());
+			if (FMath::Abs(BodyGravity) > 0 && GroundBody->getMotionState())
+			{
+				// This might not be correct if different physics objects have different gravity but is saves having to go
+				// to the component to get the gravity on the physics volume.
+				ProjectedGroundVelocity += BodyGravity * UpDirection * DeltaSeconds;
 			
+			}
 		}
 		const bool bIsGroundMoving = ProjectedGroundVelocity.SizeSquared() > UE_KINDA_SMALL_NUMBER;
 		const FVector ProjectedRelativeVelocity = TargetVelocity - ProjectedGroundVelocity;
 		const float ProjectedRelativeNormalVelocity = FloorResult.HitResult.ImpactNormal.Dot(TargetVelocity - ProjectedGroundVelocity);
 		const float ProjectedRelativeVerticalVelocity = GroundNormal.Dot(TargetVelocity - ProjectedGroundVelocity);
-		const float VerticalVelocityLimit = bNormalVelocityIntent ? 2.0f / DeltaSeconds : FMath::Abs(GroundNormal.Dot(BulletHelpers::ToUnrealDirection(GroundBody->getGravity())) * DeltaSeconds);
+		const float VerticalVelocityLimit = bNormalVelocityIntent ? 2.0f / DeltaSeconds : FMath::Abs(GroundNormal.Dot(BulletHelpers::ToUnrealDirection(MovingParticle->getGravity())) * DeltaSeconds);
 
 		bool bIsLiftingOffSurface = false;
 		if ((ProjectedRelativeNormalVelocity > VerticalVelocityLimit) && bIsGroundMoving && (ProjectedRelativeVerticalVelocity > VerticalVelocityLimit))
@@ -295,7 +297,7 @@ void UBulletPhysicsWalkingMode::SimulationTick_Implementation(const FBulletSimul
 		// This is always applied regardless of whether the character is supported
 		const FRotator TargetOrientation = UBulletMovementUtils::ApplyAngularVelocityToRotator(StartingSyncState->GetOrientation_WorldSpace(), ProposedMove.AngularVelocityDegrees, DeltaSeconds);
 
-		OutputTargetState.UpdateTargetVelocity(TargetVelocity, ProposedMove.AngularVelocityDegrees);
+		OutputTargetState.UpdateTargetVelocity(TargetVelocity.GetClampedToMaxSize(GetMaxSpeed()), ProposedMove.AngularVelocityDegrees);
 		OutputState.MovementEndState.RemainingMs = 0.0f;
 		OutputState.MovementEndState.NextModeName = Params.StartState.SyncState.MovementMode;
 		OutputSyncState.MoveDirectionIntent = ProposedMove.bHasDirIntent ? ProposedMove.DirectionIntent : FVector::ZeroVector;

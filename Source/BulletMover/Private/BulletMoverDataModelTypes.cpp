@@ -312,11 +312,12 @@ void FBulletUpdatedMotionState::Interpolate(const FBulletMoverDataStructBase& Fr
 }
 
 
-void FBulletUpdatedMotionState::SetTransforms_WorldSpace(FVector WorldLocation, FRotator WorldOrient, FVector WorldVelocity, FVector WorldAngularVelocityDegrees, UPrimitiveComponent* Base, FName BaseBone)
+void FBulletUpdatedMotionState::SetTransforms_WorldSpace(const FVector& WorldLocation, const FRotator& WorldOrient, const FVector& WorldVelocity, const FVector& WorldAngularVelocityDegrees, UPrimitiveComponent* Base, const FName& BaseBone)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(FBulletUpdatedMotionState::SetTransforms_WorldSpace);
-	if (SetMovementBase(Base, BaseBone))
+	if (Base && SetMovementBase(Base, BaseBone))
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(FBulletUpdatedMotionState::TransformToLocal);
 		UBulletBasedMovementUtils::TransformLocationToLocal(  MovementBasePos,  MovementBaseQuat, WorldLocation, OUT Location);
 		UBulletBasedMovementUtils::TransformRotatorToLocal(   MovementBaseQuat, WorldOrient, OUT Orientation);
 		UBulletBasedMovementUtils::TransformDirectionToLocal( MovementBaseQuat, WorldVelocity, OUT Velocity);
@@ -324,6 +325,8 @@ void FBulletUpdatedMotionState::SetTransforms_WorldSpace(FVector WorldLocation, 
 	}
 	else
 	{
+		
+		TRACE_CPUPROFILER_EVENT_SCOPE(FBulletUpdatedMotionState::SetDirectly);
 		if (Base)
 		{
 			UE_LOG(LogBulletMover, Warning, TEXT("Failed to set base as %s. Falling back to world space movement"), *GetNameSafe(Base->GetOwner()));

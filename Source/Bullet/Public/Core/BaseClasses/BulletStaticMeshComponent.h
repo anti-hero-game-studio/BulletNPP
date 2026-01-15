@@ -39,6 +39,8 @@ public:
 	
 protected:
 	
+	virtual bool UpdateOverlapsImpl(const TOverlapArrayView* PendingOverlaps = nullptr, bool bDoNotifies = true, const TOverlapArrayView* OverlapsAtEndLocation = nullptr) override;
+	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Bullet Physics")
 	FBulletShapeOptions ShapeOptions;
 };

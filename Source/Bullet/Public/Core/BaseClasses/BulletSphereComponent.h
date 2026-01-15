@@ -33,6 +33,8 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	
+	virtual bool UpdateOverlapsImpl(const TOverlapArrayView* PendingOverlaps = nullptr, bool bDoNotifies = true, const TOverlapArrayView* OverlapsAtEndLocation = nullptr) override;
 
 public:
 	// Called every frame

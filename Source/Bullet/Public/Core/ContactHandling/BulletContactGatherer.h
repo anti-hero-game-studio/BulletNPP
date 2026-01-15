@@ -105,6 +105,8 @@ private:
 		float NormalDotEps,
 		float GridCm)
 	{
+		
+		TRACE_CPUPROFILER_EVENT_SCOPE(FBulletContactGatherer::MeaningfulChange);
 		if (Prev.bHadContact != Curr.bHadContact)
 			return true;
 
@@ -134,6 +136,8 @@ private:
 		float& OutPenDepthCm,
 		float& OutMaxImpulse) const
 	{
+		
+		TRACE_CPUPROFILER_EVENT_SCOPE(FBulletContactGatherer::BuildCentroidSignature);
 		const int32 NumContacts = M->getNumContacts();
 		if (NumContacts <= 0)
 			return false;
@@ -150,8 +154,8 @@ private:
 			const btManifoldPoint& Pt = M->getContactPoint(p);
 
 			const float Dist = Pt.getDistance(); // < 0 penetrating
-			if (Dist >= 0.f)
-				continue;
+			/*if (Dist >= 0.f)
+				continue;*/
 
 			const float Impulse = Pt.getAppliedImpulse();
 			MaxImpulse = FMath::Max(MaxImpulse, Impulse);
@@ -172,7 +176,7 @@ private:
 
 		if (Count == 0)
 			return false;
-
+			
 		const FVector Centroid = SumPoint / float(Count);
 		const FVector AvgNormal = SumNormal.GetSafeNormal();
 
@@ -191,6 +195,8 @@ private:
 		OutPenDepthCm = PenDepthCm;
 		OutMaxImpulse = MaxImpulse;
 		return true;
+		
+		
 	}
 
 public:
@@ -325,6 +331,7 @@ public:
 	
 	void CacheHitsThisFrame()
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(FBulletContactGatherer::CacheHitsThisFrame);
 		CachedEvents = OutEvents;
 		OutEvents.Reset();
 	}

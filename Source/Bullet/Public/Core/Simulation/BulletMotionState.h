@@ -13,6 +13,7 @@ class BULLET_API FBulletMotionState : public btMotionState
 	
 protected:
 		TWeakObjectPtr<USceneComponent> UpdatedComponent;
+		TWeakObjectPtr<USceneComponent> VisualComponent;
 		// Bullet is made local so that all sims are close to origin
 		// This world origin must be in *UE dimensions*
 		FVector WorldOrigin;
@@ -33,10 +34,12 @@ protected:
 			const IBulletActorInterface* I = Cast<IBulletActorInterface>(ParentActor);
 			if (ParentActor->Implements<UBulletActorInterface>())
 			{
-				if (const UPrimitiveComponent* P  = IBulletActorInterface::Execute_GetVisualProxyRootComponent(ParentActor))
+				if (UPrimitiveComponent* P  = IBulletActorInterface::Execute_GetVisualProxyRootComponent(ParentActor))
 				{
 					BaseVisualComponentTransform = P->GetRelativeTransform();
+					VisualComponent = P; 
 				}
+				
 					
 			}
 			
@@ -59,25 +62,18 @@ protected:
 		void setWorldTransform(const btTransform& CenterOfMassWorldTrans) override
 		{// send this to actor
 			QUICK_SCOPE_CYCLE_COUNTER(STAT_BNP_TICK_FIXED);
-			TRACE_CPUPROFILER_EVENT_SCOPE(BulletMotionState::SetWorldTransform);
+			TRACE_CPUPROFILER_EVENT_SCOPE(BulletMotionState::SetUpdatedComponentTransform);
 			if (UpdatedComponent.IsValid(false))
 			{
 				FinalTransform = BulletHelpers::ToUnrealTransform(CenterOfMassWorldTrans * CenterOfMassTransform, WorldOrigin);
-				FinalTransform.SetScale3D(UpdatedComponent->K2_GetComponentScale());
-				UpdatedComponent->SetWorldTransform(FinalTransform);
-				
-				if (!UpdatedComponent->GetOwner()) return;
+				FinalTransform.SetScale3D(UpdatedComponent->GetComponentScale());
 
-				if (UpdatedComponent->GetOwner()->Implements<UBulletActorInterface>())
+				if (!UpdatedComponent.Get()->GetComponentTransform().Equals(FinalTransform))
 				{
-					UPrimitiveComponent* P = IBulletActorInterface::Execute_GetVisualProxyRootComponent(UpdatedComponent->GetOwner());
-					if (!P) return;
-					
-					if (!P->GetRelativeTransform().Equals(BaseVisualComponentTransform))
-					{
-						P->SetRelativeTransform(BaseVisualComponentTransform);
-					}
+					UpdatedComponent->SetWorldTransform(FinalTransform);
 				}
+				
+				
 			}
 		}
 	

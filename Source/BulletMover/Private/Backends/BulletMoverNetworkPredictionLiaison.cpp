@@ -101,6 +101,7 @@ void UBulletMoverNetworkPredictionLiaisonComponent::RestorePhysicsFrame(const FB
 
 void UBulletMoverNetworkPredictionLiaisonComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverNetworkPredictionLiaisonComponent::FinalizeFrame);
 	check(MoverComp);
 
 	const FBulletNetworkPredictionSettings NetworkPredictionSettings = UBulletNetworkPredictionWorldManager::ActiveInstance->GetSettings();

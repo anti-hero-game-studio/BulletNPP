@@ -126,13 +126,21 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 			{
 				P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				P->GetBodyInstance()->bNotifyRigidBodyCollision = false;
+				P->SetShouldUpdatePhysicsVolume(false);
 			}
 			
 			if (!Options.bGenerateOverlapEventsInChaos)
 			{
 				P->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 				P->SetGenerateOverlapEvents(false);
+				P->SetShouldUpdatePhysicsVolume(false);
+				if (AActor* A = P->GetOwner())
+				{
+					A->bGenerateOverlapEventsDuringLevelStreaming = false;
+				}
 			}
+			
+			//TODO:@GreggoryAddison::CodeOptimization || If both bGenerateOverlapEventsInChaos && bGenerateCollisionEventsInChaos destroy the Chaos FBodyInstance.
 			
 			UserData->Component = P;
 			Descriptor.Shapes.Last().CollisionResponses = ResponseContainer;
@@ -742,7 +750,7 @@ FHitResult UBulletPhysicsWorldSubsystem::ConstructHitResult(const FBulletHitEven
 	FHitResult Hit;
 	Hit.bBlockingHit = true;
 
-	Hit.Component = Self;
+	Hit.Component = Other;
 	Hit.HitObjectHandle = OtherOwner;
 
 	Hit.ImpactPoint = E.ImpactPoint;
@@ -778,6 +786,7 @@ FBulletUserData* UBulletPhysicsWorldSubsystem::GetUserData(const UPrimitiveCompo
 
 void UBulletPhysicsWorldSubsystem::BroadcastSymmetricHits(const FBulletHitEvent& Base)
 {
+	
 	// Self (as stored)
 	BroadcastComponentHit(Base);
 
@@ -792,6 +801,7 @@ void UBulletPhysicsWorldSubsystem::BroadcastSymmetricHits(const FBulletHitEvent&
 
 void UBulletPhysicsWorldSubsystem::BroadcastComponentHit(const FBulletHitEvent& E)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::BroadcastComponentHit);
 	UPrimitiveComponent* Self = E.SelfComp.Get();
 	UPrimitiveComponent* Other = E.OtherComp.Get();
 	if (!Self || !Other) return;
@@ -810,20 +820,26 @@ void UBulletPhysicsWorldSubsystem::BroadcastComponentHit(const FBulletHitEvent& 
 	const FVector NormalImpulse = E.ImpulseDir * E.AppliedImpulse; // You may scale/tune as needed
 
 	// Broadcast on component
-	Self->OnComponentHit.Broadcast(Self, OtherOwner, Other, NormalImpulse, Hit);
+	if (Self->OnComponentHit.IsBound())
+	{
+		Self->OnComponentHit.Broadcast(Self, OtherOwner, Other, NormalImpulse, Hit);
+	}
 
 	// Optional: call NotifyHit on the owning actor (many gameplay systems listen here)
 	// Actor NotifyHit signature differs slightly; pass values as best-effort.
+	
 	SelfOwner->NotifyHit(
-		Self,
-		OtherOwner,
-		Other,
-		true,               // bSelfMoved (unknown; set true if self is kinematic/moved)
-		E.ImpactPoint,
-		E.ImpactNormal,
-		NormalImpulse,
-		Hit
-	);
+			Self,
+			OtherOwner,
+			Other,
+			true,               // bSelfMoved (unknown; set true if self is kinematic/moved)
+			E.ImpactPoint,
+			E.ImpactNormal,
+			NormalImpulse,
+			Hit
+		);
+	
+	
 }
 
 

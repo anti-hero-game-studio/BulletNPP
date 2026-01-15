@@ -143,6 +143,8 @@ public:
 	 */
 	FBulletMover_ProcessGeneratedMovement ProcessGeneratedMovement;
 	
+	uint8 bIsClientUsingSmoothing : 1 = 0;
+
 	// Binds event for processing movement after it has been generated. Allows for final modifications to proposed movement before it's executed.
 	UFUNCTION(BlueprintCallable, Category = Mover)
 	BULLETMOVER_API void BindProcessGeneratedMovement(FBulletMover_ProcessGeneratedMovement ProcessGeneratedMovementEvent);
@@ -214,6 +216,10 @@ public:
 	/** If true, any actor component implementing MoverInputProducerInterface on this component's owner will be able to produce input commands */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Mover)
 	bool bGatherInputFromAllInputProducerComponents = true;
+	
+	/** If true, any input commands will be ignored */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Mover)
+	bool bIgnoreAnyInputProducer = false;
 
 	/* All MoverInputProducerInterface objects producing input for this mover component. If bGatherInputFromAllInputProducerComponents
 	*  is true, all components implementing MoverInputProducerInterface on this component's owner will be added to 

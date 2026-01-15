@@ -215,7 +215,7 @@ public:
 
 	UE_API virtual void Interpolate(const FBulletMoverDataStructBase& From, const FBulletMoverDataStructBase& To, float Pct) override;
 	
-	UE_API void SetTransforms_WorldSpace(FVector WorldLocation, FRotator WorldOrient, FVector WorldVelocity, FVector WorldAngularVelocityDegrees, UPrimitiveComponent* Base=nullptr, FName BaseBone = NAME_None);
+	UE_API void SetTransforms_WorldSpace(const FVector& WorldLocation, const FRotator& WorldOrient, const FVector& WorldVelocity, const FVector& WorldAngularVelocityDegrees, UPrimitiveComponent* Base=nullptr, const FName& BaseBone = NAME_None);
 
 	// Returns whether the base setting succeeded
 	UE_API bool SetMovementBase(UPrimitiveComponent* Base, FName BaseBone=NAME_None);
