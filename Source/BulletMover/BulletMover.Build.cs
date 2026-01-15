@@ -6,8 +6,6 @@ public class BulletMover : ModuleRules
 {
 	public BulletMover(ReadOnlyTargetRules Target) : base(Target)
 	{
-
-		OptimizeCode = CodeOptimization.InShippingBuildsOnly;
 		OptimizeCode = CodeOptimization.InShippingBuildsOnly;
 
 		// TODO: find a better way to manage optional dependencies, such as Water and PoseSearch. This includes module dependencies here, as well as .uplugin dependencies.
@@ -25,7 +23,7 @@ public class BulletMover : ModuleRules
 				"Water",
 				"GameplayTags",
 				"NavigationSystem",
-				"Bullet"
+				"Bullet",
 			}
 			);
 			
@@ -39,7 +37,7 @@ public class BulletMover : ModuleRules
 				"PhysicsCore",
 				"DeveloperSettings",
 				"PoseSearch",
-				"Bullet"
+				"Bullet",
 			}
 			);
 

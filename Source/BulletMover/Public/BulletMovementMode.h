@@ -8,6 +8,7 @@
 #include "BulletMoverTypes.h"
 #include "MoveLibrary/BulletMoverBlackboard.h"
 #include "BulletMovementModeTransition.h"
+#include "MoveLibrary/BulletFloorQueryUtils.h"
 #include "UObject/Interface.h"
 #include "Templates/SubclassOf.h"
 #include "BulletMovementMode.generated.h"
@@ -31,6 +32,15 @@ class IBulletMovementSettingsInterface
 public:
 	virtual FString GetDisplayName() const = 0;
 };
+
+UENUM(BlueprintType)
+enum class EBulletMoverFrictionOverrideMode : uint8
+{
+	DoNotOverride,
+	AlwaysOverrideToZero,
+	OverrideToZeroWhenMoving,
+};
+
 
 /**
  * Base class for all movement modes, exposing simulation update methods for both C++ and blueprint extension
@@ -130,15 +140,11 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Unregistered", ScriptName = "OnUnregistered"))
 	UE_API void K2_OnUnregistered();
-
-	UE_DEPRECATED(5.6, "OnActivate() has been renamed to Activate().")
-	virtual void OnActivate() final {}
-	UE_DEPRECATED(5.6, "OnDeactivate() has been renamed to Deactivate().")
-	virtual void OnDeactivate() final  {}
-	UE_DEPRECATED(5.6, "OnGenerateMove() has been replaced with a GenerateMove() BlueprintNativeEvent. Rename your override to GenerateMove_Implementation().")
-	virtual void OnGenerateMove(const FBulletMoverTickStartData& StartState, const FBulletMoverTimeStep& TimeStep, FBulletProposedMove& OutProposedMove) const final {}
-	UE_DEPRECATED(5.6, "OnSimulationTick() has been replaced with a SimulationTick() BlueprintNativeEvent. Rename your override to SimulationTick_Implementation().")
-	virtual void OnSimulationTick(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState) final {}
+	
+	
+	void FloorCheck(const FVector& StartingLocation, const FVector& ProposedLinearVelocity, const float& DeltaTime, FBulletFloorCheckResult& Result) const;
+	
+	
 };
 
 /**

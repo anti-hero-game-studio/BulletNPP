@@ -70,7 +70,12 @@ struct FBulletContactGatherer
 
 	// Output for this step (physics thread)
 	TArray<FBulletHitEvent> OutEvents;
-
+	
+	// Output for this step (physics thread)
+	TArray<FBulletHitEvent> CachedEvents;
+	
+	
+	
 private:
 	struct FContactSignature
 	{
@@ -191,6 +196,7 @@ private:
 public:
 	void Gather(btDynamicsWorld* World)
 	{
+		constexpr bool bForceUpdate = true;
 		TRACE_CPUPROFILER_EVENT_SCOPE(FBulletContactGatherer::Gather);
 		OutEvents.Reset();
 		if (!World) return;
@@ -211,9 +217,14 @@ public:
 			const btCollisionObject* Obj0 = static_cast<const btCollisionObject*>(M->getBody0());
 			const btCollisionObject* Obj1 = static_cast<const btCollisionObject*>(M->getBody1());
 			if (!Obj0 || !Obj1) continue;
+			
+			const FBulletUserData* UD0 = static_cast<const FBulletUserData*>(Obj0->getUserPointer()); 
+			const FBulletUserData* UD1 = static_cast<const FBulletUserData*>(Obj1->getUserPointer()); 
 
-			UPrimitiveComponent* C0 = static_cast<UPrimitiveComponent*>(Obj0->getUserPointer());
-			UPrimitiveComponent* C1 = static_cast<UPrimitiveComponent*>(Obj1->getUserPointer());
+			if (!UD0 || !UD1) continue;
+			
+			UPrimitiveComponent* C0 = Cast<UPrimitiveComponent>(UD0->Component);
+			UPrimitiveComponent* C1 = Cast<UPrimitiveComponent>(UD1->Component);
 			if (!C0 || !C1) continue;
 
 			// Pair key
@@ -294,7 +305,7 @@ public:
 				ContactNormalDotEpsilon,
 				QuantizeGridCm);
 
-			if (bChanged)
+			if (bChanged || bForceUpdate)
 			{
 				OutEvents.Add(Event);
 				PrevSig = *CurrSig; // update cache
@@ -310,5 +321,11 @@ public:
 				It.RemoveCurrent();
 			}
 		}
+	}
+	
+	void CacheHitsThisFrame()
+	{
+		CachedEvents = OutEvents;
+		OutEvents.Reset();
 	}
 };

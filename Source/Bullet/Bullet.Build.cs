@@ -9,6 +9,8 @@ public class Bullet : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		OptimizeCode = CodeOptimization.InShippingBuildsOnly;
 		
+		PublicDefinitions.Add("BT_USE_DOUBLE_PRECISION=1");
+		
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...

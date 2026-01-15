@@ -148,6 +148,17 @@ void UBulletPhysicsFallingMode::GenerateMove_Implementation(const FBulletMoverTi
 	{
 		UBulletMovementUtils::SetGravityVerticalComponent(OutProposedMove.LinearVelocity, VelocityWithGravity.Dot(UpDirection), UpDirection);
 	}
+	
+	
+	UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>();
+	const UBulletCommonLegacyMovementSettings* SharedSettingsPtr = GetMoverComponent<UBulletMoverComponent>()->FindSharedSettings<UBulletCommonLegacyMovementSettings>();
+	if (SimBlackboard && Subsystem && SharedSettingsPtr)
+	{
+		FBulletFloorCheckResult FloorResult;
+		FloorCheck(StartingSyncState->GetLocation_WorldSpace(), OutProposedMove.LinearVelocity,TimeStep.StepMs * 0.001f, FloorResult);
+		
+		SimBlackboard->Set(CommonBlackboard::LastFloorResult, FloorResult);
+	}
 }
 
 void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimulationTickParams& Params, FBulletMoverTickEndData& OutputState)
@@ -157,6 +168,7 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 		return;
 	}
 
+	
 	UBulletMoverComponent* MoverComponent = GetMoverComponent();
 	const FBulletMoverTickStartData& StartState = Params.StartState;
 	const UPrimitiveComponent* UpdatedComponent = Cast<UPrimitiveComponent>(Params.MovingComps.UpdatedComponent.Get());
@@ -168,8 +180,22 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 	const FBulletCharacterDefaultInputs* CharacterInputs = StartState.InputCmd.Collection.FindDataByType<FBulletCharacterDefaultInputs>();
 	const FBulletUpdatedMotionState* StartingSyncState = StartState.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 	check(StartingSyncState);
-
+	
+	
 	FBulletMoverTargetSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverTargetSyncState>();
+	
+	FBulletFloorCheckResult FloorResult;
+	FloorCheck(StartingSyncState->GetLocation_WorldSpace(), ProposedMove.LinearVelocity,Params.TimeStep.StepMs * 0.001f, FloorResult);
+
+	if (FloorResult.bBlockingHit)
+	{
+		// We are grounded and need to switch movement modes
+		OutputState.MovementEndState.RemainingMs = 0.0f;
+		OutputState.MovementEndState.NextModeName = DefaultModeNames::Walking;
+		OutputSyncState.UpdateTargetVelocity(StartingSyncState->GetVelocity_WorldSpace(), StartingSyncState->GetAngularVelocityDegrees_WorldSpace());
+		return;
+	}
+
 	
 	const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
 
@@ -201,74 +227,4 @@ void UBulletPhysicsFallingMode::OnUnregistered()
 	CommonLegacySettings = nullptr;
 
 	Super::OnUnregistered();
-}
-
-void UBulletPhysicsFallingMode::ProcessLanded(const FBulletFloorCheckResult& FloorResult, FVector& Velocity, FBulletRelativeBaseInfo& BaseInfo, FBulletMoverTickEndData& TickEndData) const
-{
-	// TODO: Refactor landed events for async movement. For now, leave the immediate event, but listeners are limited in what they can do from a worker thread.
-
-	const UBulletMoverComponent* MoverComp = GetMoverComponent();
-	UBulletMoverBlackboard* SimBlackboard = MoverComp->GetSimBlackboard_Mutable();
-
-	FName NextMovementMode = NAME_None; 
-	// if we can walk on the floor we landed on
-	if (FloorResult.IsWalkableFloor())
-	{
-		if (bCancelVerticalSpeedOnLanding)
-		{
-			const FPlane MovementPlane(FVector::ZeroVector, MoverComp->GetUpDirection());
-			Velocity = UBulletMovementUtils::ConstrainToPlane(Velocity, MovementPlane, false);
-		}
-		else
-		{
-			Velocity = FVector::VectorPlaneProject(Velocity, FloorResult.HitResult.Normal);
-		}
-		
-		// Transfer to LandingMovementMode (usually walking), and cache any floor / movement base info
-		NextMovementMode = CommonLegacySettings->GroundMovementModeName;
-
-		SimBlackboard->Set(CommonBlackboard::LastFloorResult, FloorResult);
-
-		if (UBulletBasedMovementUtils::IsADynamicBase(FloorResult.HitResult.GetComponent()))
-		{
-			BaseInfo.SetFromFloorResult(FloorResult);
-		}
-	}
-	// we could check for other surfaces here (i.e. when swimming is implemented we can check the floor hit here and see if we need to go into swimming)
-
-	// This would also be a good spot for implementing some falling physics interactions (i.e. falling into a movable object and pushing it based off of this actors velocity)
-	
-	// if a new mode was set go ahead and switch to it after this tick and broadcast we landed
-	if (!NextMovementMode.IsNone())
-	{
-		TickEndData.MovementEndState.NextModeName = NextMovementMode;
-		OnLanded.Broadcast(NextMovementMode, FloorResult.HitResult);
-	}
-}
-
-void UBulletPhysicsFallingMode::CaptureFinalState(const FBulletUpdatedMotionState* StartSyncState, const FVector& FinalLocation, const FRotator& FinalRotation, const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, FBulletMoverTargetSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const
-{
-	UBulletMoverBlackboard* SimBlackboard = GetMoverComponent()->GetSimBlackboard_Mutable();
-
-	// Check for time refunds
-	constexpr float MinRemainingSecondsToRefund = 0.0001f;	// If we have this amount of time (or more) remaining, give it to the next simulation step.
-
-	if ((DeltaSeconds - DeltaSecondsUsed) >= MinRemainingSecondsToRefund)
-	{
-		const float PctOfTimeRemaining = (1.0f - (DeltaSecondsUsed / DeltaSeconds));
-		TickEndData.MovementEndState.RemainingMs = PctOfTimeRemaining * DeltaSeconds * 1000.f;
-	}
-	else
-	{
-		TickEndData.MovementEndState.RemainingMs = 0.f;
-	}
-	
-	Record.SetDeltaSeconds( DeltaSecondsUsed );
-	
-	// If we didn't use any time lets just pass along velocity so we don't lose it when we go into the next mode with refunded time
-	FVector EffectiveVelocity = DeltaSecondsUsed <= UE_SMALL_NUMBER ? StartSyncState->GetVelocity_WorldSpace() : Record.GetRelevantVelocity();
-
-	FBulletRelativeBaseInfo MovementBaseInfo;
-	ProcessLanded(FloorResult, EffectiveVelocity, MovementBaseInfo, TickEndData);
-	OutputSyncState.UpdateTargetVelocity(EffectiveVelocity, AngularVelocityDegrees);
 }

@@ -34,6 +34,7 @@
 
 #include "Components/CapsuleComponent.h"
 #include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
+#include "DefaultMovementSet/Modes/Physics/BulletPhysicsMovementMode.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletMoverComponent)
 
@@ -254,9 +255,56 @@ void UBulletMoverComponent::PostLoad()
 	RefreshSharedSettings();
 }
 
+void UBulletMoverComponent::OnModifyContacts()
+{
+	UPrimitiveComponent* UpdatedPrim = GetUpdatedComponent<UPrimitiveComponent>();
+	if (!UpdatedPrim) return;
+	UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>();
+	if (!Subsystem) return;
+	
+	if (const UBulletPhysicsMovementMode* M = Cast<UBulletPhysicsMovementMode>(GetMovementMode()))
+	{
+		for (const FBulletHitEvent& E : Subsystem->GetAllHitEvents())
+		{
+			if (!E.SelfComp.Get() || E.SelfComp.Get() != UpdatedPrim || !E.OtherComp.Get()) continue;
+			
+			btCollisionObject* SelfRb = Subsystem->GetCollisionBody(E.SelfComp.Get());
+			btCollisionObject* OtherRb = Subsystem->GetCollisionBody(E.OtherComp.Get());
+			if (!SelfRb || !OtherRb) continue;	
+			
+			bool bOverrideToZero = false;
+		
+			switch (M->GetFrictionOverrideMode()) 
+			{
+			case EBulletMoverFrictionOverrideMode::DoNotOverride:
+				break;
+			case EBulletMoverFrictionOverrideMode::AlwaysOverrideToZero:
+				bOverrideToZero = true;
+				break;
+			case EBulletMoverFrictionOverrideMode::OverrideToZeroWhenMoving:
+				constexpr float MinInput = 0.1f;
+				bOverrideToZero = GetMovementIntent().SizeSquared() > MinInput* MinInput;
+				break;
+			}
+		
+			if (bOverrideToZero)
+			{
+				// Turn off friction for the contacting bodies?? But won't this affect other local bodies in our sim?
+				SelfRb->setFriction(0);
+				OtherRb->setFriction(0);
+			}
+		}
+	}
+}
+
 void UBulletMoverComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+	{
+		OnModifyContactsDelegateHandle = Subsystem->OnModifyContacts.AddUObject(this, &ThisClass::OnModifyContacts);
+	}
 	
 	FindDefaultUpdatedComponent();
 	ensureMsgf(UpdatedComponent != nullptr, TEXT("No root component found on %s. Simulation initialization will most likely fail."), *GetPathNameSafe(GetOwner()));
@@ -331,6 +379,15 @@ void UBulletMoverComponent::BeginPlay()
 	{
 		EventSchedulingMinDelaySeconds = BackendLiaisonComp->GetEventSchedulingMinDelaySeconds();
 	}
+}
+
+void UBulletMoverComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+	{
+		Subsystem->OnModifyContacts.Remove(OnModifyContactsDelegateHandle);
+	}
+	Super::EndPlay(EndPlayReason);
 }
 
 void UBulletMoverComponent::BindProcessGeneratedMovement(FBulletMover_ProcessGeneratedMovement ProcessGeneratedMovementEvent)

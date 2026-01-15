@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "BulletMovementMode.h"
+#include "BulletPhysicsCharacterMovementMode.h"
 #include "DefaultMovementSet/Modes/BulletKinematicFallingMode.h"
 #include "BulletPhysicsFallingMode.generated.h"
 
@@ -16,7 +16,7 @@ struct FBulletFloorCheckResult;
  * This mode simulates movement without actually modifying any scene component(s).
  */
 UCLASS(MinimalAPI, Blueprintable, BlueprintType, Experimental)
-class UBulletPhysicsFallingMode : public UBulletBaseMovementMode
+class UBulletPhysicsFallingMode : public UBulletPhysicsCharacterMovementMode
 {
 GENERATED_BODY()
 
@@ -84,15 +84,6 @@ public:
 	float TerminalVerticalSpeed;
 	
 protected:
-	/**
-	 * Is called at the end of the tick in falling mode. Handles checking any landings that should occur and switching to specific modes
-	 * (i.e. landing on a walkable surface would switch to the walking movement mode) 
-	 */
-	UFUNCTION(BlueprintCallable, Category=Mover)
-	UE_API virtual void ProcessLanded(const FBulletFloorCheckResult& FloorResult, FVector& Velocity, FBulletRelativeBaseInfo& BaseInfo, FBulletMoverTickEndData& TickEndData) const;
-
-	UE_API void CaptureFinalState(const FBulletUpdatedMotionState* StartSyncState, const FVector& FinalLocation, const FRotator& FinalRotation, const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, FBulletMoverTargetSyncState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const;
-
 	TWeakObjectPtr<const UBulletCommonLegacyMovementSettings> CommonLegacySettings;
 };
 

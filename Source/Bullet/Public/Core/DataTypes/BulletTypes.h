@@ -43,6 +43,9 @@ struct FUnrealShape
 	btCollisionObject* BlockingCollider = nullptr;
 	btGhostObject* OverlappingCollider = nullptr;
 	FCollisionResponseContainer CollisionResponses;
+	float ShapeRadius = 0.f; // X
+	float ShapeWidth = 0.f; // Y
+	float ShapeHeight = 0.f;// Z
 };
 
 
@@ -259,6 +262,15 @@ struct FBulletUserData
 
 	// For hit construction/gameplay (not used by collision filtering)
 	USceneComponent* Component = nullptr;
+	
+	float ShapeRadius = 1.f;
+	float ShapeWidth = 1.f;
+	float ShapeHeight = 1.f;
+
+	float DefaultSlidingFriction = 0.f;
+	float DefaultRollingFriction = 0.f;
+	float DefaultSpinningFriction = 0.f;
+	float DefaultRestitution = 1.f;
 
 	// Collision policy data used in hot paths
 	uint8  ObjectChannel = 0;    // 0..31 (ECollisionChannel as uint8)

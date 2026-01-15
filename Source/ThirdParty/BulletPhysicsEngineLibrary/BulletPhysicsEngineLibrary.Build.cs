@@ -209,6 +209,7 @@ public class BulletPhysicsEngineLibrary : ModuleRules
 		// Include path (Bullet uses mixed headers + sources)
 		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "bullet3", "src"));
 		PublicDefinitions.Add("WITH_BULLET_BINDING=1");
+		PublicDefinitions.Add("BT_USE_DOUBLE_PRECISION=1");
 	}
 }
 

@@ -91,7 +91,9 @@ public:
 	BULLETMOVER_API virtual void OnRegister() override;
 	BULLETMOVER_API virtual void RegisterComponentTickFunctions(bool bRegister) override;
 	BULLETMOVER_API virtual void PostLoad() override;
-	BULLETMOVER_API virtual void BeginPlay() override;
+	BULLETMOVER_API virtual void OnModifyContacts();
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	// Broadcast before each simulation tick.
 	// Note - Guaranteed to run on the game thread (even in async simulation).
@@ -920,6 +922,9 @@ protected:
 	friend class UBulletBasedMovementUtils;
 	
 	
+	
+	
+	
 #pragma region BULLET PHYSICS
 protected:
 	
@@ -958,5 +963,8 @@ protected:
 	
 public:
 	virtual void SendFinalVelocityToBullet(const FBulletMoverTimeStep& InTimeStep, const FVector& LinearVelocity, const FVector& AngularVelocity) {}
+	
+private:
+	FDelegateHandle OnModifyContactsDelegateHandle;
 #pragma endregion
 };

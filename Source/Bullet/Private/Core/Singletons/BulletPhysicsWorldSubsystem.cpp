@@ -106,6 +106,7 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 
 		if (UPrimitiveComponent* P = Descriptor.Shapes.Last().Shape.Get())
 		{
+			const FUnrealShape& UnrealShape = Descriptor.Shapes.Last();
 			IBulletPrimitiveComponentInterface* I = Cast<IBulletPrimitiveComponentInterface>(P);
 			if (!I) return;
 			
@@ -114,6 +115,12 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 			uint32 IgnoreMask;
 			BulletHelpers->BuildResponseMasks(ResponseContainer, UserData->BlockMask, UserData->OverlapMask, IgnoreMask);
 			UserData->ObjectChannel = (uint8)P->GetCollisionObjectType();
+			
+			UserData->DefaultRestitution = Options.Restitution; // TODO:@GreggoryAddison::CodeCompletion || Support Physics material values
+			UserData->DefaultSlidingFriction = Options.Friction; // TODO:@GreggoryAddison::CodeCompletion || Support Physics material values
+			UserData->ShapeRadius = UnrealShape.ShapeRadius;
+			UserData->ShapeHeight = UnrealShape.ShapeHeight;
+			UserData->ShapeWidth = UnrealShape.ShapeWidth;
 			
 			if (!Options.bGenerateCollisionEventsInChaos)
 			{
@@ -666,6 +673,45 @@ btRigidBody* UBulletPhysicsWorldSubsystem::GetRigidBody(const int32& Id) const
 	return nullptr;
 }
 
+btCollisionObject* UBulletPhysicsWorldSubsystem::GetCollisionBody(const int32& Id) const
+{
+	btCollisionObjectArray& CollisionObjects = GetBulletWorld()->getCollisionObjectArray();
+	
+	if (CollisionObjects.size()<=Id)
+	{
+		UE_LOG(LogBullet, Error, TEXT("No Collision Object"));
+		return nullptr;
+	}
+	
+	if (!CollisionObjects[Id]) 
+	{
+		UE_LOG(LogBullet, Error, TEXT("Null Collision Object"));
+		return nullptr;
+	}
+
+	return CollisionObjects[Id];
+}
+
+btCollisionObject* UBulletPhysicsWorldSubsystem::GetCollisionBody(const UPrimitiveComponent* Target) const
+{
+	if (!IsBodyValid(Target)) return nullptr;
+	
+	const int32 BodyId = FindShapeId(Target);
+	if (BodyId == INDEX_NONE) return nullptr;
+	
+	return GetCollisionBody(BodyId);
+}
+
+btCollisionObject* UBulletPhysicsWorldSubsystem::GetCollisionBody(const FHitResult& Hit) const
+{
+	if (!Hit.GetComponent())
+	{
+		return nullptr;
+	}
+	
+	return GetCollisionBody(Hit.GetComponent());
+}
+
 btRigidBody* UBulletPhysicsWorldSubsystem::GetRigidBody(const UPrimitiveComponent* Target) const
 {
 	if (!IsBodyValid(Target)) return nullptr;
@@ -674,6 +720,60 @@ btRigidBody* UBulletPhysicsWorldSubsystem::GetRigidBody(const UPrimitiveComponen
 	if (BodyId == INDEX_NONE) return nullptr;
 	
 	return GetRigidBody(BodyId);
+}
+
+btRigidBody* UBulletPhysicsWorldSubsystem::GetRigidBody(const FHitResult& Hit) const
+{
+	if (!Hit.GetComponent()) return nullptr;
+	
+	return GetRigidBody(Hit.GetComponent());
+}
+
+FHitResult UBulletPhysicsWorldSubsystem::ConstructHitResult(const FBulletHitEvent& E)
+{
+	UPrimitiveComponent* Self = E.SelfComp.Get();
+	UPrimitiveComponent* Other = E.OtherComp.Get();
+	if (!Self || !Other) return FHitResult(-1);
+
+	AActor* SelfOwner = Self->GetOwner();
+	AActor* OtherOwner = Other->GetOwner();
+	if (!SelfOwner || !OtherOwner) return FHitResult(-1);
+	
+	FHitResult Hit;
+	Hit.bBlockingHit = true;
+
+	Hit.Component = Self;
+	Hit.HitObjectHandle = OtherOwner;
+
+	Hit.ImpactPoint = E.ImpactPoint;
+	Hit.Location = E.ImpactPoint;
+
+	Hit.ImpactNormal = E.ImpactNormal;
+	Hit.Normal = E.ImpactNormal;
+
+	Hit.PenetrationDepth = E.PenetrationDepth;
+
+	// These are optional; set if you can compute them.
+	Hit.BoneName = NAME_None;
+	Hit.MyBoneName = NAME_None;
+	
+	return Hit;
+}
+
+const TArray<FBulletHitEvent>& UBulletPhysicsWorldSubsystem::GetAllHitEvents() const
+{
+	return Gatherer.CachedEvents;
+}
+
+FBulletUserData* UBulletPhysicsWorldSubsystem::GetUserData(const UPrimitiveComponent* Target) const
+{
+	const btCollisionObject* B = GetCollisionBody(Target);
+	if (!B) return nullptr;
+	
+	void* P = B->getUserPointer();
+	if (!P) return nullptr;
+	
+	return static_cast<FBulletUserData*>(P);
 }
 
 void UBulletPhysicsWorldSubsystem::BroadcastSymmetricHits(const FBulletHitEvent& Base)
@@ -700,23 +800,7 @@ void UBulletPhysicsWorldSubsystem::BroadcastComponentHit(const FBulletHitEvent& 
 	AActor* OtherOwner = Other->GetOwner();
 	if (!SelfOwner || !OtherOwner) return;
 
-	FHitResult Hit;
-	Hit.bBlockingHit = true;
-
-	Hit.Component = Self;
-	Hit.HitObjectHandle = OtherOwner;
-
-	Hit.ImpactPoint = E.ImpactPoint;
-	Hit.Location = E.ImpactPoint;
-
-	Hit.ImpactNormal = E.ImpactNormal;
-	Hit.Normal = E.ImpactNormal;
-
-	Hit.PenetrationDepth = E.PenetrationDepth;
-
-	// These are optional; set if you can compute them.
-	Hit.BoneName = NAME_None;
-	Hit.MyBoneName = NAME_None;
+	const FHitResult Hit = ConstructHitResult(E);;
 
 	// HitResult has PhysMaterial, FaceIndex, Item, etc. (usually unavailable from Bullet without extra bookkeeping)
 
@@ -972,6 +1056,14 @@ void UBulletPhysicsWorldSubsystem::StepPhysics(const float DeltaSeconds, const i
 		BroadcastSymmetricHits(Event);
 	}
 	
+	Gatherer.CacheHitsThisFrame();
+
+	// TODO:@GreggoryAddison::CodeCompletion || Reset all bodies friction, restitution back to the default (stored in user data)0
+	if (OnModifyContacts.IsBound())
+	{
+		OnModifyContacts.Broadcast();
+	}
+	
 }
 
 void UBulletPhysicsWorldSubsystem::AddImpulse(AActor* Target, const FVector Impulse)
@@ -1027,8 +1119,8 @@ void UBulletPhysicsWorldSubsystem::UpdateActorVelocity(AActor* Target, const FVe
 	btCollisionObject* C = GetBulletWorld()->getCollisionObjectArray()[Id];
 	btRigidBody* Rb = btRigidBody::upcast(C);
 	if (!Rb) return;
-	Rb->applyCentralForce(BulletHelpers::ToBulletDirection(LinearVelocity, true));
-	Rb->setAngularVelocity(BulletHelpers::ToBulletVector3(AngularVelocity));
+	Rb->applyCentralImpulse(BulletHelpers::ToBulletDirection(LinearVelocity));
+	Rb->setAngularVelocity(BulletHelpers::ToBulletDirection(AngularVelocity));
 }
 
 TArray<AActor*> UBulletPhysicsWorldSubsystem::GetOverlappingActors(AActor* Target) const
@@ -1874,7 +1966,9 @@ void UBulletPhysicsWorldSubsystem::ExtractPhysicsGeometry(UPrimitiveComponent* P
 			continue;
 		}
 		
-		
+		ShapeDescriptor.Shapes.Last().ShapeRadius = Dimensions.X;
+		ShapeDescriptor.Shapes.Last().ShapeWidth = Dimensions.Y;
+		ShapeDescriptor.Shapes.Last().ShapeHeight = Dimensions.Z;
 		CB(Shape, XForm, I->GetShapeOptions());
 	}
 	for (auto&& Sphere : BodySetup->AggGeom.SphereElems)
@@ -1889,6 +1983,7 @@ void UBulletPhysicsWorldSubsystem::ExtractPhysicsGeometry(UPrimitiveComponent* P
 			CompoundShape->addChildShape(BulletHelpers::ToBulletTransform(XForm, UE_WORLD_ORIGIN), Shape);
 			continue;
 		}
+		ShapeDescriptor.Shapes.Last().ShapeRadius = Sphere.Radius * Scale.X;
 		CB(Shape, XForm, I->GetShapeOptions());
 	}
 	// Sphyl == Capsule (??)
@@ -1910,6 +2005,8 @@ void UBulletPhysicsWorldSubsystem::ExtractPhysicsGeometry(UPrimitiveComponent* P
 			continue;
 		}
 		
+		ShapeDescriptor.Shapes.Last().ShapeRadius = Capsule.Radius * Scale.X;
+		ShapeDescriptor.Shapes.Last().ShapeHeight = Capsule.Length * Scale.Z;
 		CB(Shape, XForm, I->GetShapeOptions());
 	}
 	for (uint16 i = 0; const FKConvexElem& ConVexElem : BodySetup->AggGeom.ConvexElems)
@@ -1923,11 +2020,15 @@ void UBulletPhysicsWorldSubsystem::ExtractPhysicsGeometry(UPrimitiveComponent* P
 			continue;
 		}
 		
+		// TODO@GreggoryAddison::CodeCompletion || Use the bounding box??
 		CB(Shape, XformSoFar, I->GetShapeOptions());
 	}
 
 	if (CompoundShape)
 	{
+		// TODO@GreggoryAddison::CodeCompletion || Use the bounding box for compound shapes?? 
+		//ShapeDescriptor.Shapes.Last().ShapeRadius = Capsule.Radius * Scale.X;
+		//ShapeDescriptor.Shapes.Last().ShapeHeight = Capsule.Length * Scale.Z;
 		Shape = CompoundShape;
 		CB(Shape, XformSoFar, I->GetShapeOptions());
 		delete CompoundShape;

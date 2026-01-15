@@ -26,6 +26,7 @@
 
 class FUnrealCollisionDispatcher;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhysicsStep, const float&, DeltaTime);
+DECLARE_MULTICAST_DELEGATE(FOnModifyContacts);
 
 /**
  * 
@@ -104,9 +105,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Get All Overlapping Actors", meta=(DevelopementOnly))
 	TArray<AActor*> GetOverlappingActors(AActor* Target) const;
 	
-	
 	UFUNCTION(BlueprintPure, Category = "Bullet Physics|Objects")
 	float GetGravity(const UPrimitiveComponent* Target) const;
+	
+
+	
 
 	
 #pragma region SCENE QUERY
@@ -296,8 +299,18 @@ public:
 	bool IsGhostBodyActive(const UPrimitiveComponent* Target) const;
 	void SetRigidBodyActiveState(const UPrimitiveComponent* Target, bool Active) const;
 	const FCollisionResponseContainer& GetCollisionResponseContainer(const UPrimitiveComponent* Target) const;
+	btCollisionObject* GetCollisionBody(const int32& Id) const;
+	btCollisionObject* GetCollisionBody(const UPrimitiveComponent* Target) const;
+	btCollisionObject* GetCollisionBody(const FHitResult& Hit) const;
 	btRigidBody* GetRigidBody(const int32& Id) const;
 	btRigidBody* GetRigidBody(const UPrimitiveComponent* Target) const;
+	btRigidBody* GetRigidBody(const FHitResult& Hit) const;
+	static FHitResult ConstructHitResult(const FBulletHitEvent& E);
+	const TArray<FBulletHitEvent>& GetAllHitEvents() const;
+	FBulletUserData* GetUserData(const UPrimitiveComponent* Target) const;
+	
+	FOnModifyContacts OnModifyContacts;
+	
 
 private:
 	
