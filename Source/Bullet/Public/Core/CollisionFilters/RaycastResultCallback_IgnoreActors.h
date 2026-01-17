@@ -17,6 +17,7 @@ struct btClosestNotMeRaycastResultCallback : public btCollisionWorld::ClosestRay
 
 	virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(btClosestNotMeRaycastResultCallback::addSingleResult);
 		for (int i = 0; i < Me->size(); ++i)
 		{
 			btCollisionObject* Obj = Me->at(i);

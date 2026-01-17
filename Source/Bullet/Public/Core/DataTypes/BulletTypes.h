@@ -135,6 +135,13 @@ struct FUnrealShapeDescriptor
 	
 	UPrimitiveComponent* FindClosestPrimitive(const FVector& Location) const
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(FUnrealShapeDescriptor::FindClosestPrimitive);
+		
+		if (Shapes.Num() == 1)
+		{
+			return Shapes[0].Shape.Get();
+		}
+		
 		float Distance = TNumericLimits<float>::Max();
 		UPrimitiveComponent* NearestComponent = nullptr;
 		for (const FUnrealShape& S : Shapes)
@@ -262,6 +269,8 @@ struct FBulletUserData
 
 	// For hit construction/gameplay (not used by collision filtering)
 	USceneComponent* Component = nullptr;
+	AActor* OwnerActor = nullptr;
+	UPhysicalMaterial* PhysMaterial = nullptr;
 	
 	float ShapeRadius = 1.f;
 	float ShapeWidth = 1.f;

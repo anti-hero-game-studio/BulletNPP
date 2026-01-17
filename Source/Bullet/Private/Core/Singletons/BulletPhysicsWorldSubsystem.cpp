@@ -121,6 +121,8 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 			UserData->ShapeRadius = UnrealShape.ShapeRadius;
 			UserData->ShapeHeight = UnrealShape.ShapeHeight;
 			UserData->ShapeWidth = UnrealShape.ShapeWidth;
+			UserData->OwnerActor = Target;
+			UserData->PhysMaterial = Options.bUsePhysicsMaterial ? Options.PhysMaterial : nullptr;
 			
 			if (!Options.bGenerateCollisionEventsInChaos)
 			{
@@ -747,7 +749,7 @@ FHitResult UBulletPhysicsWorldSubsystem::ConstructHitResult(const FBulletHitEven
 	AActor* OtherOwner = Other->GetOwner();
 	if (!SelfOwner || !OtherOwner) return FHitResult(-1);
 	
-	FHitResult Hit;
+	FHitResult Hit(NoInit);
 	Hit.bBlockingHit = true;
 
 	Hit.Component = Other;
@@ -1135,8 +1137,23 @@ void UBulletPhysicsWorldSubsystem::UpdateActorVelocity(AActor* Target, const FVe
 	btCollisionObject* C = GetBulletWorld()->getCollisionObjectArray()[Id];
 	btRigidBody* Rb = btRigidBody::upcast(C);
 	if (!Rb) return;
-	Rb->applyCentralImpulse(BulletHelpers::ToBulletDirection(LinearVelocity));
+	Rb->applyCentralForce(BulletHelpers::ToBulletDirection(LinearVelocity));
 	Rb->setAngularVelocity(BulletHelpers::ToBulletDirection(AngularVelocity));
+}
+
+void UBulletPhysicsWorldSubsystem::ZeroActorVelocity(AActor* Target)
+{
+	int32 Id = INDEX_NONE;
+	const FUnrealShapeDescriptor& Descriptor = GetShapeDescriptorData(Target);
+	Id = Descriptor.GetRootColliderId();
+	
+	if (Id == INDEX_NONE) return;
+	
+	btCollisionObject* C = GetBulletWorld()->getCollisionObjectArray()[Id];
+	btRigidBody* Rb = btRigidBody::upcast(C);
+	if (!Rb) return;
+	Rb->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
+	Rb->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
 }
 
 TArray<AActor*> UBulletPhysicsWorldSubsystem::GetOverlappingActors(AActor* Target) const
@@ -1195,7 +1212,8 @@ void UBulletPhysicsWorldSubsystem::StopDebugDrawer()
 
 FHitResult UBulletPhysicsWorldSubsystem::LineTraceSingleByChannel(const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId)
 {
-	FHitResult Hit(-1);
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::LineTraceSingleByChannel);
+	FHitResult Hit(NoInit);
 	HitBodyId = LineTraceSingle(Start, End, Channel, ActorsToIgnore, Hit);
 	
 	return Hit;
@@ -1213,7 +1231,7 @@ TArray<FHitResult> UBulletPhysicsWorldSubsystem::LineTraceMultiByChannel(const F
 FHitResult UBulletPhysicsWorldSubsystem::SweepSphereSingleByChannel(const float Radius, const FVector Start, const FVector End, 
                                                                     const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId)
 {
-	FHitResult Hit(-1);
+	FHitResult Hit(NoInit);
 
 	const FCollisionShape Shape = FCollisionShape::MakeSphere(Radius);
 	HitBodyId = SweepTraceSingle(Shape, Start, End, FQuat::Identity, Channel, ActorsToIgnore, Hit);
@@ -1236,7 +1254,7 @@ TArray<FHitResult> UBulletPhysicsWorldSubsystem::SweepSphereMultiByChannel(const
 FHitResult UBulletPhysicsWorldSubsystem::SweepCapsuleSingleByChannel(const float Radius, const float HalfHeight,
                                                                      const FVector Start, const FVector End, const FRotator Rotation, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId)
 {
-	FHitResult Hit(-1);
+	FHitResult Hit(NoInit);
 
 	const FCollisionShape Shape = FCollisionShape::MakeCapsule(Radius, HalfHeight);
 	HitBodyId = SweepTraceSingle(Shape, Start, End,Rotation.Quaternion(), Channel, ActorsToIgnore, Hit);
@@ -1318,12 +1336,15 @@ int32 UBulletPhysicsWorldSubsystem::LineTraceSingle(const FVector& Start, const 
 	
 	btClosestNotMeRaycastResultCallback RayCallback(&CollisionArray, FromV, ToV, Channel);
 
-	BtWorld->rayTest
-	(
-		FromV,
-		ToV,
-		RayCallback
-	);
+	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::RayTest);
+		BtWorld->rayTest
+	   (
+		   FromV,
+		   ToV,
+		   RayCallback
+	   );
+	}
 	
 	ConstructHitResult(RayCallback, OutHit);
 	
@@ -1605,28 +1626,30 @@ TArray<int32> UBulletPhysicsWorldSubsystem::SweepTraceMulti(const FCollisionShap
 
 void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::ClosestRayResultCallback& Result, FHitResult& OutHit) const
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::ConstructHitResult);
 	UPhysicalMaterial* UEMat = nullptr;
 
 	const FVector HitLocation = BulletHelpers::ToUnrealPosition(Result.m_hitPointWorld, UE_WORLD_ORIGIN);
 	const FVector ImpactNormal = BulletHelpers::ToUnrealDirection(Result.m_hitNormalWorld);
 	const FVector From = BulletHelpers::ToUnrealPosition(Result.m_rayFromWorld, UE_WORLD_ORIGIN);
 	
+	const FBulletUserData* UserData =  Result.m_collisionObject->getUserPointer() ? static_cast<FBulletUserData*>(Result.m_collisionObject->getUserPointer()) : nullptr;
+	if (!UserData) return;
 	
 	AActor* HitActor = nullptr;
-	if (Result.hasHit() && Result.m_collisionObject->getUserPointer())
+	if (Result.hasHit())
 	{
-		if (const FBulletUserData* SceneComponent = static_cast<FBulletUserData*>(Result.m_collisionObject->getUserPointer()))
-		{
-			HitActor = SceneComponent->Component && SceneComponent->Component->GetOwner() ? SceneComponent->Component->GetOwner() : nullptr;
-		}
+		HitActor = UserData->OwnerActor;
 	}
 	
-	OutHit.bBlockingHit = Result.hasHit();
-	OutHit.Location = HitLocation;
-	OutHit.ImpactPoint = HitLocation;
-	OutHit.ImpactNormal = ImpactNormal;
-	OutHit.Normal = ImpactNormal;
-	OutHit.Distance = FVector::Distance(HitLocation, From);
+	{
+		OutHit.bBlockingHit = Result.hasHit();
+		OutHit.Location = HitLocation;
+		OutHit.ImpactPoint = HitLocation;
+		OutHit.ImpactNormal = ImpactNormal;
+		OutHit.Normal = ImpactNormal;
+		OutHit.Distance = FVector::Distance(HitLocation, From);
+	}
 	
 	if (!HitActor) return;
 	
@@ -1635,13 +1658,9 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::Cl
 		const FUnrealShapeDescriptor& Data = GlobalShapeDescriptorDataCache[HitActor];
 		UPrimitiveComponent* HitComp = Data.FindClosestPrimitive(HitLocation);
 		OutHit.Component = HitComp;
-		OutHit.HitObjectHandle = FActorInstanceHandle(Data.ShapeOwner.Get());
-
-		if (const UStaticMeshComponent* S = Cast<UStaticMeshComponent>(HitComp))
-		{
-			if (S->GetMaterials().Num() == 0) return;
-			OutHit.PhysMaterial = S->GetMaterial(0)->GetPhysicalMaterial();
-		}
+		OutHit.HitObjectHandle = FActorInstanceHandle(HitActor);
+		
+		OutHit.PhysMaterial = UserData->PhysMaterial;
 	}
 
 }
@@ -1656,13 +1675,13 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::Cl
 	const FVector ImpactNormal = BulletHelpers::ToUnrealDirection(Result.m_hitNormalWorld);
 	const FVector From = BulletHelpers::ToUnrealPosition(Result.m_convexFromWorld, UE_WORLD_ORIGIN);
 	
+	const FBulletUserData* UserData =  Result.m_hitCollisionObject->getUserPointer() ? static_cast<FBulletUserData*>(Result.m_hitCollisionObject->getUserPointer()) : nullptr;
+	if (!UserData) return;
+	
 	AActor* HitActor = nullptr;
-	if (Result.hasHit() && Result.m_hitCollisionObject->getUserPointer())
+	if (Result.hasHit())
 	{
-		if (const FBulletUserData* SceneComponent = static_cast<FBulletUserData*>(Result.m_hitCollisionObject->getUserPointer()))
-		{
-			HitActor = SceneComponent->Component && SceneComponent->Component->GetOwner() ? SceneComponent->Component->GetOwner() : nullptr;
-		}
+		HitActor = UserData->OwnerActor;
 	}
 	
 	OutHit.bBlockingHit = Result.hasHit();
@@ -1678,13 +1697,9 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::Cl
 		const FUnrealShapeDescriptor& Data = GlobalShapeDescriptorDataCache[HitActor];
 		UPrimitiveComponent* HitComp = Data.FindClosestPrimitive(HitLocation);
 		OutHit.Component = HitComp;
-		OutHit.HitObjectHandle = FActorInstanceHandle(Data.ShapeOwner.Get());
+		OutHit.HitObjectHandle = FActorInstanceHandle(HitActor);
 
-		if (const UStaticMeshComponent* S = Cast<UStaticMeshComponent>(HitComp))
-		{
-			if (S->GetMaterials().Num() == 0) return;
-			OutHit.PhysMaterial = S->GetMaterial(0)->GetPhysicalMaterial();
-		}
+		OutHit.PhysMaterial = UserData->PhysMaterial;
 	}
 }
 
@@ -1706,13 +1721,13 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeRaycastRes
 		const FVector ImpactNormal = BulletHelpers::ToUnrealDirection(HitNormal);
 	
 	
+		const FBulletUserData* UserData =  HitObject->getUserPointer() ? static_cast<FBulletUserData*>(HitObject->getUserPointer()) : nullptr;
+		if (!UserData) return;
+	
 		AActor* HitActor = nullptr;
-		if (Result.hasHit() && HitObject->getUserPointer())
+		if (Result.hasHit())
 		{
-			if (const FBulletUserData* SceneComponent = static_cast<FBulletUserData*>(HitObject->getUserPointer()))
-			{
-				HitActor = SceneComponent->Component && SceneComponent->Component->GetOwner() ? SceneComponent->Component->GetOwner() : nullptr;
-			}
+			HitActor = UserData->OwnerActor;
 		}
 	
 		OutHit.bBlockingHit = Result.hasHit();
@@ -1730,13 +1745,9 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeRaycastRes
 			const FUnrealShapeDescriptor& Data = GlobalShapeDescriptorDataCache[HitActor];
 			UPrimitiveComponent* HitComp = Data.FindClosestPrimitive(HitLocation);
 			OutHit.Component = HitComp;
-			OutHit.HitObjectHandle = FActorInstanceHandle(Data.ShapeOwner.Get());
+			OutHit.HitObjectHandle = FActorInstanceHandle(HitActor);
 
-			if (const UStaticMeshComponent* S = Cast<UStaticMeshComponent>(HitComp))
-			{
-				if (S->GetMaterials().Num() == 0) return;
-				OutHit.PhysMaterial = S->GetMaterial(0)->GetPhysicalMaterial();
-			}
+			OutHit.PhysMaterial = UserData->PhysMaterial;
 		}
 		
 		OutHits.Add(OutHit);
@@ -1763,13 +1774,13 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeConvexResu
 		const FVector ImpactNormal = BulletHelpers::ToUnrealDirection(HitNormal);
 	
 	
+		const FBulletUserData* UserData =  HitObject->getUserPointer() ? static_cast<FBulletUserData*>(HitObject->getUserPointer()) : nullptr;
+		if (!UserData) return;
+	
 		AActor* HitActor = nullptr;
-		if (Result.hasHit() && HitObject->getUserPointer())
+		if (Result.hasHit())
 		{
-			if (const FBulletUserData* SceneComponent = static_cast<FBulletUserData*>(HitObject->getUserPointer()))
-			{
-				HitActor = SceneComponent->Component && SceneComponent->Component->GetOwner() ? SceneComponent->Component->GetOwner() : nullptr;
-			}
+			HitActor = UserData->OwnerActor;
 		}
 	
 		OutHit.bBlockingHit = Result.hasHit();
@@ -1787,13 +1798,8 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeConvexResu
 			const FUnrealShapeDescriptor& Data = GlobalShapeDescriptorDataCache[HitActor];
 			UPrimitiveComponent* HitComp = Data.FindClosestPrimitive(HitLocation);
 			OutHit.Component = HitComp;
-			OutHit.HitObjectHandle = FActorInstanceHandle(Data.ShapeOwner.Get());
-
-			if (const UStaticMeshComponent* S = Cast<UStaticMeshComponent>(HitComp))
-			{
-				if (S->GetMaterials().Num() == 0) return;
-				OutHit.PhysMaterial = S->GetMaterial(0)->GetPhysicalMaterial();
-			}
+			OutHit.HitObjectHandle = FActorInstanceHandle(HitActor);
+			OutHit.PhysMaterial = UserData->PhysMaterial;
 		}
 		
 		OutHits.Add(OutHit);

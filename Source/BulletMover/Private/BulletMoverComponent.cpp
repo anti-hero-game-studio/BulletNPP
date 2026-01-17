@@ -633,6 +633,12 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 	// Send mover info to the Chaos Visual Debugger (this will do nothing if CVD is not recording, or the mover info data channel not enabled)
 	//UE::BulletMoverUtils::FBulletMoverCVDRuntimeTrace::TraceMoverData(this, &SimInput.InputCmd, &SimInput.SyncState);
 
+	bool bIsSimProxy = false;
+	if (GetOwnerRole() == ROLE_SimulatedProxy)
+	{
+		bIsSimProxy = true;
+	}
+	
 	const bool bIsResimulating = InTimeStep.BaseSimTimeMs <= CachedNewestSimTickTimeStep.BaseSimTimeMs;
 
 	FBulletMoverTimeStep MoverTimeStep(InTimeStep);
@@ -811,6 +817,8 @@ void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)
 		
 		//TODO:@GreggoryAddison::CodeCompletion || The current base a player is standing on will need to be passed in... I think.
 		FinalState.SetTransforms_WorldSpace(T.GetLocation(), T.GetRotation().Rotator(), V, A, nullptr);
+		
+		//Subsystem->ZeroActorVelocity(GetOwner());
 	}
 }
 

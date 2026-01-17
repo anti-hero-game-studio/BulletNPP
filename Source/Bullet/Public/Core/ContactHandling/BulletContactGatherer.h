@@ -214,117 +214,126 @@ public:
 		TMap<FBulletPairKey, FBulletHitEvent> BestByPair;
 		TMap<FBulletPairKey, FContactSignature> CurrSigByPair;
 
-		const int32 NumManifolds = Dispatcher->getNumManifolds();
-		for (int32 i = 0; i < NumManifolds; ++i)
 		{
-			btPersistentManifold* M = Dispatcher->getManifoldByIndexInternal(i);
-			if (!M) continue;
+			TRACE_CPUPROFILER_EVENT_SCOPE(FBulletContactGatherer::FilterManifolds);
+			const int32 NumManifolds = Dispatcher->getNumManifolds();
+			for (int32 i = 0; i < NumManifolds; ++i)
+			{
+				btPersistentManifold* M = Dispatcher->getManifoldByIndexInternal(i);
+				if (!M) continue;
 
-			const btCollisionObject* Obj0 = static_cast<const btCollisionObject*>(M->getBody0());
-			const btCollisionObject* Obj1 = static_cast<const btCollisionObject*>(M->getBody1());
-			if (!Obj0 || !Obj1) continue;
+				const btCollisionObject* Obj0 = static_cast<const btCollisionObject*>(M->getBody0());
+				const btCollisionObject* Obj1 = static_cast<const btCollisionObject*>(M->getBody1());
+				if (!Obj0 || !Obj1) continue;
 			
-			const FBulletUserData* UD0 = static_cast<const FBulletUserData*>(Obj0->getUserPointer()); 
-			const FBulletUserData* UD1 = static_cast<const FBulletUserData*>(Obj1->getUserPointer()); 
+				const FBulletUserData* UD0 = static_cast<const FBulletUserData*>(Obj0->getUserPointer()); 
+				const FBulletUserData* UD1 = static_cast<const FBulletUserData*>(Obj1->getUserPointer()); 
 
-			if (!UD0 || !UD1) continue;
+				if (!UD0 || !UD1) continue;
 			
-			UPrimitiveComponent* C0 = Cast<UPrimitiveComponent>(UD0->Component);
-			UPrimitiveComponent* C1 = Cast<UPrimitiveComponent>(UD1->Component);
-			if (!C0 || !C1) continue;
+				UPrimitiveComponent* C0 = Cast<UPrimitiveComponent>(UD0->Component);
+				UPrimitiveComponent* C1 = Cast<UPrimitiveComponent>(UD1->Component);
+				if (!C0 || !C1) continue;
 
-			// Pair key
-			const FBulletPairKey Key = FBulletPairKey::Make(Obj0, Obj1);
+				// Pair key
+				const FBulletPairKey Key = FBulletPairKey::Make(Obj0, Obj1);
 
-			// Build a stable resting-contact signature for this manifold
-			FContactSignature Sig;
-			FVector ImpactPoint, ImpactNormal;
-			float PenDepthCm = 0.f;
-			float MaxImpulse = 0.f;
+				// Build a stable resting-contact signature for this manifold
+				FContactSignature Sig;
+				FVector ImpactPoint, ImpactNormal;
+				float PenDepthCm = 0.f;
+				float MaxImpulse = 0.f;
 
-			if (!BuildCentroidSignature(M, Sig, ImpactPoint, ImpactNormal, PenDepthCm, MaxImpulse))
-			{
-				continue;
-			}
-
-			// If you still want to gate reporting by impulse (optional):
-			// For resting spam suppression, it's better NOT to gate by impulse (impulse fluctuates),
-			// but we keep your knobs: only apply impulse gate when bReportAllContacts is false.
-			if (!bReportAllContacts && MaxImpulse < MinImpulseToReport)
-			{
-				// Still allow reporting if penetration is meaningfully non-zero (common for resting).
-				// If you want strictly impulse-based, delete this block and just continue.
-				// continue;
-			}
-
-			// Keep the first manifold signature per pair (normally only one exists).
-			// If duplicates exist, you can choose the deeper one:
-			FContactSignature* ExistingSig = CurrSigByPair.Find(Key);
-			if (!ExistingSig)
-			{
-				CurrSigByPair.Add(Key, Sig);
-
-				FBulletHitEvent& E = BestByPair.FindOrAdd(Key);
-				E.SelfComp = C0;
-				E.OtherComp = C1;
-				E.ImpactPoint = ImpactPoint;
-				E.ImpactNormal = ImpactNormal;
-				E.PenetrationDepth = PenDepthCm;
-				E.AppliedImpulse = MaxImpulse;
-				E.ImpulseDir = ImpactNormal;
-			}
-			else
-			{
-				// If you encounter multiple manifolds per pair, prefer the one with deeper penetration.
-				// (We only stored PenDepth in the event; recompute comparison cheaply)
-				FBulletHitEvent& ExistingEvent = BestByPair.FindOrAdd(Key);
-				if (PenDepthCm > ExistingEvent.PenetrationDepth)
+				if (!BuildCentroidSignature(M, Sig, ImpactPoint, ImpactNormal, PenDepthCm, MaxImpulse))
 				{
-					*ExistingSig = Sig;
-					ExistingEvent.SelfComp = C0;
-					ExistingEvent.OtherComp = C1;
-					ExistingEvent.ImpactPoint = ImpactPoint;
-					ExistingEvent.ImpactNormal = ImpactNormal;
-					ExistingEvent.PenetrationDepth = PenDepthCm;
-					ExistingEvent.AppliedImpulse = MaxImpulse;
-					ExistingEvent.ImpulseDir = ImpactNormal;
+					continue;
+				}
+
+				// If you still want to gate reporting by impulse (optional):
+				// For resting spam suppression, it's better NOT to gate by impulse (impulse fluctuates),
+				// but we keep your knobs: only apply impulse gate when bReportAllContacts is false.
+				if (!bReportAllContacts && MaxImpulse < MinImpulseToReport)
+				{
+					// Still allow reporting if penetration is meaningfully non-zero (common for resting).
+					// If you want strictly impulse-based, delete this block and just continue.
+					// continue;
+				}
+
+				// Keep the first manifold signature per pair (normally only one exists).
+				// If duplicates exist, you can choose the deeper one:
+				FContactSignature* ExistingSig = CurrSigByPair.Find(Key);
+				if (!ExistingSig)
+				{
+					CurrSigByPair.Add(Key, Sig);
+
+					FBulletHitEvent& E = BestByPair.FindOrAdd(Key);
+					E.SelfComp = C0;
+					E.OtherComp = C1;
+					E.ImpactPoint = ImpactPoint;
+					E.ImpactNormal = ImpactNormal;
+					E.PenetrationDepth = PenDepthCm;
+					E.AppliedImpulse = MaxImpulse;
+					E.ImpulseDir = ImpactNormal;
+				}
+				else
+				{
+					// If you encounter multiple manifolds per pair, prefer the one with deeper penetration.
+					// (We only stored PenDepth in the event; recompute comparison cheaply)
+					FBulletHitEvent& ExistingEvent = BestByPair.FindOrAdd(Key);
+					if (PenDepthCm > ExistingEvent.PenetrationDepth)
+					{
+						*ExistingSig = Sig;
+						ExistingEvent.SelfComp = C0;
+						ExistingEvent.OtherComp = C1;
+						ExistingEvent.ImpactPoint = ImpactPoint;
+						ExistingEvent.ImpactNormal = ImpactNormal;
+						ExistingEvent.PenetrationDepth = PenDepthCm;
+						ExistingEvent.AppliedImpulse = MaxImpulse;
+						ExistingEvent.ImpulseDir = ImpactNormal;
+					}
 				}
 			}
 		}
 
 		// Diff against last frame: only emit hits when the centroid/normal meaningfully changed
-		for (auto& It : BestByPair)
 		{
-			const FBulletPairKey Key = It.Key;
-			FBulletHitEvent& Event = It.Value;
-
-			const FContactSignature* CurrSig = CurrSigByPair.Find(Key);
-			if (!CurrSig)
-				continue;
-
-			FContactSignature& PrevSig = LastSigByPair.FindOrAdd(Key);
-
-			const bool bChanged = MeaningfulChange(
-				PrevSig,
-				*CurrSig,
-				ContactPointEpsilonCm,
-				ContactNormalDotEpsilon,
-				QuantizeGridCm);
-
-			if (bChanged || bForceUpdate)
+			TRACE_CPUPROFILER_EVENT_SCOPE(FBulletContactGatherer::Diff);
+			for (auto& It : BestByPair)
 			{
-				OutEvents.Add(Event);
-				PrevSig = *CurrSig; // update cache
+				const FBulletPairKey Key = It.Key;
+				FBulletHitEvent& Event = It.Value;
+
+				const FContactSignature* CurrSig = CurrSigByPair.Find(Key);
+				if (!CurrSig)
+					continue;
+
+				FContactSignature& PrevSig = LastSigByPair.FindOrAdd(Key);
+
+				const bool bChanged = MeaningfulChange(
+					PrevSig,
+					*CurrSig,
+					ContactPointEpsilonCm,
+					ContactNormalDotEpsilon,
+					QuantizeGridCm);
+
+				if (bChanged || bForceUpdate)
+				{
+					OutEvents.Add(Event);
+					PrevSig = *CurrSig; // update cache
+				}
 			}
 		}
 
 		// Optional: clear cache for pairs that no longer exist so a future contact re-triggers.
 		// If you want "contact ended" behavior, track this separately.
-		for (auto It = LastSigByPair.CreateIterator(); It; ++It)
 		{
-			if (!CurrSigByPair.Contains(It.Key()))
+			TRACE_CPUPROFILER_EVENT_SCOPE(FBulletContactGatherer::ClearCache);
+			for (auto It = LastSigByPair.CreateIterator(); It; ++It)
 			{
-				It.RemoveCurrent();
+				if (!CurrSigByPair.Contains(It.Key()))
+				{
+					It.RemoveCurrent();
+				}
 			}
 		}
 	}

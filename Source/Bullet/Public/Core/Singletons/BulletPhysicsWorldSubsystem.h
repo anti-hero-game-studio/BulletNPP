@@ -102,6 +102,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void UpdateActorVelocity(AActor* Target, const FVector LinearVelocity, const FVector AngularVelocity);
 	
+	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
+	void ZeroActorVelocity(AActor* Target);
+	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Get All Overlapping Actors", meta=(DevelopementOnly))
 	TArray<AActor*> GetOverlappingActors(AActor* Target) const;
 	

@@ -20,10 +20,11 @@ public:
 
 	virtual void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) override
 	{
+		FColor DisplayColor = World->GetNetMode() == NM_Client ? FColor::Blue : FColor::Green; 
 		DrawDebugLine(World,
 				BulletHelpers::ToUnrealPosition(from, WorldOrigin),
 				BulletHelpers::ToUnrealPosition(to, WorldOrigin),
-				BulletHelpers::ToUnrealColor(color));
+				DisplayColor);
 	}
 
 	virtual void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance,

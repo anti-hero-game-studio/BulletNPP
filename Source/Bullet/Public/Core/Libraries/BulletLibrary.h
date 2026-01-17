@@ -38,18 +38,22 @@ public:
 	
 	static FVector ToUnrealPosition(const btVector3& V, const FVector& WorldOrigin)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToUnrealPosition);
 		return FVector(V.x(), V.y(), V.z()) * BULLET_TO_WORLD_SCALE + WorldOrigin;
 	}
 	static btVector3 ToBulletPosition(const FVector& V, const FVector& WorldOrigin)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToBulletPosition);
 		return btVector3(V.X - WorldOrigin.X, V.Y - WorldOrigin.Y, V.Z - WorldOrigin.Z) * WORLD_TO_BULLET_SCALE;
 	}
 	static btVector3 ToBulletPosition(const FVector3f& V, const FVector& WorldOrigin)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToBulletPosition);
 		return btVector3(V.X - WorldOrigin.X, V.Y - WorldOrigin.Y, V.Z - WorldOrigin.Z) * WORLD_TO_BULLET_SCALE;
 	}
 	static FVector ToUnrealDirection(const btVector3& V, bool AdjustScale = true)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToUnrealDirection);
 		if (AdjustScale)
 			return FVector(V.x(), V.y(), V.z()) * BULLET_TO_WORLD_SCALE;
 		else
@@ -57,6 +61,7 @@ public:
 	}
 	static btVector3 ToBulletDirection(const FVector& V, bool AdjustScale = true)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToUnrealDirection);
 		if (AdjustScale)
 			return btVector3(V.X, V.Y, V.Z) * WORLD_TO_BULLET_SCALE;
 		else
@@ -64,6 +69,7 @@ public:
 	}
 	static btVector3 ToBulletDirection(const FVector3f& V, bool AdjustScale = true)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToBulletDirection);
 		if (AdjustScale)
 			return btVector3(V.X, V.Y, V.Z) * WORLD_TO_BULLET_SCALE;
 		else
@@ -72,30 +78,36 @@ public:
 	
 	static FQuat ToUnrealQuat(const btQuaternion& Q)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToUnrealQuat);
 		return FQuat(Q.x(), Q.y(), Q.z(), Q.w());
 	}
 	
 	static btQuaternion ToBulletQuat(const FQuat& Q)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToBulletQuat);
 		return btQuaternion(Q.X, Q.Y, Q.Z, Q.W);
 	}
 	static btQuaternion ToBulletQuat(const FRotator& r)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToBulletQuat);
 		return ToBulletQuat(r.Quaternion());
 	}
 	static FColor ToUnrealColor(const btVector3& C)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToUnrealColor);
 		return FLinearColor(C.x(), C.y(), C.z()).ToFColor(true);
 	}
 
 	static FTransform ToUnrealTransform(const btTransform& T, const FVector& WorldOrigin)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToUnrealTransform);
 		const FQuat Rot = ToUnrealQuat(T.getRotation());
 		const FVector Pos = ToUnrealPosition(T.getOrigin(), WorldOrigin);
 		return FTransform(Rot, Pos);
 	}
 	static btTransform ToBulletTransform(const FTransform& T, const FVector& WorldOrigin)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToBulletTransform);
 		return btTransform(
 				ToBulletQuat(T.GetRotation()),
 				ToBulletPosition(T.GetLocation(), WorldOrigin));
@@ -104,12 +116,14 @@ public:
 	
 	static bool IsAnyCollisionAllowed(const btCollisionObject* A, const btCollisionObject* B)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::IsAnyCollisionAllowed);
 		if (!A || !B) return true;
 		return IsBlockingCollisionAllowed(A, B) || IsOverlappingCollisionAllowed(A, B);
 	}
 	
 	static bool IsAnyCollisionAllowed(const TEnumAsByte<ECollisionChannel>& Channel, const btCollisionObject* B)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::IsAnyCollisionAllowed);
 		if (!B) return true;
 		
 		// Your policy (example)
@@ -118,6 +132,7 @@ public:
 	
 	static bool IsBlockingCollisionAllowed(const TEnumAsByte<ECollisionChannel>& Channel, const btCollisionObject* B)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::IsBlockingCollisionAllowed);
 		if (!B) return true;
 		
 		const FBulletUserData* UB = GetUserData(B);
@@ -138,6 +153,7 @@ public:
 	
 	static bool IsBlockingCollisionAllowed(const btCollisionObject* A, const btCollisionObject* B)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::IsBlockingCollisionAllowed);
 		if (!A || !B) return false;
 
 		const FBulletUserData* UA = GetUserData(A);
@@ -174,6 +190,7 @@ public:
 	
 	static bool IsOverlappingCollisionAllowed(const btCollisionObject* A, const btCollisionObject* B)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::IsOverlappingCollisionAllowed);
 		if (!A || !B) return false;
 
 		const FBulletUserData* UA = GetUserData(A);
@@ -210,6 +227,7 @@ public:
 	
 	static bool IsOverlappingCollisionAllowed(const TEnumAsByte<ECollisionChannel>& Channel, const btCollisionObject* B)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::IsOverlappingCollisionAllowed);
 		if (!B) return true;
 		
 		const FBulletUserData* UB = GetUserData(B);
@@ -260,6 +278,7 @@ public:
 	// Helper: safely get FBulletUserData from a Bullet object
 	static FORCEINLINE const FBulletUserData* GetUserData(const btCollisionObject* Obj)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::GetUserData);
 		if (!Obj) return nullptr;
 		void* P = Obj->getUserPointer();
 		if (!P) return nullptr;

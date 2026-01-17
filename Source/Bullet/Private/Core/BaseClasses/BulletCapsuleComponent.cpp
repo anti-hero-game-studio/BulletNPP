@@ -144,8 +144,7 @@ bool UBulletCapsuleComponent::UpdateOverlapsImpl(const TOverlapArrayView* Pendin
 
 
 // Called every frame
-void UBulletCapsuleComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                             FActorComponentTickFunction* ThisTickFunction)
+void UBulletCapsuleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
