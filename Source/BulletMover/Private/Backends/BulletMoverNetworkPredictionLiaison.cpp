@@ -11,6 +11,8 @@
 #include "Misc/DataValidation.h"
 #endif
 
+#include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletMoverNetworkPredictionLiaison)
 
 
@@ -95,8 +97,20 @@ void UBulletMoverNetworkPredictionLiaisonComponent::RestoreFrame(const FBulletMo
 
 void UBulletMoverNetworkPredictionLiaisonComponent::RestorePhysicsFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
 {
-	// I believe this only needs to happen once on the first rollback frame.
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverNetworkPredictionLiaisonComponent::RestorePhysicsFrame);
 	//TODO:@GreggoryAddison::CodeCompletion || This should set the physics state of all mover bodies back to their authoritative state. Static colliders don't need to be reset
+	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+	{
+		if (!MoverComp) return;
+		const UPrimitiveComponent* P = MoverComp->GetUpdatedComponent<UPrimitiveComponent>();
+		if (!P) return;
+
+		if (const FBulletUpdatedMotionState* S = SyncState->Collection.FindDataByType<FBulletUpdatedMotionState>() )
+		{
+			Subsystem->K2_SetPhysicsState(P, S->GetTransform_WorldSpace(), S->GetVelocity_WorldSpace(), S->GetAngularVelocityDegrees_WorldSpace());
+		}
+	}
+	
 }
 
 void UBulletMoverNetworkPredictionLiaisonComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)

@@ -559,6 +559,7 @@ void UBulletNetworkPredictionWorldManager::ConfigureInstance(FBulletNetworkPredi
 			case EBulletNetworkLOD::ForwardPredict:
 				ServiceMask |= EBulletNetworkPredictionService::FixedRollback;
 				ServiceMask |= EBulletNetworkPredictionService::FixedPhysics;
+				ServiceMask |= EBulletNetworkPredictionService::FixedPhysicsRollback;
 
 				if (FBulletNetworkPredictionDriver<ModelDef>::HasSimulation())
 				{

@@ -464,23 +464,25 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 				Ptr->Tick(Step, ServiceStep);
 			}
 			
-			
 			{
-				TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::BulletPhysicsTick);
-				if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+		
 				{
-					const double FixedTimeStep = Step.StepMS * 0.001;
-					Subsystem->StepPhysics(DeltaTimeSeconds, 1, FixedTimeStep);
-				}
+					TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::BulletPhysicsTick);
+					if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+					{
+						const double FixedTimeStep = Step.StepMS * 0.001;
+						Subsystem->StepPhysics(DeltaTimeSeconds, 1, FixedTimeStep);
+					}
 				
-			}
+				}
 			
-			// TODO:@GreggoryAddison::CodeModularity || This will need to be wrapped in a boolean in order to support a Kinematic body using bullet.
-			{
-				TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::PostBulletPhysicsTick);
-				for (TUniquePtr<IBulletLocalPhysicsService>& Ptr : Services.FixedPhysics.Array)
+				// TODO:@GreggoryAddison::CodeModularity || This will need to be wrapped in a boolean in order to support a Kinematic body using bullet.
 				{
-					Ptr->Tick(Step, ServiceStep);
+					TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::PostBulletPhysicsTick);
+					for (TUniquePtr<IBulletLocalPhysicsService>& Ptr : Services.FixedPhysics.Array)
+					{
+						Ptr->Tick(Step, ServiceStep);
+					}
 				}
 			}
 			
@@ -531,7 +533,12 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 					}
 				}
 			}
+			
+			// TODO:@GreggoryAddison::CodeModularity || This is mean to be behind a bool for the cases where you are not using a physics sim. In the default case this will always be true.
+			FixedTickState.UnspentTimeMS = 0.f;
+			break;
 		}
+		
 	}
 
 	// -------------------------------------------------------------------------

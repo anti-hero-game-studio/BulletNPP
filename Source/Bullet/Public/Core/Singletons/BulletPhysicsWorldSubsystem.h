@@ -78,8 +78,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Register Dynamic Rigid Body", meta=(AutoCreateRefTerm = "Options"))
 	FUnrealShapeId RegisterBulletRigidBody(AActor* Target);
 	
-	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
-	void SetPhysicsState(int ID, FTransform Transforms, FVector Velocity, FVector AngularVelocity,FVector& Force);
+	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects", DisplayName="Set Physics State")
+	void K2_SetPhysicsState(const UPrimitiveComponent* Target, const FTransform& Transforms, const FVector& Velocity, const FVector& AngularVelocity);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void GetPhysicsState(int ID, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force);
@@ -301,6 +301,8 @@ public:
 	bool IsCollisionBodyActive(const UPrimitiveComponent* Target) const;
 	bool IsGhostBodyActive(const UPrimitiveComponent* Target) const;
 	void SetRigidBodyActiveState(const UPrimitiveComponent* Target, bool Active) const;
+	void SetPhysicsState(int ID, const FTransform& Transforms, const FVector& Velocity, const FVector& AngularVelocity) const;
+	
 	const FCollisionResponseContainer& GetCollisionResponseContainer(const UPrimitiveComponent* Target) const;
 	btCollisionObject* GetCollisionBody(const int32& Id) const;
 	btCollisionObject* GetCollisionBody(const UPrimitiveComponent* Target) const;
@@ -311,6 +313,8 @@ public:
 	static FHitResult ConstructHitResult(const FBulletHitEvent& E);
 	const TArray<FBulletHitEvent>& GetAllHitEvents() const;
 	FBulletUserData* GetUserData(const UPrimitiveComponent* Target) const;
+	
+	
 	
 	FOnModifyContacts OnModifyContacts;
 	

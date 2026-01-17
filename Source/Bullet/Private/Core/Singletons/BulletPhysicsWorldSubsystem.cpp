@@ -196,6 +196,12 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 	return Descriptor.Shapes.IsEmpty() ? FUnrealShapeId() : Descriptor.Shapes.Last().Id;
 }
 
+void UBulletPhysicsWorldSubsystem::K2_SetPhysicsState(const UPrimitiveComponent* Target, const FTransform& Transforms, const FVector& Velocity, const FVector& AngularVelocity)
+{
+	int32 Id = FindShapeId(Target);
+	SetPhysicsState(Id, Transforms, Velocity, AngularVelocity);
+}
+
 
 btCollisionShape* UBulletPhysicsWorldSubsystem::GetBoxCollisionShape(const FVector& Dimensions)
 {
@@ -963,12 +969,13 @@ btGhostObject* UBulletPhysicsWorldSubsystem::AddGhostCollider(btCollisionShape* 
 }
 
 
-void UBulletPhysicsWorldSubsystem::SetPhysicsState(const int ID, const FTransform Transforms, const FVector Velocity, const FVector AngularVelocity, FVector& Force)
+void UBulletPhysicsWorldSubsystem::SetPhysicsState(const int ID, const FTransform& Transforms, const FVector& Velocity, const FVector& AngularVelocity) const
 {
-	if (BtRigidBodies[ID]) {
-		BtRigidBodies[ID]->setWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
-		BtRigidBodies[ID]->setLinearVelocity(BulletHelpers::ToBulletPosition(Velocity, UE_WORLD_ORIGIN));
-		BtRigidBodies[ID]->setAngularVelocity(BulletHelpers::ToBulletPosition(AngularVelocity, FVector(0)));
+	if (btRigidBody* RB = GetRigidBody(ID)) 
+	{
+		RB->setWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
+		RB->setLinearVelocity(BulletHelpers::ToBulletPosition(Velocity, UE_WORLD_ORIGIN));
+		RB->setAngularVelocity(BulletHelpers::ToBulletPosition(AngularVelocity, UE_WORLD_ORIGIN));
 	}
 }
 

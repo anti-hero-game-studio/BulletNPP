@@ -455,6 +455,13 @@ void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::FinalizeFrame);
 
+	bool bIsSimProxy = false;
+	if (GetOwnerRole() == ROLE_SimulatedProxy)
+	{
+		bIsSimProxy = true;
+	}
+	
+	
 	// TODO: Revisit this location check -- it seems simplistic now that we have composable state. Consider supporting a version that allows each sync state data struct a chance to react.
 	// The component will often be in the "right place" already on FinalizeFrame, so a comparison check makes sense before setting it.
 	
@@ -806,6 +813,18 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::PostPhysicsTick);
+	bool bIsSimProxy = false;
+	if (GetOwnerRole() == ROLE_SimulatedProxy)
+	{
+		bIsSimProxy = true;
+		return;
+	}
+	
+	if (GetOwnerRole() == ROLE_Authority && !bIsSimProxy)
+	{
+		bIsSimProxy = false;
+	}
+	
 	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
 		FBulletUpdatedMotionState& FinalState = SimOutput.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
