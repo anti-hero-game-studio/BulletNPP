@@ -43,10 +43,10 @@ public class BulletMover : ModuleRules
 
 		if (IsChaosVisualDebuggerSupported(Target))
 		{
-			//PublicDependencyModuleNames.Add("BulletMoverCVDData");
+			PublicDependencyModuleNames.Add("BulletMoverCVDData");
 		}
-		//SetupModuleChaosVisualDebuggerSupport(Target);
-
+		
+		SetupModuleChaosVisualDebuggerSupport(Target);
 		SetupGameplayDebuggerSupport(Target);
 
 		//SetupModulePhysicsSupport(Target);

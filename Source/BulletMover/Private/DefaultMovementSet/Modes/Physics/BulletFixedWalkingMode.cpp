@@ -54,7 +54,7 @@ void UBulletFixedWalkingMode::GenerateMove_Implementation(const FBulletMoverTick
 	// If there's no intent from input to change orientation, use the current orientation
 	if (!CharacterInputs || CharacterInputs->OrientationIntent.IsNearlyZero())
 	{
-		IntendedOrientation_WorldSpace = StartingSyncState->GetOrientation_WorldSpace();
+		IntendedOrientation_WorldSpace = StartingSyncState->GetOrientation_WorldSpace_Quantized();
 	}
 	else
 	{
@@ -74,13 +74,18 @@ void UBulletFixedWalkingMode::GenerateMove_Implementation(const FBulletMoverTick
 	}
 	else
 	{
-		Params.MoveInputType = EBulletMoveInputType::None;
-		Params.MoveInput = FVector::ZeroVector;
+		if (MoverComp->GetOwnerRole() == ROLE_SimulatedProxy)
+		{
+			Params.MoveInputType = EBulletMoveInputType::Velocity;
+
+			const bool bMaintainInputMagnitude = true;
+			Params.MoveInput = UBulletPlanarConstraintUtils::ConstrainDirectionToPlane(MoverComp->GetPlanarConstraint(), StartingSyncState->GetVelocity_WorldSpace_Quantized().GetSafeNormal(), bMaintainInputMagnitude);
+		}
 	}
 
 	Params.OrientationIntent = IntendedOrientation_WorldSpace;
-	Params.PriorVelocity = FVector::VectorPlaneProject(StartingSyncState->GetVelocity_WorldSpace(), MovementNormal);
-	Params.PriorOrientation = StartingSyncState->GetOrientation_WorldSpace();
+	Params.PriorVelocity = FVector::VectorPlaneProject(StartingSyncState->GetVelocity_WorldSpace_Quantized(), MovementNormal);
+	Params.PriorOrientation = StartingSyncState->GetOrientation_WorldSpace_Quantized();
 	Params.GroundNormal = MovementNormal;
 	Params.TurningRate = CommonLegacySettings->TurningRate;
 	Params.TurningBoost = CommonLegacySettings->TurningBoost;
@@ -111,9 +116,6 @@ void UBulletFixedWalkingMode::SimulationTick_Implementation(const FBulletSimulat
 	{
 		return;
 	}
-	
-	UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>();
-	if (!Subsystem) return;
 
 	UBulletMoverComponent* MoverComp = GetMoverComponent();
 	const FBulletMoverTickStartData& StartState = Params.StartState;
@@ -125,7 +127,6 @@ void UBulletFixedWalkingMode::SimulationTick_Implementation(const FBulletSimulat
 	check(StartingSyncState);
 
 	FBulletUpdatedMotionState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
-	OutputSyncState = *StartingSyncState;
 	
 	FBulletMoverTargetSyncState& OutputTargetState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverTargetSyncState>();
 	OutputTargetState = *StartingTargetState;
@@ -149,7 +150,7 @@ void UBulletFixedWalkingMode::SimulationTick_Implementation(const FBulletSimulat
 	
 	OutputSyncState.MoveDirectionIntent = (ProposedMove.bHasDirIntent ? ProposedMove.DirectionIntent : FVector::ZeroVector);
 
-	const FRotator StartingOrient = StartingSyncState->GetOrientation_WorldSpace();
+	const FRotator StartingOrient = StartingSyncState->GetOrientation_WorldSpace_Quantized();
 	const FRotator TargetOrient = UBulletMovementUtils::ApplyAngularVelocityToRotator(StartingOrient, ProposedMove.AngularVelocityDegrees, DeltaSeconds);
 	const bool bIsOrientationChanging = !StartingOrient.Equals(TargetOrient);
 
@@ -168,18 +169,11 @@ void UBulletFixedWalkingMode::SimulationTick_Implementation(const FBulletSimulat
 	
 	FVector CurMoveDelta = OrigMoveDelta;
 	
-	
-	if (!CharacterInputs)
-	{
-		UE_LOG(LogBulletMover, Warning, TEXT("Bullet Physics Falling Mode requires FBulletCharacterDefaultInputs"));
-		return;
-	}
-	
 	const UBulletMoverComponent* MoverCompConst = GetMoverComponent();
 	UPrimitiveComponent* UpdatedComponent = MoverCompConst ? MoverCompConst->GetUpdatedComponent<UPrimitiveComponent>() : nullptr;
 	if (!UpdatedComponent) return;
 
-	const FVector CurrentVelocity = StartingSyncState->GetVelocity_WorldSpace();
+	const FVector CurrentVelocity = StartingSyncState->GetVelocity_WorldSpace_Quantized();
 
 	// --- 1) Planar target velocity from ProposedMove (fixes “walking stuck”) ---
 	const FVector ProposedPlanarVelocity = ProposedMove.LinearVelocity - ProposedMove.LinearVelocity.ProjectOnToNormal(UpDirection);

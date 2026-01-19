@@ -8,6 +8,42 @@
 
 #define UE_API BULLETMOVER_API
 
+namespace UE::BulletNetQuant
+{
+	template<int32 ScaleFactor>
+	FORCEINLINE float QuantizePackedFloat(float Value)
+	{
+		// PackedVector semantics: quantize to 1/ScaleFactor.
+		// Symmetric rounding for negatives.
+		return (float)FMath::RoundToInt(Value * (float)ScaleFactor) / (float)ScaleFactor;
+	}
+
+	template<int32 ScaleFactor>
+	FORCEINLINE FVector QuantizePackedVector(const FVector& V)
+	{
+		return FVector(
+			QuantizePackedFloat<ScaleFactor>(V.X),
+			QuantizePackedFloat<ScaleFactor>(V.Y),
+			QuantizePackedFloat<ScaleFactor>(V.Z));
+	}
+
+	FORCEINLINE float QuantizeAxisCompressedShort(float Degrees)
+	{
+		// Matches FRotator::SerializeCompressedShort behavior:
+		// compress to uint16 then decompress.
+		const uint16 Packed = FRotator::CompressAxisToShort(Degrees);
+		return FRotator::DecompressAxisFromShort(Packed);
+	}
+
+	FORCEINLINE FRotator QuantizeRotatorCompressedShort(const FRotator& R)
+	{
+		return FRotator(
+			QuantizeAxisCompressedShort(R.Pitch),
+			QuantizeAxisCompressedShort(R.Yaw),
+			QuantizeAxisCompressedShort(R.Roll));
+	}
+}
+
 
 
 
@@ -248,6 +284,46 @@ public:
 
 	UE_API FVector GetAngularVelocityDegrees_WorldSpace() const;
 	UE_API FVector GetAngularVelocityDegrees_BaseSpace() const;
+	
+	UE_API FVector GetLocation_WorldSpace_Quantized() const
+	{
+		const FVector LocalQ = UE::BulletNetQuant::QuantizePackedVector<100>(GetLocation_BaseSpace());
+		if (MovementBase.IsValid())
+		{
+			return FTransform(MovementBaseQuat, MovementBasePos).TransformPositionNoScale(LocalQ);
+		}
+		return LocalQ;
+	}
+
+	UE_API FVector GetVelocity_WorldSpace_Quantized() const
+	{
+		const FVector LocalQ = UE::BulletNetQuant::QuantizePackedVector<10>(GetVelocity_BaseSpace());
+		if (MovementBase.IsValid())
+		{
+			return MovementBaseQuat.RotateVector(LocalQ);
+		}
+		return LocalQ;
+	}
+
+	UE_API FVector GetAngularVelocityDegrees_WorldSpace_Quantized() const
+	{
+		const FVector LocalQ = UE::BulletNetQuant::QuantizePackedVector<10>(GetAngularVelocityDegrees_BaseSpace());
+		if (MovementBase.IsValid())
+		{
+			return MovementBaseQuat.RotateVector(LocalQ);
+		}
+		return LocalQ;
+	}
+
+	UE_API FRotator GetOrientation_WorldSpace_Quantized() const
+	{
+		const FRotator LocalQ = UE::BulletNetQuant::QuantizeRotatorCompressedShort(GetOrientation_BaseSpace());
+		if (MovementBase.IsValid())
+		{
+			return (MovementBaseQuat * FQuat(LocalQ)).Rotator();
+		}
+		return LocalQ;
+	}
 };
 
 template<>

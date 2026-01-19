@@ -229,6 +229,9 @@ bool FBulletUpdatedMotionState::ShouldReconcile(const FBulletMoverDataStructBase
 	const bool bAreInDifferentSpaces = !((MovementBase.HasSameIndexAndSerialNumber(AuthoritySyncState->MovementBase)) && (MovementBaseBoneName == AuthoritySyncState->MovementBaseBoneName));
 
 	bool bIsNearEnough = false;
+	bool bIsFastEnough = false;
+	
+	bIsFastEnough = GetVelocity_WorldSpace().Equals(AuthoritySyncState->GetVelocity_WorldSpace(), DistErrorTolerance);
 
 	if (!bAreInDifferentSpaces)
 	{
@@ -242,7 +245,21 @@ bool FBulletUpdatedMotionState::ShouldReconcile(const FBulletMoverDataStructBase
 		}
 	}
 
-	return bAreInDifferentSpaces || !bIsNearEnough;
+	if (!bIsNearEnough)
+	{
+		UE_LOG(LogBulletMover, Error, TEXT("Client And Server Locations Are Out Of Sync"))
+		UE_LOG(LogBulletMover, Error, TEXT("Client Velocity : %s"), *GetLocation_WorldSpace().ToCompactString())
+		UE_LOG(LogBulletMover, Error, TEXT("Server Velocity : %s"), *AuthoritySyncState->GetLocation_WorldSpace().ToCompactString())
+	}
+	
+	if (!bIsFastEnough)
+	{
+		UE_LOG(LogBulletMover, Error, TEXT("Client And Server Velocity Are Out Of Sync"))
+		UE_LOG(LogBulletMover, Error, TEXT("Client Velocity : %s"), *GetVelocity_WorldSpace().ToCompactString())
+		UE_LOG(LogBulletMover, Error, TEXT("Server Velocity : %s"), *AuthoritySyncState->GetVelocity_WorldSpace().ToCompactString())
+	}
+
+	return /*bAreInDifferentSpaces || */!bIsNearEnough || !bIsFastEnough;
 }
 
 
@@ -332,10 +349,10 @@ void FBulletUpdatedMotionState::SetTransforms_WorldSpace(const FVector& WorldLoc
 			UE_LOG(LogBulletMover, Warning, TEXT("Failed to set base as %s. Falling back to world space movement"), *GetNameSafe(Base->GetOwner()));
 		}
 
-		Location = WorldLocation;
-		Orientation = WorldOrient;
-		Velocity = WorldVelocity;
-		AngularVelocityDegrees = WorldAngularVelocityDegrees;
+		Location = UE::BulletNetQuant::QuantizePackedVector<100>(WorldLocation);
+		Orientation = UE::BulletNetQuant::QuantizeRotatorCompressedShort(WorldOrient);
+		Velocity = UE::BulletNetQuant::QuantizePackedVector<10>(WorldVelocity);
+		AngularVelocityDegrees = UE::BulletNetQuant::QuantizePackedVector<10>(WorldAngularVelocityDegrees);
 	}
 }
 
@@ -522,8 +539,8 @@ void FBulletMoverTargetSyncState::Interpolate(const FBulletMoverDataStructBase& 
 
 void FBulletMoverTargetSyncState::UpdateTargetVelocity(const FVector& InTargetLinearVelocity, const FVector& InTargetAngularVelocity)
 {
-	TargetAngularVelocity = InTargetAngularVelocity;
-	TargetLinearVelocity = InTargetLinearVelocity;
+	TargetAngularVelocity = UE::BulletNetQuant::QuantizePackedVector<10>(InTargetAngularVelocity);
+	TargetLinearVelocity = UE::BulletNetQuant::QuantizePackedVector<10>(InTargetLinearVelocity);
 }
 
 bool FBulletMoverTargetSyncState::IsNearlyEqual(const FBulletMoverTargetSyncState& Other) const

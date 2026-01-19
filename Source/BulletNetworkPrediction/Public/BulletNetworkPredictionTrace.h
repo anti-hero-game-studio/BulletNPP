@@ -115,7 +115,7 @@ struct FBulletNetworkPredictionInstanceConfig;
 
 #endif // UE_BNP_TRACE_ENABLED
 
-UE_TRACE_CHANNEL_EXTERN(NetworkPredictionChannel, BULLETNETWORKPREDICTION_API);
+UE_TRACE_CHANNEL_EXTERN(BulletNetworkPredictionChannel, BULLETNETWORKPREDICTION_API);
 
 class AActor;
 class UGameInstance;
@@ -179,7 +179,7 @@ public:
 			return;
 		}
 
-		if (UE_TRACE_CHANNELEXPR_IS_ENABLED(NetworkPredictionChannel))
+		if (UE_TRACE_CHANNELEXPR_IS_ENABLED(BulletNetworkPredictionChannel))
 		{
 			bnpCheckSlow(State);
 

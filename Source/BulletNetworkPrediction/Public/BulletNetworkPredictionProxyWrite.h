@@ -11,7 +11,7 @@ inline void FBulletNetworkPredictionProxy::TraceViaConfigFunc(EConfigAction Acti
 	// this allows for per-ModelDef customizations but more importantly will call State->ToString on the correct child class.
 	// consider FChildSyncState : FBaseSyncState{}; with a base driver class that calls WriteSyncState<FBaseSyncState>(...);
 #if UE_BNP_TRACE_USER_STATES_ENABLED
-	if (UE_TRACE_CHANNELEXPR_IS_ENABLED(NetworkPredictionChannel))
+	if (UE_TRACE_CHANNELEXPR_IS_ENABLED(BulletNetworkPredictionChannel))
 	{
 		ConfigFunc(this, FBulletNetworkPredictionID(), Action);
 	}

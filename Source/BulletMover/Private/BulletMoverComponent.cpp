@@ -32,6 +32,11 @@
 #include "Misc/DataValidation.h"
 #endif
 
+#if WITH_CHAOS_VISUAL_DEBUGGER
+#include "ChaosVisualDebugger/ChaosVisualDebuggerTrace.h"
+#include "ChaosVisualDebugger/BulletMoverCVDRuntimeTrace.h"
+#endif
+
 #include "Components/CapsuleComponent.h"
 #include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 #include "DefaultMovementSet/Modes/Physics/BulletPhysicsMovementMode.h"
@@ -638,13 +643,7 @@ void UBulletMoverComponent::InitializeSimulationState(FBulletMoverSyncState* Out
 void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeStep, const FBulletMoverTickStartData& SimInput, OUT FBulletMoverTickEndData& SimOutput)
 {
 	// Send mover info to the Chaos Visual Debugger (this will do nothing if CVD is not recording, or the mover info data channel not enabled)
-	//UE::BulletMoverUtils::FBulletMoverCVDRuntimeTrace::TraceMoverData(this, &SimInput.InputCmd, &SimInput.SyncState);
-
-	bool bIsSimProxy = false;
-	if (GetOwnerRole() == ROLE_SimulatedProxy)
-	{
-		bIsSimProxy = true;
-	}
+	UE::BulletMoverUtils::FBulletMoverCVDRuntimeTrace::TraceBulletMoverData(this, &SimInput.InputCmd, &SimInput.SyncState);
 	
 	const bool bIsResimulating = InTimeStep.BaseSimTimeMs <= CachedNewestSimTickTimeStep.BaseSimTimeMs;
 
@@ -813,18 +812,6 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::PostPhysicsTick);
-	bool bIsSimProxy = false;
-	if (GetOwnerRole() == ROLE_SimulatedProxy)
-	{
-		bIsSimProxy = true;
-		return;
-	}
-	
-	if (GetOwnerRole() == ROLE_Authority && !bIsSimProxy)
-	{
-		bIsSimProxy = false;
-	}
-	
 	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
 		FBulletUpdatedMotionState& FinalState = SimOutput.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
@@ -834,10 +821,13 @@ void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)
 		FVector V, A, F;
 		Subsystem->GetMotionState(Id, T, V, A, F);
 		
+		const FString MyRole = GetOwnerRole() == ROLE_Authority ? "Server" : "Client"; 
+		UE_LOG(LogBulletMover, Warning, TEXT("[MSL] NetMode = %s : Transform = %s"), *MyRole, *T.ToHumanReadableString());
+		UE_LOG(LogBulletMover, Warning, TEXT("[MSL] NetMode = %s : LinearVelocity = %s"), *MyRole, *V.ToCompactString());
+		UE_LOG(LogBulletMover, Warning, TEXT("[MSL] NetMode = %s : AngularVelocity = %s"), *MyRole, *A.ToCompactString());
+		
 		//TODO:@GreggoryAddison::CodeCompletion || The current base a player is standing on will need to be passed in... I think.
 		FinalState.SetTransforms_WorldSpace(T.GetLocation(), T.GetRotation().Rotator(), V, A, nullptr);
-		
-		//Subsystem->ZeroActorVelocity(GetOwner());
 	}
 }
 
@@ -1138,7 +1128,7 @@ void UBulletMoverComponent::SetFrameStateFromContext(const FBulletMoverSyncState
 		else
 		{
 			FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
-			UpdatedComponent->SetWorldTransform(Transform, /*bSweep*/false, nullptr, ETeleportType::TeleportPhysics);
+			UpdatedComponent->SetWorldTransform(Transform, /*bSweep*/false, nullptr, ETeleportType::None);
 			UpdatedComponent->ComponentVelocity = WorldVelocity;
 		}
 	}

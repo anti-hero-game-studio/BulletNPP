@@ -55,7 +55,7 @@ void UBulletPhysicsFallingMode::GenerateMove_Implementation(const FBulletMoverTi
 	
 	// We don't want velocity limits to take the falling velocity component into account, since it is handled 
 	//   separately by the terminal velocity of the environment.
-	const FVector StartVelocity = StartingSyncState->GetVelocity_WorldSpace();
+	const FVector StartVelocity = StartingSyncState->GetVelocity_WorldSpace_Quantized();
 	const FVector StartHorizontalVelocity =  FVector::VectorPlaneProject(StartVelocity, UpDirection);
 
 	FBulletFreeMoveParams Params;
@@ -79,7 +79,7 @@ void UBulletPhysicsFallingMode::GenerateMove_Implementation(const FBulletMoverTi
 	// If there's no intent from input to change orientation, use the current orientation
 	if (!CharacterInputs || CharacterInputs->OrientationIntent.IsNearlyZero())
 	{
-		IntendedOrientation_WorldSpace = StartingSyncState->GetOrientation_WorldSpace();
+		IntendedOrientation_WorldSpace = StartingSyncState->GetOrientation_WorldSpace_Quantized();
 	}
 	else
 	{
@@ -90,7 +90,7 @@ void UBulletPhysicsFallingMode::GenerateMove_Implementation(const FBulletMoverTi
 	
 	Params.OrientationIntent = IntendedOrientation_WorldSpace;
 	Params.PriorVelocity = StartHorizontalVelocity;
-	Params.PriorOrientation = StartingSyncState->GetOrientation_WorldSpace();
+	Params.PriorOrientation = StartingSyncState->GetOrientation_WorldSpace_Quantized();
 	Params.DeltaSeconds = DeltaSeconds;
 	Params.TurningRate = CommonLegacySettings->TurningRate;
 	Params.TurningBoost = CommonLegacySettings->TurningBoost;
@@ -192,7 +192,7 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 		// We are grounded and need to switch movement modes
 		OutputState.MovementEndState.RemainingMs = 0.0f;
 		OutputState.MovementEndState.NextModeName = DefaultModeNames::Walking;
-		OutputSyncState.UpdateTargetVelocity(StartingSyncState->GetVelocity_WorldSpace(), StartingSyncState->GetAngularVelocityDegrees_WorldSpace());
+		OutputSyncState.UpdateTargetVelocity(StartingSyncState->GetVelocity_WorldSpace_Quantized(), StartingSyncState->GetAngularVelocityDegrees_WorldSpace_Quantized());
 		return;
 	}
 
@@ -203,9 +203,9 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 	if (!Subsystem) return;
 	
 	// The physics simulation applies Z-only gravity acceleration via physics volumes, so we need to account for it here 
-	const FVector TargetVel = ProposedMove.LinearVelocity - Subsystem->GetGravity(UpdatedComponent) * FVector::UpVector;
-	const FVector DeltaLinearVelocity = (TargetVel - StartingSyncState->GetVelocity_WorldSpace()).GetClampedToMaxSize(TerminalVerticalSpeed) * DeltaSeconds;
-	const FVector DeltaAngularVelocity = (ProposedMove.AngularVelocityDegrees - StartingSyncState->GetAngularVelocityDegrees_WorldSpace()) * DeltaSeconds;
+	const FVector TargetVel = ProposedMove.LinearVelocity - MoverComponent->GetGravityAcceleration() * FVector::UpVector;
+	const FVector DeltaLinearVelocity = (TargetVel - StartingSyncState->GetVelocity_WorldSpace_Quantized()).GetClampedToMaxSize(TerminalVerticalSpeed) * DeltaSeconds;
+	const FVector DeltaAngularVelocity = (ProposedMove.AngularVelocityDegrees - StartingSyncState->GetAngularVelocityDegrees_WorldSpace_Quantized()) * DeltaSeconds;
 
 	OutputState.MovementEndState.RemainingMs = 0.0f;
 	OutputState.MovementEndState.NextModeName = Params.StartState.SyncState.MovementMode;

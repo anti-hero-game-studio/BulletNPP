@@ -859,7 +859,8 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, c
 	const btRigidBody::btRigidBodyConstructionInfo RBInfo(Options.Mass, MotionState, CollisionShape, Inertia);
 	btRigidBody* Body = new btRigidBody(RBInfo);
 	Body->setWorldTransform(BulletHelpers::ToBulletTransform(FinalTransform, UE_WORLD_ORIGIN));
-	
+	Body->setGravity(btVector3(0, 0, 0));
+	MotionState->CacheOwner(Body);
 	if (Options.bKeepShapeVertical)
 	{
 		Body->setAngularFactor(btVector3(0, 0, 1));
@@ -974,8 +975,18 @@ void UBulletPhysicsWorldSubsystem::SetPhysicsState(const int ID, const FTransfor
 	if (btRigidBody* RB = GetRigidBody(ID)) 
 	{
 		RB->setWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
+		/*if (RB->getMotionState())
+		{
+			RB->getMotionState()->setWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
+		}*/
+		RB->clearForces();
 		RB->setLinearVelocity(BulletHelpers::ToBulletPosition(Velocity, UE_WORLD_ORIGIN));
 		RB->setAngularVelocity(BulletHelpers::ToBulletPosition(AngularVelocity, UE_WORLD_ORIGIN));
+		/*RB->setInterpolationWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
+		RB->setInterpolationLinearVelocity(BulletHelpers::ToBulletPosition(Velocity, UE_WORLD_ORIGIN));
+		RB->setInterpolationAngularVelocity(BulletHelpers::ToBulletPosition(AngularVelocity, UE_WORLD_ORIGIN));*/
+		
+		BtWorld->updateSingleAabb(RB);
 	}
 }
 
@@ -1055,7 +1066,7 @@ void UBulletPhysicsWorldSubsystem::StepPhysics(const float DeltaSeconds, const i
 		OnPrePhysicsStep.Broadcast(FixedTimeStep);
 	}
 	TRACE_CPUPROFILER_EVENT_SCOPE(StepPhysics);
-	BtWorld->stepSimulation(DeltaSeconds,MaxSubSteps,FixedTimeStep);
+	BtWorld->stepSimulation(FixedTimeStep,MaxSubSteps,FixedTimeStep);
 
 #if WITH_EDITOR
 	if (DrawDebugShapes == 1) 

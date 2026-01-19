@@ -38,6 +38,22 @@
 			"Name": "BulletEditor",
 			"Type": "Editor",
 			"LoadingPhase": "PostEngineInit"
+		},
+		{
+			"Name": "BulletMoverCVDData",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"TargetConfigurationDenyList": [ "Shipping" ]
+		},
+		{
+			"Name": "BulletMoverEditor",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "BulletMoverCVDEditor",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "PreDefault"
 		}
 	],
 	"Plugins": [

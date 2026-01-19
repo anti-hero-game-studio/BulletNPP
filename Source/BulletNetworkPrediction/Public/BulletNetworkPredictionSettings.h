@@ -133,7 +133,7 @@ struct FBulletNetworkPredictionDevHUD
 };
 
 
-UCLASS(config=NetworkPrediction, defaultconfig, meta=(DisplayName="Network Prediction"))
+UCLASS(config=NetworkPrediction, defaultconfig, meta=(DisplayName="Bullet Network Prediction"))
 class UBulletNetworkPredictionSettingsObject : public UObject
 {
 	GENERATED_BODY()

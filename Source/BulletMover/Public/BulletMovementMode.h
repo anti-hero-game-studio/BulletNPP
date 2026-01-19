@@ -42,6 +42,7 @@ enum class EBulletMoverFrictionOverrideMode : uint8
 };
 
 
+
 /**
  * Base class for all movement modes, exposing simulation update methods for both C++ and blueprint extension
  */

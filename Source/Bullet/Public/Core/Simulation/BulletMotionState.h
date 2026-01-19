@@ -20,6 +20,7 @@ protected:
 		btTransform CenterOfMassTransform;
 		FTransform FinalTransform;
 		FTransform BaseVisualComponentTransform;
+		const btRigidBody* RigidBody = nullptr;
 
 
 	public:
@@ -30,7 +31,6 @@ protected:
 
 		FBulletMotionState(const AActor* ParentActor, const FVector& WorldCentre, const btTransform& CenterOfMassOffset = btTransform::getIdentity())
 		{
-			
 			const IBulletActorInterface* I = Cast<IBulletActorInterface>(ParentActor);
 			if (ParentActor->Implements<UBulletActorInterface>())
 			{
@@ -57,22 +57,24 @@ protected:
 			}
 
 		}
+	
+		void CacheOwner(const btRigidBody* OwnerBody)
+		{
+			RigidBody = OwnerBody;
+		}
 
 		///synchronizes world transform from physics to UE
 		void setWorldTransform(const btTransform& CenterOfMassWorldTrans) override
 		{// send this to actor
-			QUICK_SCOPE_CYCLE_COUNTER(STAT_BNP_TICK_FIXED);
-			TRACE_CPUPROFILER_EVENT_SCOPE(BulletMotionState::SetUpdatedComponentTransform);
 			if (UpdatedComponent.IsValid(false))
 			{
-				FinalTransform = BulletHelpers::ToUnrealTransform(CenterOfMassWorldTrans * CenterOfMassTransform, WorldOrigin);
+				FinalTransform = BulletHelpers::ToUnrealTransform(RigidBody->getWorldTransform(), WorldOrigin);
 				FinalTransform.SetScale3D(UpdatedComponent->GetComponentScale());
 
 				if (!UpdatedComponent.Get()->GetComponentTransform().Equals(FinalTransform))
 				{
 					UpdatedComponent->SetWorldTransform(FinalTransform);
 				}
-				
 				
 			}
 		}

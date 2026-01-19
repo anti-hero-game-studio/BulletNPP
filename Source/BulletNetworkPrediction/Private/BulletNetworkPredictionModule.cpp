@@ -73,9 +73,9 @@ void FBulletNetworkPredictionModule::StartupModule()
 	ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings");
 	if (SettingsModule != nullptr)
 	{
-		SettingsModule->RegisterSettings("Project", "Project", "Network Prediction",
-			LOCTEXT("BulletNetworkPredictionSettingsName", "Network Prediction"),
-			LOCTEXT("BulletNetworkPredictionSettingsDescription", "Settings for the Network Prediction runtime module."),
+		SettingsModule->RegisterSettings("Project", "Project", "Bullet Network Prediction",
+			LOCTEXT("BulletNetworkPredictionSettingsName", "Bullet Network Prediction"),
+			LOCTEXT("BulletNetworkPredictionSettingsDescription", "Settings for the Bullet Network Prediction runtime module."),
 			GetMutableDefault<UBulletNetworkPredictionSettingsObject>()
 		);
 	}
@@ -102,7 +102,7 @@ void FBulletNetworkPredictionModule::ShutdownModule()
 
 	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
 	{
-		SettingsModule->UnregisterSettings("Project", "Project", "Network Prediction");
+		SettingsModule->UnregisterSettings("Project", "Project", "Bullet Network Prediction");
 	}
 #endif
 }

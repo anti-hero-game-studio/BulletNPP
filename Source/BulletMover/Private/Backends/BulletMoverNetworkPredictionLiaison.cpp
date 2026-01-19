@@ -98,6 +98,38 @@ void UBulletMoverNetworkPredictionLiaisonComponent::RestoreFrame(const FBulletMo
 void UBulletMoverNetworkPredictionLiaisonComponent::RestorePhysicsFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverNetworkPredictionLiaisonComponent::RestorePhysicsFrame);
+	int32 NewBaseSimTimeMs = 0;
+	int32 NextFrameNum = 0;
+
+	switch (UBulletNetworkPredictionWorldManager::ActiveInstance->PreferredDefaultTickingPolicy())
+	{
+	default:	// fall through
+	case EBulletNetworkPredictionTickingPolicy::Fixed:
+		{
+			const FBulletFixedTickState& FixedTickState = UBulletNetworkPredictionWorldManager::ActiveInstance->GetFixedTickState();
+			FBulletNetSimTimeStep TimeStep = FixedTickState.GetNextTimeStep();
+			NewBaseSimTimeMs = TimeStep.TotalSimulationTime;
+			NextFrameNum = TimeStep.Frame;
+		}
+		break; 
+
+	case EBulletNetworkPredictionTickingPolicy::Independent:
+		{
+			const FBulletVariableTickState& VariableTickState = UBulletNetworkPredictionWorldManager::ActiveInstance->GetVariableTickState();
+			const FBulletNetSimTimeStep NextVariableTimeStep = VariableTickState.GetNextTimeStep(VariableTickState.Frames[VariableTickState.ConfirmedFrame]);
+			NewBaseSimTimeMs = NextVariableTimeStep.TotalSimulationTime;
+			NextFrameNum = NextVariableTimeStep.Frame;
+
+		}
+		break;
+	}
+
+	FBulletMoverTimeStep MoverTimeStep;
+
+	MoverTimeStep.ServerFrame = NextFrameNum;
+	MoverTimeStep.BaseSimTimeMs = NewBaseSimTimeMs;
+	MoverTimeStep.StepMs = 0;
+	
 	//TODO:@GreggoryAddison::CodeCompletion || This should set the physics state of all mover bodies back to their authoritative state. Static colliders don't need to be reset
 	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
@@ -105,7 +137,9 @@ void UBulletMoverNetworkPredictionLiaisonComponent::RestorePhysicsFrame(const FB
 		const UPrimitiveComponent* P = MoverComp->GetUpdatedComponent<UPrimitiveComponent>();
 		if (!P) return;
 
-		if (const FBulletUpdatedMotionState* S = SyncState->Collection.FindDataByType<FBulletUpdatedMotionState>() )
+		const FBulletUpdatedMotionState* S = SyncState->Collection.FindDataByType<FBulletUpdatedMotionState>(); 
+		const FBulletMoverTargetSyncState* T = SyncState->Collection.FindDataByType<FBulletMoverTargetSyncState>(); 
+		if (S && T)
 		{
 			Subsystem->K2_SetPhysicsState(P, S->GetTransform_WorldSpace(), S->GetVelocity_WorldSpace(), S->GetAngularVelocityDegrees_WorldSpace());
 		}
