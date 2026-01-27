@@ -97,7 +97,7 @@ FUnrealShapeId UBulletPhysicsWorldSubsystem::RegisterBulletRigidBody(AActor* Tar
 	FUnrealShapeDescriptor Descriptor = GlobalShapeDescriptorDataCache.Contains(Target) ? GlobalShapeDescriptorDataCache[Target] : FUnrealShapeDescriptor();
 	Descriptor.ShapeOwner = Target;
 	
-	ExtractPhysicsGeometry(Target,[Target, this, &Descriptor](btCollisionShape* Shape, const FTransform& RelTransform, const FBulletShapeOptions& Options)
+	ExtractPhysicsGeometry(Target,[Target, this, &Descriptor](btCollisionShape* Shape, const FTransform& RelTransform, const FBulletRigidBodySettings& Options)
 	{
 		// Every sub-collider in the actor is passed to this callback function
 		// We're baking this in world space, so apply actor transform to relative
@@ -390,7 +390,7 @@ btCollisionShape* UBulletPhysicsWorldSubsystem::GetConvexHullCollisionShape(UBod
 	auto C = new btConvexHullShape();
 	for (auto&& P : Elem.VertexData)
 	{
-		C->addPoint(BulletHelpers::ToBulletPosition(P, FVector::ZeroVector));
+		C->addPoint(BulletHelpers::ToBulletPosition(P * Scale, FVector::ZeroVector));
 	}
 	// Very important! Otherwise there's a gap between 
 	C->setMargin(0);
@@ -423,7 +423,7 @@ const UBulletPhysicsWorldSubsystem::CachedDynamicShapeData& UBulletPhysicsWorldS
 	TArray<FTransform, TInlineAllocator<20>> ShapeRelXforms;
 	FUnrealShapeDescriptor Descriptor;
 	ExtractPhysicsGeometry(Actor,
-			[&Shapes, &ShapeRelXforms](btCollisionShape* Shape, const FTransform& RelTransform,  const FBulletShapeOptions& Options)
+			[&Shapes, &ShapeRelXforms](btCollisionShape* Shape, const FTransform& RelTransform,  const FBulletRigidBodySettings& Options)
 			{
 				Shapes.Add(Shape);
 				ShapeRelXforms.Add(RelTransform);
@@ -851,7 +851,7 @@ void UBulletPhysicsWorldSubsystem::BroadcastComponentHit(const FBulletHitEvent& 
 }
 
 
-btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape,  const FBulletShapeOptions& Options)
+btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape,  const FBulletRigidBodySettings& Options)
 {
 	btVector3 Inertia;
 	CollisionShape->calculateLocalInertia(Options.Mass, Inertia);
@@ -893,7 +893,7 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, c
 	return Body;
 }
 
-btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& PhysicsAssetTransform, btCollisionShape* CollisionShape, const FBulletShapeOptions& Options)
+btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& PhysicsAssetTransform, btCollisionShape* CollisionShape, const FBulletRigidBodySettings& Options)
 {
 	checkf(Skel!=nullptr, TEXT("Got null skeletal mesh"));
 	btVector3 Inertia(0,0,0);
@@ -923,7 +923,7 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(USkeletalMeshCom
 	return Body;
 }
 
-btCollisionObject* UBulletPhysicsWorldSubsystem::AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletShapeOptions& Options)
+btCollisionObject* UBulletPhysicsWorldSubsystem::AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletRigidBodySettings& Options)
 {
 	if (!BtWorld){
 		UE_LOG(LogTemp, Warning, TEXT("UBulletPhysicsWorldSubsystem::AddStaticCollision: BtWorld is empty"));
@@ -948,7 +948,7 @@ btCollisionObject* UBulletPhysicsWorldSubsystem::AddStaticCollider(btCollisionSh
 	return Obj;
 }
 
-btGhostObject* UBulletPhysicsWorldSubsystem::AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletShapeOptions& Options)
+btGhostObject* UBulletPhysicsWorldSubsystem::AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletRigidBodySettings& Options)
 {
 	btGhostObject* Ghost = new btGhostObject();
 	
@@ -1155,7 +1155,7 @@ void UBulletPhysicsWorldSubsystem::UpdateActorVelocity(AActor* Target, const FVe
 	btCollisionObject* C = GetBulletWorld()->getCollisionObjectArray()[Id];
 	btRigidBody* Rb = btRigidBody::upcast(C);
 	if (!Rb) return;
-	Rb->applyCentralForce(BulletHelpers::ToBulletDirection(LinearVelocity));
+	Rb->setLinearVelocity(BulletHelpers::ToBulletDirection(LinearVelocity));
 	Rb->setAngularVelocity(BulletHelpers::ToBulletDirection(AngularVelocity));
 }
 
@@ -1886,7 +1886,7 @@ void UBulletPhysicsWorldSubsystem::ExtractPhysicsGeometry(const AActor* Actor, P
 		IBulletPrimitiveComponentInterface* I = Cast<IBulletPrimitiveComponentInterface>(Comp);
 		if (!I) continue;
 
-		const FBulletShapeOptions& ShapeOptions = I->GetShapeOptions();
+		const FBulletRigidBodySettings& ShapeOptions = I->GetShapeOptions();
 		if (!ShapeOptions.bGenerateCollisionEventsInBullet && !ShapeOptions.bGenerateOverlapEventsInBullet)
 		{
 			continue;

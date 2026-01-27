@@ -209,7 +209,7 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 
 	OutputState.MovementEndState.RemainingMs = 0.0f;
 	OutputState.MovementEndState.NextModeName = Params.StartState.SyncState.MovementMode;
-	OutputSyncState.UpdateTargetVelocity(DeltaLinearVelocity, DeltaAngularVelocity);
+	OutputSyncState.UpdateTargetVelocity(ProposedMove.LinearVelocity, ProposedMove.AngularVelocityDegrees);
 }
 
 

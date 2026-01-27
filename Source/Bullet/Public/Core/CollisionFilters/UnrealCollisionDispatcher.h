@@ -30,7 +30,7 @@ public:
 	
 		if (!body0 || !body1) return Super;
 
-		const bool Result = BulletHelpers::IsBlockingCollisionAllowed(body0, body1);
+		const bool Result = BulletHelpers::IsAnyCollisionAllowed(body0, body1);
 		
 		return Result;
 	}

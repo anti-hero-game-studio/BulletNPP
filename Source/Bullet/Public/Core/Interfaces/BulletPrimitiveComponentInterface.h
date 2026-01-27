@@ -24,9 +24,9 @@ class BULLET_API IBulletPrimitiveComponentInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	
-	virtual const FBulletShapeOptions& GetShapeOptions() const = 0;
+	virtual const FBulletRigidBodySettings& GetShapeOptions() const = 0;
 	
-	virtual FBulletShapeOptions& GetShapeOptions() = 0;
+	virtual FBulletRigidBodySettings& GetShapeOptions() = 0;
 	
 	virtual const FCollisionResponseContainer& GetDefaultResponseContainer() const = 0;
 	//virtual ECollisionChannel GetDefaultCollisionChannel() const = 0;

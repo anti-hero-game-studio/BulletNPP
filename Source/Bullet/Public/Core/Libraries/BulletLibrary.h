@@ -59,6 +59,12 @@ public:
 		else
 			return FVector(V.x(), V.y(), V.z());
 	}
+	
+	static FVector ToUnrealNormal(const btVector3& V)
+	{
+		return ToUnrealDirection(V).GetSafeNormal();
+	}
+	
 	static btVector3 ToBulletDirection(const FVector& V, bool AdjustScale = true)
 	{
 		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToUnrealDirection);

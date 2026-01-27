@@ -202,11 +202,11 @@ enum class EBulletShapeType : uint8
 
 
 USTRUCT(BlueprintType)
-struct FBulletShapeOptions
+struct FBulletRigidBodySettings
 {
 	GENERATED_BODY()
 	
-	FBulletShapeOptions()
+	FBulletRigidBodySettings()
 	{
 		
 	}

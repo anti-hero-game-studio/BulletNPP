@@ -241,19 +241,19 @@ public:
 
 	btCollisionShape* GetConvexHullCollisionShape(UBodySetup* BodySetup, int ConvexIndex, const FVector& Scale);
 
-	btRigidBody* AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, const FBulletShapeOptions& Options);
+	btRigidBody* AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, const FBulletRigidBodySettings& Options);
 
-	btRigidBody* AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& localTransform, btCollisionShape* CollisionShape, const FBulletShapeOptions& Options);
+	btRigidBody* AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& localTransform, btCollisionShape* CollisionShape, const FBulletRigidBodySettings& Options);
 	
-	btCollisionObject* AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletShapeOptions& Options);
+	btCollisionObject* AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletRigidBodySettings& Options);
 	
-	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletShapeOptions& Options);
+	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletRigidBodySettings& Options);
 	
 	btCollisionObject* GetStaticObject(int ID) const;
 	
 	
 private:
-	typedef const std::function<void(btCollisionShape* /*SingleShape*/, const FTransform& /*RelativeXform*/, const FBulletShapeOptions& /*ShapeOptions*/)>& PhysicsGeometryCallback;
+	typedef const std::function<void(btCollisionShape* /*SingleShape*/, const FTransform& /*RelativeXform*/, const FBulletRigidBodySettings& /*ShapeOptions*/)>& PhysicsGeometryCallback;
 
 	void ExtractPhysicsGeometry(const AActor* Actor, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
 	
