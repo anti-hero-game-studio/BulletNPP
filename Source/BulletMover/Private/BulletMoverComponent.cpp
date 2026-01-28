@@ -464,9 +464,9 @@ void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState
 	if (const FBulletUpdatedMotionState* MoverState = SyncState->Collection.FindDataByType<FBulletUpdatedMotionState>())
 	{
 		const FRotator& ComponentRot =  UpdatedComponent->GetComponentQuat().Rotator();
-		const FRotator& StateRot = MoverState->GetOrientation_WorldSpace();
+		const FRotator& StateRot = MoverState->GetOrientation_WorldSpace_Quantized();
 		const FVector& ComponentLoc = UpdatedComponent->GetComponentLocation();	
-		const FVector& StateLoc = MoverState->GetLocation_WorldSpace();
+		const FVector& StateLoc = MoverState->GetLocation_WorldSpace_Quantized();
 
 		if ((ComponentLoc.Equals(StateLoc) == false ||
 			 ComponentRot.Equals(StateRot, ROTATOR_TOLERANCE) == false))
@@ -642,7 +642,10 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::SimulationTick);
 	// Send mover info to the Chaos Visual Debugger (this will do nothing if CVD is not recording, or the mover info data channel not enabled)
-	UE::BulletMoverUtils::FBulletMoverCVDRuntimeTrace::TraceBulletMoverData(this, &SimInput.InputCmd, &SimInput.SyncState);
+	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::TraceBulletMoverData);
+		UE::BulletMoverUtils::FBulletMoverCVDRuntimeTrace::TraceBulletMoverData(this, &SimInput.InputCmd, &SimInput.SyncState);
+	}
 	
 	const bool bIsResimulating = InTimeStep.BaseSimTimeMs <= CachedNewestSimTickTimeStep.BaseSimTimeMs;
 
@@ -1118,7 +1121,7 @@ void UBulletMoverComponent::SetFrameStateFromContext(const FBulletMoverSyncState
 		// The state's properties are usually worldspace already, but may need to be adjusted to match the current movement base
 		const FVector WorldLocation = MoverState->GetLocation_WorldSpace_Quantized();
 		const FRotator WorldOrientation = MoverState->GetOrientation_WorldSpace_Quantized();
-		const FVector WorldVelocity = MoverState->GetVelocity_WorldSpace();
+		const FVector WorldVelocity = MoverState->GetVelocity_WorldSpace_Quantized();
 		
 		FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
 		
@@ -1169,7 +1172,7 @@ void UBulletMoverComponent::SetFrameStateFromContextFromNestedChild(const FBulle
 		// The state's properties are usually worldspace already, but may need to be adjusted to match the current movement base
 		const FVector WorldLocation = MoverState->GetLocation_WorldSpace_Quantized();
 		const FRotator WorldOrientation = MoverState->GetOrientation_WorldSpace_Quantized();
-		const FVector WorldVelocity = MoverState->GetVelocity_WorldSpace();
+		const FVector WorldVelocity = MoverState->GetVelocity_WorldSpace_Quantized();
 		
 		FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
 		

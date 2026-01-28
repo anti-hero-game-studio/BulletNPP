@@ -442,25 +442,28 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 			const bool bIsServer = GetWorld()->GetNetMode() == NM_ListenServer || GetWorld()->GetNetMode() == NM_DedicatedServer;
 			const float InterpTimeMs = bIsServer ? FixedTickState.GetTotalSimTimeMS() : FixedTickState.Interpolation.InterpolatedTimeMS;
 			UE_BNP_TRACE_PUSH_INPUT_FRAME(ServerInputFrame);
-			if (Services.FixedInputRemote.Array.Num() > 0)
 			{
-				for (UBulletNetworkPredictionPlayerControllerComponent*& InputHandler : RPCHandlers)
+				TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::MoverComponentProduceInput);
+				if (Services.FixedInputRemote.Array.Num() > 0)
 				{
-					//ToDo : This Is Hard Coded 32 Needs to fix it
-					if (IsValid(InputHandler))
+					for (UBulletNetworkPredictionPlayerControllerComponent*& InputHandler : RPCHandlers)
 					{
-						InputHandler->AdvanceLastConsumedFrame(32);
+						//ToDo : This Is Hard Coded 32 Needs to fix it
+						if (IsValid(InputHandler))
+						{
+							InputHandler->AdvanceLastConsumedFrame(32);
+						}
+					}
+
+					for (TUniquePtr<IBulletInputService>& Ptr : Services.FixedInputRemote.Array)
+					{
+						Ptr->ProduceInput(FixedTickState.FixedStepMS,InterpTimeMs);
 					}
 				}
-
-				for (TUniquePtr<IBulletInputService>& Ptr : Services.FixedInputRemote.Array)
+				for (TUniquePtr<IBulletInputService>& Ptr : Services.FixedInputLocal.Array)
 				{
 					Ptr->ProduceInput(FixedTickState.FixedStepMS,InterpTimeMs);
 				}
-			}
-			for (TUniquePtr<IBulletInputService>& Ptr : Services.FixedInputLocal.Array)
-			{
-				Ptr->ProduceInput(FixedTickState.FixedStepMS,InterpTimeMs);
 			}
 
 			UE_BNP_TRACE_PUSH_TICK(Step.TotalSimulationTime, FixedTickState.FixedStepMS, Step.Frame);
@@ -470,9 +473,12 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 			// So we want their seed state/cached pending frame to be set to the next pending frame, not this one.
 			FixedTickState.PendingFrame++;
 
-			for (TUniquePtr<IBulletLocalTickService>& Ptr : Services.FixedTick.Array)
 			{
-				Ptr->Tick(Step, ServiceStep);
+				TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::MoverComponentTick);
+				for (TUniquePtr<IBulletLocalTickService>& Ptr : Services.FixedTick.Array)
+				{
+					Ptr->Tick(Step, ServiceStep);
+				}
 			}
 			
 			{

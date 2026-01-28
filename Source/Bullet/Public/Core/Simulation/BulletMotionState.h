@@ -66,7 +66,7 @@ protected:
 		///synchronizes world transform from physics to UE
 		void setWorldTransform(const btTransform& CenterOfMassWorldTrans) override
 		{// send this to actor
-			if (UpdatedComponent.IsValid(false))
+			/*if (UpdatedComponent.IsValid(false))
 			{
 				FinalTransform = BulletHelpers::ToUnrealTransform(RigidBody->getWorldTransform(), WorldOrigin);
 				FinalTransform.SetScale3D(UpdatedComponent->GetComponentScale());
@@ -76,7 +76,7 @@ protected:
 					UpdatedComponent->SetWorldTransform(FinalTransform);
 				}
 				
-			}
+			}*/
 		}
 	
 		FTransform GetFinalTransform() const
