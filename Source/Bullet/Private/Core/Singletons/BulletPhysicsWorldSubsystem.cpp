@@ -19,10 +19,17 @@
 #include "GameFramework/PhysicsVolume.h"
 
 int32 DrawDebugShapes = 0;
-static FAutoConsoleVariableRef CVarDisableDataCopyInPlace(
-	TEXT("b.debug.draw"),
+static FAutoConsoleVariableRef CVarDrawDebugShapes(
+	TEXT("b.debug.shapes"),
 	DrawDebugShapes,
 	TEXT("Show the bullet collision shapes according to the bullet world view"),
+	ECVF_Default);
+
+float DrawDebugTraces = 0;
+static FAutoConsoleVariableRef CVarDrawDebugTraces(
+	TEXT("b.debug.traces"),
+	DrawDebugTraces,
+	TEXT("enter the time you want traces from the bullet physics scene to show up in the viewport"),
 	ECVF_Default);
 
 const FVector UE_WORLD_ORIGIN = FVector(0);
@@ -1203,6 +1210,32 @@ void UBulletPhysicsWorldSubsystem::StopDebugDrawer()
 	delete BtDebugDraw;
 }
 
+void UBulletPhysicsWorldSubsystem::ShowDebugShapes(const FCollisionShape& Shape, const FVector& Start, const FVector& End, const FQuat& Rotation) const
+{
+	if (DrawDebugTraces > 0)
+	{
+		DrawDebugLine(GetWorld(), Start, End, FColor::Yellow, false, DrawDebugTraces);
+		
+		if (Shape.IsBox())
+		{
+			DrawDebugBox(GetWorld(), Start, Shape.GetBox(), Rotation, FColor::Magenta, false, DrawDebugTraces);
+			DrawDebugBox(GetWorld(), End, Shape.GetBox(), Rotation, FColor::Green, false, DrawDebugTraces);
+		}
+		else if (Shape.IsSphere())
+		{
+			DrawDebugSphere(GetWorld(), Start, Shape.GetCapsuleRadius(), 12, FColor::Magenta, false, DrawDebugTraces);
+			DrawDebugSphere(GetWorld(), End, Shape.GetCapsuleRadius(), 12, FColor::Magenta, false, DrawDebugTraces);
+			
+		}
+		else if (Shape.IsCapsule())
+		{
+			DrawDebugCapsule(GetWorld(), Start, Shape.GetCapsuleHalfHeight(), Shape.GetCapsuleRadius(), Rotation, FColor::Magenta, false, DrawDebugTraces);
+			DrawDebugCapsule(GetWorld(), End, Shape.GetCapsuleHalfHeight(), Shape.GetCapsuleRadius(), Rotation, FColor::Green, false, DrawDebugTraces);
+		}
+	}
+}
+
+
 FHitResult UBulletPhysicsWorldSubsystem::LineTraceSingleByChannel(const FVector Start, const FVector End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, int32& HitBodyId)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::LineTraceSingleByChannel);
@@ -1336,16 +1369,12 @@ int32 UBulletPhysicsWorldSubsystem::LineTraceSingle(const FVector& Start, const 
 	
 	ConstructHitResult(RayCallback, OutHit);
 	
-	if (DrawDebugShapes > 0)
+	if (DrawDebugTraces > 0)
 	{
+		DrawDebugLine(GetWorld(), Start, OutHit.Location, FColor::Green, false, DrawDebugTraces, 0, 1);
 		if (OutHit.bBlockingHit)
 		{
-			DrawDebugLine(GetWorld(), Start, OutHit.Location, FColor::Green, false, 10.f, 0, 1);
-			DrawDebugSolidBox(GetWorld(), OutHit.Location, FVector(10.f), FColor::Red, false, 10.f, 1);
-		}
-		else
-		{
-			DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 10.f, 0, 1);
+			DrawDebugSolidBox(GetWorld(), OutHit.Location, FVector(10.f), FColor::Red, false, DrawDebugTraces, 1);
 		}
 	}
 	
@@ -1397,18 +1426,14 @@ TArray<int32> UBulletPhysicsWorldSubsystem::LineTraceMulti(const FVector& Start,
 	
 	ConstructHitResult(RayCallback, OutHits);
 	
-	if (DrawDebugShapes > 0)
+	if (DrawDebugTraces > 0)
 	{
 		for (const FHitResult& Hit : OutHits)
 		{
+			DrawDebugLine(GetWorld(), Start, Hit.Location, FColor::Green, false, DrawDebugTraces, 0, 1);
 			if (Hit.bBlockingHit)
 			{
-				DrawDebugLine(GetWorld(), Start, Hit.Location, FColor::Green, false, 10.f, 0, 1);
-				DrawDebugSolidBox(GetWorld(), Hit.Location, FVector(10.f), FColor::Red, false, 10.f, 1);
-			}
-			else
-			{
-				DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 10.f, 0, 1);
+				DrawDebugSolidBox(GetWorld(), Hit.Location, FVector(10.f), FColor::Red, false, DrawDebugTraces, 1);
 			}
 		}
 	}
@@ -1438,38 +1463,17 @@ int32 UBulletPhysicsWorldSubsystem::SweepTraceSingle(const FCollisionShape& Shap
 	if (Shape.IsBox())
 	{
 		CollisionShape = GetBoxCollisionShape(Shape.GetBox());
-		
-		if (DrawDebugShapes > 0)
-		{
-			DrawDebugBox(GetWorld(), Start, Shape.GetBox(), Rotation, FColor::Magenta, false, 10.f);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Yellow);
-			DrawDebugBox(GetWorld(), End, Shape.GetBox(), Rotation, FColor::Green, false, 10.f);
-		}
 	}
 	else if (Shape.IsSphere())
 	{
 		CollisionShape = GetSphereCollisionShape(Shape.GetSphereRadius());
-		
-		if (DrawDebugShapes > 0)
-		{
-			DrawDebugSphere(GetWorld(), Start, Shape.GetCapsuleRadius(), 12, FColor::Magenta, false, 10.f);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Yellow);
-			DrawDebugSphere(GetWorld(), End, Shape.GetCapsuleRadius(), 12, FColor::Magenta, false, 10.f);
-			
-		}
 	}
 	else if (Shape.IsCapsule())
 	{
 		CollisionShape = GetCapsuleCollisionShape(Shape.GetCapsuleRadius(), Shape.GetCapsuleHalfHeight());
-
-
-		if (DrawDebugShapes > 0)
-		{
-			DrawDebugCapsule(GetWorld(), Start, Shape.GetCapsuleHalfHeight(), Shape.GetCapsuleRadius(), Rotation, FColor::Magenta, false, 10.f);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Yellow);
-			DrawDebugCapsule(GetWorld(), End, Shape.GetCapsuleHalfHeight(), Shape.GetCapsuleRadius(), Rotation, FColor::Green, false, 10.f);
-		}
 	}
+	
+	ShowDebugShapes(Shape, Start, End, Rotation);
 	
 	
 	FVector FinalEnd = End;
@@ -1511,9 +1515,10 @@ int32 UBulletPhysicsWorldSubsystem::SweepTraceSingle(const FCollisionShape& Shap
 	return SweepTraceInternal(FromTransform, ToTransform, CollisionShape, RayCallback, OutHit);
 }
 
+
 TArray<int32> UBulletPhysicsWorldSubsystem::SweepTraceMulti(const FCollisionShape& Shape, const FVector& Start,
-	const FVector& End, const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel,
-	const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& OutHits)
+                                                            const FVector& End, const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel,
+                                                            const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& OutHits)
 {
 	
 	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::SweepTraceMulti);
@@ -1524,42 +1529,23 @@ TArray<int32> UBulletPhysicsWorldSubsystem::SweepTraceMulti(const FCollisionShap
 	} 
 	
 	const btCollisionShape* CollisionShape = nullptr;
-
+	
 	if (Shape.IsBox())
 	{
 		CollisionShape = GetBoxCollisionShape(Shape.GetBox());
-		
-		if (DrawDebugShapes > 0)
-		{
-			DrawDebugBox(GetWorld(), Start, Shape.GetBox(), Rotation, FColor::Magenta, false, 10.f);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Yellow);
-			DrawDebugBox(GetWorld(), End, Shape.GetBox(), Rotation, FColor::Green, false, 10.f);
-		}
 	}
 	else if (Shape.IsSphere())
 	{
 		CollisionShape = GetSphereCollisionShape(Shape.GetSphereRadius());
-		
-		if (DrawDebugShapes > 0)
-		{
-			DrawDebugSphere(GetWorld(), Start, Shape.GetCapsuleRadius(), 12, FColor::Magenta, false, 10.f);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Yellow);
-			DrawDebugSphere(GetWorld(), End, Shape.GetCapsuleRadius(), 12, FColor::Magenta, false, 10.f);
-			
-		}
 	}
 	else if (Shape.IsCapsule())
 	{
 		CollisionShape = GetCapsuleCollisionShape(Shape.GetCapsuleRadius(), Shape.GetCapsuleHalfHeight());
-
-
-		if (DrawDebugShapes > 0)
-		{
-			DrawDebugCapsule(GetWorld(), Start, Shape.GetCapsuleHalfHeight(), Shape.GetCapsuleRadius(), Rotation, FColor::Magenta, false, 10.f);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Yellow);
-			DrawDebugCapsule(GetWorld(), End, Shape.GetCapsuleHalfHeight(), Shape.GetCapsuleRadius(), Rotation, FColor::Green, false, 10.f);
-		}
 	}
+
+	ShowDebugShapes(Shape, Start, End, Rotation);
+
+	
 	
 	
 	FVector FinalEnd = End;
@@ -1815,6 +1801,17 @@ TArray<int32> UBulletPhysicsWorldSubsystem::SweepTraceInternal(const btTransform
 		const btCollisionObject* Hit = Result.m_collisionObjects.at(i);
 		if (!Hit) continue;
 		HitIds.Add(Hit->getWorldArrayIndex());
+	}
+
+	if (DrawDebugTraces > 0)
+	{
+		for (const FHitResult& hit : OutHits)
+		{
+			if (hit.bBlockingHit)
+			{
+				DrawDebugSphere(GetWorld(), hit.Location, 30.f, 8, FColor::Red, false, DrawDebugTraces);
+			}
+		}
 	}
 	
 	return HitIds;

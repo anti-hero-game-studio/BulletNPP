@@ -490,7 +490,7 @@ void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState
 	// Only allow the server to move this component or the client if they are not smoothing. This removes the double call to update the component
 	if (!bIsClientUsingSmoothing || (GetOwner()->HasAuthority() && !GetOwner()->HasLocalNetOwner()) || GetNetMode() == NM_DedicatedServer)
 	{
-		if (PrimaryVisualComponent)
+		if (PrimaryVisualComponent && PrimaryVisualComponent != UpdatedComponent)
 		{
 			TRACE_CPUPROFILER_EVENT_SCOPE(PrimaryVisualComponent::SetRelativeTransform);
 			if (!PrimaryVisualComponent->GetRelativeTransform().Equals(BaseVisualComponentTransform))
@@ -2982,7 +2982,7 @@ void UBulletMoverComponent::CheckForExternalMovement(const FBulletMoverTickStart
 
 		const FTransform& ComponentTransform = UpdatedComponent->GetComponentTransform();
 
-		if (!ComponentTransform.GetLocation().Equals(StartingSyncState->GetLocation_WorldSpace()))
+		if (!ComponentTransform.GetLocation().Equals(StartingSyncState->GetLocation_WorldSpace(), 0.1f))
 		{
 			if (bWarnOnExternalMovement)
 			{
@@ -2999,8 +2999,8 @@ void UBulletMoverComponent::CheckForExternalMovement(const FBulletMoverTickStart
 
 				MutableSyncState->SetTransforms_WorldSpace(ComponentTransform.GetLocation(), 
 				                                           ComponentTransform.GetRotation().Rotator(),
-				                                           MutableSyncState->GetVelocity_WorldSpace(),
-				                                           MutableSyncState->GetAngularVelocityDegrees_WorldSpace());
+				                                           MutableSyncState->GetVelocity_WorldSpace_Quantized(),
+				                                           MutableSyncState->GetAngularVelocityDegrees_WorldSpace_Quantized());
 			}
 		}
 	}

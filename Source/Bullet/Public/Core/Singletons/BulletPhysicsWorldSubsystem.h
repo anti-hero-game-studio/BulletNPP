@@ -172,6 +172,8 @@ private:
 #pragma region DEBUGGER
 	void StartDebugDrawer();
 	void StopDebugDrawer();
+	
+	void ShowDebugShapes(const FCollisionShape& Shape, const FVector& Start, const FVector& End, const FQuat& Rotation) const;
 #pragma endregion
 	
 	
