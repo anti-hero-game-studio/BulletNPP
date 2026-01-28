@@ -169,7 +169,7 @@ private:
 			SumPoint += Mid;
 
 			// Bullet: m_normalWorldOnB points from B toward A (into body0 for body0/body1 ordering).
-			SumNormal += BulletHelpers::ToUnrealDirection(Pt.m_normalWorldOnB).GetSafeNormal();
+			SumNormal += BulletHelpers::ToUnrealVector3(Pt.m_normalWorldOnB).GetSafeNormal();
 
 			++Count;
 		}

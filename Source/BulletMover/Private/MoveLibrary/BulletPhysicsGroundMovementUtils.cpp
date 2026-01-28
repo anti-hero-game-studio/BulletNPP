@@ -2,8 +2,6 @@
 
 
 #include "MoveLibrary/BulletPhysicsGroundMovementUtils.h"
-#include "BulletDynamics/Dynamics/btRigidBody.h"
-#include "Core/Libraries/BulletLibrary.h"
 #include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 #include "MoveLibrary/BulletFloorQueryUtils.h"
 
@@ -20,10 +18,10 @@ const FVector& Position, const FBulletFloorCheckResult& FloorResult)
 	
 	if (const btRigidBody* Rigid = Subsystem->GetRigidBody(FloorResult.HitResult))
 	{
-		const FTransform ComTransform = BulletHelpers::ToUnrealTransform(Rigid->getWorldTransform(), FVector(0));
+		const FTransform ComTransform = BulletHelpers::ToUnrealTransform(Rigid->getCenterOfMassTransform(), FVector(0));
 		FVector Offset = Position - ComTransform.GetLocation();
 		Offset -= Offset.ProjectOnToNormal(FloorResult.HitResult.ImpactNormal);
-		GroundVelocity = BulletHelpers::ToUnrealDirection(Rigid->getLinearVelocity()) + BulletHelpers::ToUnrealDirection(Rigid->getAngularVelocity()).Cross(Offset);
+		GroundVelocity = BulletHelpers::ToUnrealVector3(Rigid->getLinearVelocity()) + BulletHelpers::ToUnrealVector3(Rigid->getAngularVelocity()).Cross(Offset);
 	}
 	return GroundVelocity;
 }

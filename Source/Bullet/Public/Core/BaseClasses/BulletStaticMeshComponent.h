@@ -32,8 +32,8 @@ public:
 	virtual const FCollisionResponseContainer& GetCollisionResponseToChannels() const override;
 	
 	
-	virtual FBulletRigidBodySettings& GetShapeOptions() override {return ShapeOptions;};
-	virtual const FBulletRigidBodySettings& GetShapeOptions() const override { return ShapeOptions; };
+	virtual FBulletPhysicsBodySettings& GetBulletPhysicsBodySettings() override {return ShapeOptions;};
+	virtual const FBulletPhysicsBodySettings& GetBulletPhysicsBodySettings() const override { return ShapeOptions; };
 	virtual const FCollisionResponseContainer& GetDefaultResponseContainer() const override { return BodyInstance.GetResponseToChannels();}
 	
 	
@@ -42,5 +42,5 @@ protected:
 	virtual bool UpdateOverlapsImpl(const TOverlapArrayView* PendingOverlaps = nullptr, bool bDoNotifies = true, const TOverlapArrayView* OverlapsAtEndLocation = nullptr) override;
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Bullet Physics")
-	FBulletRigidBodySettings ShapeOptions;
+	FBulletPhysicsBodySettings ShapeOptions;
 };

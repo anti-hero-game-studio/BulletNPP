@@ -41,14 +41,14 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
-	virtual FBulletRigidBodySettings& GetShapeOptions() override {return ShapeOptions;};
-	virtual const FBulletRigidBodySettings& GetShapeOptions() const override { return ShapeOptions; };
+	virtual FBulletPhysicsBodySettings& GetBulletPhysicsBodySettings() override {return ShapeOptions;};
+	virtual const FBulletPhysicsBodySettings& GetBulletPhysicsBodySettings() const override { return ShapeOptions; };
 	virtual const FCollisionResponseContainer& GetDefaultResponseContainer() const override { return BodyInstance.GetResponseToChannels();}
 	
 protected:
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Bullet Physics")
-	FBulletRigidBodySettings ShapeOptions;
+	FBulletPhysicsBodySettings ShapeOptions;
 	
 private:
 	

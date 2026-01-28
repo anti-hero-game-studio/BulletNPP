@@ -7,18 +7,6 @@
 #include "BulletTypes.generated.h"
 
 
-USTRUCT(BlueprintType)
-struct FUnrealShapeId
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(BlueprintReadOnly)
-	int32 BlockingShapeWorldArrayIndex = INDEX_NONE;
-	
-	UPROPERTY(BlueprintReadOnly)
-	int32 OverlappingShapeWorldArrayIndex = INDEX_NONE;
-};
-
 USTRUCT()
 struct FUnrealShape
 {
@@ -33,15 +21,11 @@ struct FUnrealShape
 	{
 		bIsRootComponent = false;
 		Shape = NewPrimitive;
-		BlockingCollider = nullptr;
-		OverlappingCollider = nullptr;
 	}
 	
 	uint8 bIsRootComponent : 1 = false;
-	FUnrealShapeId Id;
+	uint32 Id = 0;
 	TWeakObjectPtr<UPrimitiveComponent> Shape = nullptr;
-	btCollisionObject* BlockingCollider = nullptr;
-	btGhostObject* OverlappingCollider = nullptr;
 	FCollisionResponseContainer CollisionResponses;
 	float ShapeRadius = 0.f; // X
 	float ShapeWidth = 0.f; // Y
@@ -65,9 +49,6 @@ struct FUnrealShapeDescriptor
 	
 	FCollisionResponseContainer CollisionResponseContainer = FCollisionResponseContainer();
 	
-	
-	
-	
 	void Add(UPrimitiveComponent* C, const bool& bIsRoot)
 	{
 		Shapes.Add(FUnrealShape(C));
@@ -86,48 +67,25 @@ struct FUnrealShapeDescriptor
 		return nullptr;
 	}
 	
-	btCollisionObject* GetRootBlockingCollider() const
+	uint32 GetRootColliderId() const
 	{
 		for (const FUnrealShape& Shape : Shapes)
 		{
 			if (!Shape.bIsRootComponent) continue;
 			
-			return Shape.BlockingCollider;
+			return Shape.Id;
 		}
 		
-		return nullptr;
+		return 0;
 	}
 	
-	btGhostObject* GetRootOverlappingCollider() const
+	int GetColliderId(const UPrimitiveComponent* Target) const
 	{
 		for (const FUnrealShape& Shape : Shapes)
 		{
-			if (!Shape.bIsRootComponent) continue;
+			if (Shape.Shape != Target) continue;
 			
-			return Shape.OverlappingCollider;
-		}
-		
-		return nullptr;
-	}
-	
-	TArray<btGhostObject*> GetAllOverlappingColliders() const
-	{
-		TArray<btGhostObject*> OverlappingColliders;
-		for (const FUnrealShape& Shape : Shapes)
-		{
-			OverlappingColliders.Add(Shape.OverlappingCollider);
-		}
-		
-		return OverlappingColliders;
-	}
-	
-	int GetRootColliderId() const
-	{
-		for (const FUnrealShape& Shape : Shapes)
-		{
-			if (!Shape.bIsRootComponent) continue;
-			
-			return Shape.Id.BlockingShapeWorldArrayIndex;
+			return Shape.Id;
 		}
 		
 		return INDEX_NONE;
@@ -164,16 +122,28 @@ struct FUnrealShapeDescriptor
 		return NearestComponent;
 	}
 	
-	int32 Find(const UPrimitiveComponent* T, const bool bFindBlockingShape = true) const
+	int32 Find(const UPrimitiveComponent* T) const
 	{
 		for (const FUnrealShape& S : Shapes)
 		{
 			if (!S.Shape.Get()) continue;
 			if (S.Shape.Get() != T) continue;
-			return bFindBlockingShape ? S.Id.BlockingShapeWorldArrayIndex : S.Id.OverlappingShapeWorldArrayIndex;
+			return S.Id;
 		}
 		
 		return INDEX_NONE;
+	}
+	
+	UPrimitiveComponent* Find(const uint32& T) const
+	{
+		for (const FUnrealShape& S : Shapes)
+		{
+			if (!S.Shape.Get()) continue;
+			if (S.Id != T) continue;
+			return S.Shape.Get();
+		}
+		
+		return nullptr;
 	}
 	
 	const FCollisionResponseContainer& GetCollisionResponseContainer(const UPrimitiveComponent* Target) const
@@ -199,14 +169,25 @@ enum class EBulletShapeType : uint8
 	KINEMATIC = 2,
 };
 
+UENUM(BlueprintType)
+enum class EGravityOverrideType : uint8
+{
+	NONE = 0,
+	STATIC_VECTOR = 1,
+	VECTOR_CURVE = 2 UMETA(Hidden), // TODO:@GreggoryAddison
+	STATIC_FLOAT = 3,
+	FLOAT_CURVE = 4,
+	FROM_MOVER = 5,
+};
+
 
 
 USTRUCT(BlueprintType)
-struct FBulletRigidBodySettings
+struct FBulletPhysicsBodySettings
 {
 	GENERATED_BODY()
 	
-	FBulletRigidBodySettings()
+	FBulletPhysicsBodySettings()
 	{
 		
 	}
@@ -220,7 +201,11 @@ struct FBulletRigidBodySettings
 	
 	/* Useful for player controlled bodies that should never be sent to sleep*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	bool bDisableDeactivation = false;
+	bool bCanBodyEverSleep = false;
+	
+	/* Turning this on adds an added cost to move each body in chaos. If you are using built-in AI pathing logic this needs to be true unless you roll your own avoidance system.*/
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bCanBodyEverAffectNavigation = false;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bUsePhysicsMaterial = false;
@@ -253,10 +238,29 @@ struct FBulletRigidBodySettings
 	float Mass = 10.f;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="ShapeType != EBulletShapeType::STATIC", EditConditionHides))
-	bool bHasGravityOverride = false;
+	EGravityOverrideType GravityOverrideType = EGravityOverrideType::NONE;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="bHasGravityOverride && ShapeType != EBulletShapeType::STATIC", EditConditionHides))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="GravityOverrideType == EGravityOverrideType::STATIC_VECTOR && ShapeType != EBulletShapeType::STATIC", EditConditionHides))
 	FVector GravityOverride = FVector(0, 0, -980.f);
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="GravityOverrideType == EGravityOverrideType::STATIC_FLOAT && ShapeType != EBulletShapeType::STATIC", EditConditionHides), DisplayName="Gravity Scale")
+	float GravityScale_Static = 1.0f;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta=(EditCondition="GravityOverrideType == EGravityOverrideType::FLOAT_CURVE && ShapeType != EBulletShapeType::STATIC", EditConditionHides), DisplayName="Gravity Scale")
+	TObjectPtr<UCurveFloat> GravityScale_Dynamic;
+	
+	
+	float GetDesiredRestitution() const
+	{
+		// TODO:@GreggoryAddison::CodeCompletion || Support Physics Material values
+		return Restitution;
+	}
+	
+	float GetDesiredFriction() const
+	{
+		// TODO:@GreggoryAddison::CodeCompletion || Support Physics Material values
+		return Friction;
+	}
 	
 };
 
@@ -283,10 +287,13 @@ struct FBulletUserData
 
 	// Collision policy data used in hot paths
 	uint8  ObjectChannel = 0;    // 0..31 (ECollisionChannel as uint8)
-	uint8  bQueryEnabled = 1;    // optional
-	uint8  bPhysicsEnabled = 1;  // optional
+	uint8  bCollisionsEnabled : 1 = 1;    // optional
+	uint8  bPhysicsEnabled: 1 = 1;  // optional
+	uint8  bGenerateOverlapEvents : 1 = 0;  // optional
+	uint8  bGenerateHitEvents : 1 = 0;  // optional
 	uint8  Pad = 0;
 
 	uint32 BlockMask = 0;        // bits for channels this blocks
 	uint32 OverlapMask = 0;      // bits for channels this overlaps (optional)c.)
+	uint32 CombinedMask = 0;      // bits for channels this overlaps (optional)c.)
 };

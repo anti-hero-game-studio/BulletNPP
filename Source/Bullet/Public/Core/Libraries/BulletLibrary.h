@@ -51,7 +51,7 @@ public:
 		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToBulletPosition);
 		return btVector3(V.X - WorldOrigin.X, V.Y - WorldOrigin.Y, V.Z - WorldOrigin.Z) * WORLD_TO_BULLET_SCALE;
 	}
-	static FVector ToUnrealDirection(const btVector3& V, bool AdjustScale = true)
+	static FVector ToUnrealVector3(const btVector3& V, bool AdjustScale = true)
 	{
 		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToUnrealDirection);
 		if (AdjustScale)
@@ -62,7 +62,7 @@ public:
 	
 	static FVector ToUnrealNormal(const btVector3& V)
 	{
-		return ToUnrealDirection(V).GetSafeNormal();
+		return ToUnrealVector3(V).GetSafeNormal();
 	}
 	
 	static btVector3 ToBulletDirection(const FVector& V, bool AdjustScale = true)
@@ -169,12 +169,12 @@ public:
 		// choose a policy. Safest for gameplay is usually "allow" (or fall back to Super).
 		if (!UA || !UB)
 		{
-			return true; // or false, or "return Super" at the callsite
+			return false; // or false, or "return Super" at the callsite
 		}
 
 		// Optional: respect query/physics enabled flags.
 		// If this function is used for sweeps/queries, gate by query.
-		if (!UA->bQueryEnabled || !UB->bQueryEnabled)
+		if (!UA->bCollisionsEnabled || !UB->bCollisionsEnabled)
 		{
 			return false;
 		}
@@ -211,7 +211,7 @@ public:
 
 		// Optional: respect query/physics enabled flags.
 		// If this function is used for sweeps/queries, gate by query.
-		if (!UA->bQueryEnabled || !UB->bQueryEnabled)
+		if (!UA->bCollisionsEnabled || !UB->bCollisionsEnabled)
 		{
 			return false;
 		}

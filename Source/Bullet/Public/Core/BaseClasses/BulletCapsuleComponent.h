@@ -38,13 +38,45 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
-	virtual FBulletRigidBodySettings& GetShapeOptions() override {return ShapeOptions;};
-	virtual const FBulletRigidBodySettings& GetShapeOptions() const override { return ShapeOptions; };
+	virtual FBulletPhysicsBodySettings& GetBulletPhysicsBodySettings() override {return BulletPhysicsBodySettings;};
+	virtual const FBulletPhysicsBodySettings& GetBulletPhysicsBodySettings() const override { return BulletPhysicsBodySettings; };
 	virtual const FCollisionResponseContainer& GetDefaultResponseContainer() const override { return BodyInstance.GetResponseToChannels();}
+	
+	virtual float GetGroundTraceDistance() const override;
+	virtual float GetShapeHeight() const override;
+	virtual float GetShapeWidth() const override;
+	virtual float GetShapeStepHeightRatio() const override {return StepHeightRatio;}
+	
+	virtual void WakeRigidBody(FName BoneName = NAME_None) override;
 	
 	
 protected:
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Bullet Physics")
-	FBulletRigidBodySettings ShapeOptions;
+	FBulletPhysicsBodySettings BulletPhysicsBodySettings;
+	
+	/* This requires your collision shape to be a child of the root component allowing for a collider that floats above the ground
+	* Currently not implemented.
+	 */
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Shape Options")
+	bool bUseFloatingShape = false;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Shape Options")
+	float ColliderHeight = 88.f;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Shape Options")
+	float ColliderRadius = 44.f;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Shape Options", meta=(ClampMin="0", ClampMax="1"))
+	float StepHeightRatio = 0.1f;
+	
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Shape Options")
+	FVector ColliderOffset = FVector::Zero();
+
+	
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+	void RecalculateCollider();
+	
+#endif
 };

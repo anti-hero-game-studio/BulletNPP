@@ -448,10 +448,16 @@ public:	// Queries
 	// Sets which component we're using as the root of our movement
 	UFUNCTION(BlueprintCallable, Category = Mover)
 	BULLETMOVER_API void SetUpdatedComponent(USceneComponent* NewUpdatedComponent);
+	
+	UFUNCTION(BlueprintCallable, Category = Mover)
+	BULLETMOVER_API void SetBulletPhysicsComponent(UPrimitiveComponent* NewPhysicsComponent);
 
 	// Access the root component of the actor that our Mover simulation is moving
 	UFUNCTION(BlueprintCallable, Category = Mover)
 	BULLETMOVER_API USceneComponent* GetUpdatedComponent() const;
+
+	UFUNCTION(BlueprintCallable, Category = Mover)
+	BULLETMOVER_API UPrimitiveComponent* GetUpdatedPrimitive() const;
 
 	// Typed accessor to root moving component
 	template<class T>
@@ -460,6 +466,10 @@ public:	// Queries
 		static_assert(TPointerIsConvertibleFromTo<T, const USceneComponent>::Value, "'T' template parameter to GetUpdatedComponent must be derived from USceneComponent");
 		return Cast<T>(GetUpdatedComponent());
 	}
+	
+	// Access the root component of the actor that our Mover simulation is moving
+	UFUNCTION(BlueprintCallable, Category = Mover)
+	BULLETMOVER_API UPrimitiveComponent* GetBulletPhysicsBodyComponent() const;
 
 	// Access the primary visual component of the actor
 	UFUNCTION(BlueprintCallable, Category = Mover)
@@ -693,6 +703,7 @@ protected:
 	  @param bRebaseBasedState	If true and the state was using based movement, it will use the current game world base pos/rot instead of the captured one. This is necessary during rollbacks.
 	*/
 	BULLETMOVER_API void SetFrameStateFromContext(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState, bool bRebaseBasedState);
+	BULLETMOVER_API void SetFrameStateFromContextFromNestedChild(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState, bool bRebaseBasedState);
 
 	/** Update cached frame state if it has changed */
 	BULLETMOVER_API void UpdateCachedFrameState(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState);
@@ -705,6 +716,7 @@ public:
 	BULLETMOVER_API void HandleImpact(FBulletMoverOnImpactParams& ImpactParams);
 
 protected:
+	BULLETMOVER_API void FindDefaultComponents();
 	BULLETMOVER_API void FindDefaultUpdatedComponent();
 	BULLETMOVER_API void UpdateTickRegistration();
 
@@ -757,6 +769,11 @@ protected:
 	/** UpdatedComponent, cast as a UPrimitiveComponent. May be invalid if UpdatedComponent was null or not a UPrimitiveComponent. */
 	UPROPERTY(Transient)
 	TObjectPtr<UPrimitiveComponent> UpdatedCompAsPrimitive = nullptr;
+	
+	/** BulletPhysicsComponent, must be a UPrimitiveComponent. Should not be invalid. 
+	 * It is fetched automatically on BeginPlay where the first bullet primitive type in the hierarchy is used*/
+	UPROPERTY(Transient)
+	TObjectPtr<UPrimitiveComponent> BulletPhysicsComponent = nullptr;
 
 	/** The main visual component associated with this Mover actor, typically a mesh and typically parented to the UpdatedComponent. */
 	UPROPERTY(Transient)
@@ -934,43 +951,17 @@ protected:
 #pragma region BULLET PHYSICS
 protected:
 	
-	/* If the owner actor of this component has extra collision shapes allow for them to be created in the physics world.
-	 * This will not create the rigid body for them just the shape.
-	 */
-	UPROPERTY(EditDefaultsOnly, Category="Bullet Mover|Physics Settings")
-	uint8 bShouldCreateSecondaryShapes : 1 = 0;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Bullet Mover|Physics Settings")
-	uint8 bShouldTraceAgainstBackFaces : 1 = 0;
-	
-	/* Set to indicate that extra effort should be made to try to remove ghost contacts (collisions with internal edges of a mesh). 
-	 * This is more expensive but makes bodies move smoother over a mesh with convex edges.
-	*/
-	UPROPERTY(EditDefaultsOnly, Category="Bullet Mover|Physics Settings")
-	uint8 bUseEnhancedEdgeDetection : 1 = 0;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Bullet Mover|Physics Settings|Mass")
-	float DefaultMass = 70.0f;
-	
-	/* Populate an array with the shapes you want to be created in the bullet physics world 
-	 */
-	UFUNCTION(BlueprintNativeEvent, Category="Bullet Mover|Collision Shapes")
-	TArray<UPrimitiveComponent*> GetSecondaryCollisionShapes() const;
+
 	
 	
-	// The different stances for the character
-	
-	virtual void InitializeWithBullet();
-	virtual void CreateShapesForRootComponent();
-	virtual void CreateSecondaryShapes();
+	virtual void InitializeWithBullet() {};
 	
 	virtual void BulletPreSimulationTick(const FBulletMoverTimeStep& InTimeStep, const FBulletMoverTickStartData& SimInput, FBulletMoverTickEndData& SimOutput) {};
 	virtual void FinalizeStateFromBulletSimulation(FBulletMoverTickEndData& SimOutput) {};
 	
 public:
 	virtual void SendFinalVelocityToBullet(const FBulletMoverTimeStep& InTimeStep, const FVector& LinearVelocity, const FVector& AngularVelocity) {}
-	
-private:
-	FDelegateHandle OnModifyContactsDelegateHandle;
+
 #pragma endregion
 };

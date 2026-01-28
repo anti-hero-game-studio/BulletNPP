@@ -356,6 +356,22 @@ void FBulletUpdatedMotionState::SetTransforms_WorldSpace(const FVector& WorldLoc
 	}
 }
 
+void FBulletUpdatedMotionState::SetLinearVelocity_WorldSpace(const FVector& LinearVelocity)
+{
+	Velocity = UE::BulletNetQuant::QuantizePackedVector<10>(LinearVelocity);
+}
+
+void FBulletUpdatedMotionState::SetAngularVelocity_WorldSpace(const FVector& LinearVelocity)
+{
+	AngularVelocityDegrees = UE::BulletNetQuant::QuantizePackedVector<10>(LinearVelocity);
+}
+
+void FBulletUpdatedMotionState::SetLinearAndAngularVelocity_WorldSpace(const FVector& Linear, const FVector& Angular)
+{
+	Velocity = UE::BulletNetQuant::QuantizePackedVector<10>(Linear);
+	AngularVelocityDegrees = UE::BulletNetQuant::QuantizePackedVector<10>(Angular);
+}
+
 
 bool FBulletUpdatedMotionState::SetMovementBase(UPrimitiveComponent* Base, FName BaseBone)
 {

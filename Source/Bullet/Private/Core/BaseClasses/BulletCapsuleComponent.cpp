@@ -11,14 +11,14 @@ UBulletCapsuleComponent::UBulletCapsuleComponent(const FObjectInitializer& Objec
 	:Super(ObjectInitializer)
 {
 	
-	SetGenerateOverlapEvents(ShapeOptions.bGenerateOverlapEventsInChaos);
+	SetGenerateOverlapEvents(BulletPhysicsBodySettings.bGenerateOverlapEventsInChaos);
 }
 
 
 void UBulletCapsuleComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
-	SetGenerateOverlapEvents(ShapeOptions.bGenerateOverlapEventsInChaos);
+	SetGenerateOverlapEvents(BulletPhysicsBodySettings.bGenerateOverlapEventsInChaos);
 }
 
 void UBulletCapsuleComponent::SetSimulatePhysics(const bool bSimulate)
@@ -137,7 +137,7 @@ void UBulletCapsuleComponent::BeginPlay()
 bool UBulletCapsuleComponent::UpdateOverlapsImpl(const TOverlapArrayView* PendingOverlaps, bool bDoNotifies,
 	const TOverlapArrayView* OverlapsAtEndLocation)
 {
-	if (!ShapeOptions.bGenerateOverlapEventsInChaos) return true;
+	if (!BulletPhysicsBodySettings.bGenerateOverlapEventsInChaos) return true;
 	
 	return Super::UpdateOverlapsImpl(PendingOverlaps, bDoNotifies, OverlapsAtEndLocation);
 }
@@ -151,3 +151,82 @@ void UBulletCapsuleComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	// ...
 }
 
+float UBulletCapsuleComponent::GetGroundTraceDistance() const
+{
+	const float Length = CapsuleHalfHeight * (1 - StepHeightRatio) * 0.5f + CapsuleHalfHeight * StepHeightRatio;
+	return Length * GetRelativeScale3D().Z;
+}
+
+float UBulletCapsuleComponent::GetShapeHeight() const
+{
+	return GetScaledCapsuleHalfHeight();
+}
+
+float UBulletCapsuleComponent::GetShapeWidth() const
+{
+	return GetScaledCapsuleRadius();
+}
+
+void UBulletCapsuleComponent::WakeRigidBody(FName BoneName)
+{
+	if (UBulletPhysicsWorldSubsystem* S = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+	{
+		S->WakeBody(this);
+	}
+}
+
+#if WITH_EDITOR
+void UBulletCapsuleComponent::RecalculateCollider()
+{
+	if (bUseFloatingShape)
+	{
+		CapsuleHalfHeight = ColliderHeight * (1 - StepHeightRatio);
+		const FVector NewRelativeLocation = ColliderOffset+ FVector(0.f, 0.f, StepHeightRatio * ColliderHeight / 2.f);
+		SetRelativeLocation(NewRelativeLocation);
+		CapsuleRadius = ColliderRadius;
+
+		if (CapsuleHalfHeight < CapsuleRadius)
+		{
+			CapsuleRadius = CapsuleHalfHeight;
+		}
+	}
+	else
+	{
+		CapsuleHalfHeight = ColliderHeight;
+		CapsuleRadius = ColliderRadius;
+		if (CapsuleHalfHeight < CapsuleRadius)
+		{
+			CapsuleRadius = CapsuleHalfHeight;
+		}
+	}
+	
+	
+	
+	MarkRenderStateDirty();
+	
+	
+}
+
+void UBulletCapsuleComponent::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	if (PropertyChangedEvent.GetMemberPropertyName() == GET_MEMBER_NAME_CHECKED(ThisClass, StepHeightRatio))
+	{
+		RecalculateCollider();
+	}
+	else if (PropertyChangedEvent.GetMemberPropertyName() == GET_MEMBER_NAME_CHECKED(ThisClass, ColliderHeight))
+	{
+		RecalculateCollider();
+	}
+	else if (PropertyChangedEvent.GetMemberPropertyName() == GET_MEMBER_NAME_CHECKED(ThisClass, ColliderRadius))
+	{
+		RecalculateCollider();
+	}
+	else if (PropertyChangedEvent.GetMemberPropertyName() == GET_MEMBER_NAME_CHECKED(ThisClass, ColliderOffset))
+	{
+		RecalculateCollider();
+	}
+	
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+}
+
+#endif

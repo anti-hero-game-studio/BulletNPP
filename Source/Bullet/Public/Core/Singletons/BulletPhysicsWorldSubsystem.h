@@ -12,6 +12,7 @@
 #include "Components/ShapeComponent.h"
 #include <functional>
 
+#include "Core/BaseClasses/BulletCapsuleComponent.h"
 #include "Core/CollisionFilters/BulletOverlappingPairCache.h"
 #include "Core/CollisionFilters/ConvexResultCallback_IgnoreActors.h"
 #include "Core/CollisionFilters/OverlapFilterCallback.h"
@@ -76,13 +77,13 @@ public:
 	 * @return	Returns the id to use in collision lookups
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Register Dynamic Rigid Body", meta=(AutoCreateRefTerm = "Options"))
-	FUnrealShapeId RegisterBulletRigidBody(AActor* Target);
+	void RegisterBulletRigidBody(AActor* Target);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects", DisplayName="Set Physics State")
 	void K2_SetPhysicsState(const UPrimitiveComponent* Target, const FTransform& Transforms, const FVector& Velocity, const FVector& AngularVelocity);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
-	void GetPhysicsState(int ID, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force);
+	void GetPhysicsState(const UPrimitiveComponent* Target, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void GetMotionState(int Id, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity, FVector& Force);
@@ -97,16 +98,19 @@ public:
 	void AddForce(AActor* Target, const FVector Force);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
+	void WakeBody(const UPrimitiveComponent* Target);
+	
+	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
+	void SleepBody(const UPrimitiveComponent* Target);
+	
+	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void SetAngularVelocity(AActor* Target, const FVector AngularVelocity);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
-	void UpdateActorVelocity(AActor* Target, const FVector LinearVelocity, const FVector AngularVelocity);
+	void ApplyVelocity(const UPrimitiveComponent* Target, const FVector LinearVelocity, const FVector AngularVelocity);
 	
 	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Objects")
 	void ZeroActorVelocity(AActor* Target);
-	
-	UFUNCTION(BlueprintCallable, Category = "Bullet Physics|Registration", DisplayName="Get All Overlapping Actors", meta=(DevelopementOnly))
-	TArray<AActor*> GetOverlappingActors(AActor* Target) const;
 	
 	UFUNCTION(BlueprintPure, Category = "Bullet Physics|Objects")
 	float GetGravity(const UPrimitiveComponent* Target) const;
@@ -150,7 +154,6 @@ public:
 	
 	int32 SweepTraceSingle(const FCollisionShape& Shape, const FVector& Start, const FVector& End, const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit);
 	TArray<int32> SweepTraceMulti(const FCollisionShape& Shape, const FVector& Start, const FVector& End, const FQuat& Rotation, const TEnumAsByte<ECollisionChannel>& Channel, const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& OutHits);
-
 	
 private:
 	void ConstructHitResult(const btCollisionWorld::ClosestRayResultCallback& Result, FHitResult& OutHit) const;
@@ -194,8 +197,6 @@ private:
 	TArray<btSphereShape*> BtSphereCollisionShapes;
 	TArray<btCapsuleShape*> BtCapsuleCollisionShapes;
 	btSequentialImpulseConstraintSolver* mt;
-	
-	TArray<FBulletUserData*> BtUserData;
 	
 	// Structure to hold re-usable ConvexHull shapes based on origin BodySetup / subindex / scale
 	struct ConvexHullShapeHolder
@@ -241,19 +242,19 @@ public:
 
 	btCollisionShape* GetConvexHullCollisionShape(UBodySetup* BodySetup, int ConvexIndex, const FVector& Scale);
 
-	btRigidBody* AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, const FBulletRigidBodySettings& Options);
+	btRigidBody* AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape, const FBulletPhysicsBodySettings& Options);
 
-	btRigidBody* AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& localTransform, btCollisionShape* CollisionShape, const FBulletRigidBodySettings& Options);
+	btRigidBody* AddRigidBodyCollider(USkeletalMeshComponent* Skel, const FTransform& localTransform, btCollisionShape* CollisionShape, const FBulletPhysicsBodySettings& Options);
 	
-	btCollisionObject* AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletRigidBodySettings& Options);
+	btCollisionObject* AddStaticCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletPhysicsBodySettings& Options);
 	
-	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletRigidBodySettings& Options);
+	btGhostObject* AddGhostCollider(btCollisionShape* Shape, const FTransform& Transform, const FBulletPhysicsBodySettings& Options);
 	
 	btCollisionObject* GetStaticObject(int ID) const;
 	
 	
 private:
-	typedef const std::function<void(btCollisionShape* /*SingleShape*/, const FTransform& /*RelativeXform*/, const FBulletRigidBodySettings& /*ShapeOptions*/)>& PhysicsGeometryCallback;
+	typedef const std::function<void(btCollisionShape* /*SingleShape*/, const FTransform& /*RelativeXform*/, const FBulletPhysicsBodySettings& /*ShapeOptions*/)>& PhysicsGeometryCallback;
 
 	void ExtractPhysicsGeometry(const AActor* Actor, PhysicsGeometryCallback CB, FUnrealShapeDescriptor& ShapeDescriptor);
 	
@@ -318,8 +319,21 @@ public:
 	
 	FOnModifyContacts OnModifyContacts;
 	
+	
+	
+	
 
 private:
+	
+	TArray<TUniquePtr<FBulletUserData>> UserDataStore;
+	
+	FBulletUserData* AllocUserData()
+	{
+		TUniquePtr<FBulletUserData> Ptr = MakeUnique<FBulletUserData>();
+		FBulletUserData* Raw = Ptr.Get();
+		UserDataStore.Add(MoveTemp(Ptr));
+		return Raw;
+	}
 	
 	FCollisionResponseContainer DefaultCollisionResponseContainer;
 	

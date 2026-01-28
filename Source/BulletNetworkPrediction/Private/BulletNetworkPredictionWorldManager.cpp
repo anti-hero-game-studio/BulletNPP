@@ -481,7 +481,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 					TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::BulletPhysicsTick);
 					if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 					{
-						UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("[MSL] Time | DeltaTime = %f | Frame = %d"), DeltaTimeSeconds, Step.Frame);
+						//UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("[MSL] Time | DeltaTime = %f | Frame = %d"), DeltaTimeSeconds, Step.Frame);
 						const double FixedTimeStep = Step.StepMS * 0.001;
 						Subsystem->StepPhysics(DeltaTimeSeconds, 1, FixedTimeStep);
 					}
@@ -493,7 +493,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 					TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::PostBulletPhysicsTick);
 					for (TUniquePtr<IBulletLocalPhysicsService>& Ptr : Services.FixedPhysics.Array)
 					{
-						UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("[MSL] Non Rollback Frame = %d"), Step.Frame);
+						//UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("[MSL] Non Rollback Frame = %d"), Step.Frame);
 						Ptr->Tick(Step, ServiceStep);
 					}
 				}

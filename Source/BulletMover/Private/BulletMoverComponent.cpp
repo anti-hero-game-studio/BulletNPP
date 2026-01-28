@@ -118,7 +118,7 @@ void UBulletMoverComponent::InitializeComponent()
 		RollbackBlackboard->CreateEntry<FBulletMovementModeChangeRecord>(CommonBlackboard::LastModeChangeRecord, ModeChangeRecordSettings);
 
 
-		FindDefaultUpdatedComponent();
+		FindDefaultComponents();
 
 		// Set up FSM and initial movement states
 		ModeFSM = NewObject<UBulletMovementModeStateMachine>(this, TEXT("BulletMoverStateMachine"), RF_Transient);
@@ -217,7 +217,7 @@ void UBulletMoverComponent::OnRegister()
 
 	Super::OnRegister();
 
-	FindDefaultUpdatedComponent();
+	FindDefaultComponents();
 }
 
 
@@ -264,7 +264,7 @@ void UBulletMoverComponent::PostLoad()
 
 void UBulletMoverComponent::OnModifyContacts()
 {
-	UPrimitiveComponent* UpdatedPrim = GetUpdatedComponent<UPrimitiveComponent>();
+	/*UPrimitiveComponent* UpdatedPrim = GetUpdatedComponent<UPrimitiveComponent>();
 	if (!UpdatedPrim) return;
 	UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>();
 	if (!Subsystem) return;
@@ -275,8 +275,8 @@ void UBulletMoverComponent::OnModifyContacts()
 		{
 			if (!E.SelfComp.Get() || E.SelfComp.Get() != UpdatedPrim || !E.OtherComp.Get()) continue;
 			
-			btCollisionObject* SelfRb = Subsystem->GetCollisionBody(E.SelfComp.Get());
-			btCollisionObject* OtherRb = Subsystem->GetCollisionBody(E.OtherComp.Get());
+			BTRIGIDBODY* SelfRb = Subsystem->GetCollisionBody(E.SelfComp.Get());
+			BTRIGIDBODY* OtherRb = Subsystem->GetCollisionBody(E.OtherComp.Get());
 			if (!SelfRb || !OtherRb) continue;	
 			
 			bool bOverrideToZero = false;
@@ -301,21 +301,16 @@ void UBulletMoverComponent::OnModifyContacts()
 				OtherRb->setFriction(0);
 			}
 		}
-	}
+	}*/
 }
 
 void UBulletMoverComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
-	{
-		OnModifyContactsDelegateHandle = Subsystem->OnModifyContacts.AddUObject(this, &ThisClass::OnModifyContacts);
-	}
-
 	
 	
-	FindDefaultUpdatedComponent();
+	
+	FindDefaultComponents();
 	ensureMsgf(UpdatedComponent != nullptr, TEXT("No root component found on %s. Simulation initialization will most likely fail."), *GetPathNameSafe(GetOwner()));
 
 	WorldToGravityTransform = FQuat::FindBetweenNormals(FVector::UpVector, GetUpDirection());
@@ -404,10 +399,6 @@ void UBulletMoverComponent::BeginPlay()
 
 void UBulletMoverComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
-	{
-		Subsystem->OnModifyContacts.Remove(OnModifyContactsDelegateHandle);
-	}
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -452,20 +443,20 @@ void UBulletMoverComponent::RestoreFrame(const FBulletMoverSyncState* SyncState,
 	const FBulletMoverSyncState& InvalidSyncState = GetSyncState();
 	const FBulletMoverAuxStateContext& InvalidAuxState = CachedLastAuxState;
 	OnSimulationPreRollback(&InvalidSyncState, SyncState, &InvalidAuxState, AuxState, NewBaseTimeStep);
-	SetFrameStateFromContext(SyncState, AuxState, /* rebase? */ true);
+	if (GetBulletPhysicsBodyComponent() && GetBulletPhysicsBodyComponent() == GetUpdatedComponent())
+	{
+		SetFrameStateFromContext(SyncState, AuxState, /* rebase? */ true);
+	}
+	else if (GetBulletPhysicsBodyComponent() && GetBulletPhysicsBodyComponent() != GetUpdatedComponent())
+	{
+		SetFrameStateFromContextFromNestedChild(SyncState, AuxState,  true);
+	}
 	OnSimulationRollback(SyncState, AuxState, NewBaseTimeStep);
 }
 
 void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState, const FBulletMoverAuxStateContext* AuxState)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::FinalizeFrame);
-
-	bool bIsSimProxy = false;
-	if (GetOwnerRole() == ROLE_SimulatedProxy)
-	{
-		bIsSimProxy = true;
-	}
-	
 	
 	// TODO: Revisit this location check -- it seems simplistic now that we have composable state. Consider supporting a version that allows each sync state data struct a chance to react.
 	// The component will often be in the "right place" already on FinalizeFrame, so a comparison check makes sense before setting it.
@@ -480,7 +471,14 @@ void UBulletMoverComponent::FinalizeFrame(const FBulletMoverSyncState* SyncState
 		if ((ComponentLoc.Equals(StateLoc) == false ||
 			 ComponentRot.Equals(StateRot, ROTATOR_TOLERANCE) == false))
 		{
-			SetFrameStateFromContext(SyncState, AuxState, /* rebase? */ false);
+			if (GetBulletPhysicsBodyComponent() && GetBulletPhysicsBodyComponent() == GetUpdatedComponent())
+			{
+				SetFrameStateFromContext(SyncState, AuxState, /* rebase? */ false);
+			}
+			else if (GetBulletPhysicsBodyComponent() && GetBulletPhysicsBodyComponent() != GetUpdatedComponent())
+			{
+				SetFrameStateFromContextFromNestedChild(SyncState, AuxState,  false);
+			}
 		}
 		else
 		{
@@ -642,6 +640,7 @@ void UBulletMoverComponent::InitializeSimulationState(FBulletMoverSyncState* Out
 
 void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeStep, const FBulletMoverTickStartData& SimInput, OUT FBulletMoverTickEndData& SimOutput)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::SimulationTick);
 	// Send mover info to the Chaos Visual Debugger (this will do nothing if CVD is not recording, or the mover info data channel not enabled)
 	UE::BulletMoverUtils::FBulletMoverCVDRuntimeTrace::TraceBulletMoverData(this, &SimInput.InputCmd, &SimInput.SyncState);
 	
@@ -732,11 +731,11 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 	{
 		// If we're on the game thread, we can make use of a scoped movement update for better perf of multi-step movements.  If not, then we're definitely not moving the component in immediate mode so the scope would have no effect.
 		FScopedMovementUpdate ScopedMovementUpdate(UpdatedComponent, EScopedUpdate::DeferredUpdates);
-		ModeFSM->OnSimulationTick(UpdatedComponent, UpdatedCompAsPrimitive, SimBlackboard.Get(), SimInput, MoverTimeStep, SimOutput);
+		ModeFSM->OnSimulationTick(UpdatedComponent, UpdatedCompAsPrimitive.Get() ? UpdatedCompAsPrimitive.Get() : GetBulletPhysicsBodyComponent(), SimBlackboard.Get(), SimInput, MoverTimeStep, SimOutput);
 	}
 	else
 	{
-		ModeFSM->OnSimulationTick(UpdatedComponent, UpdatedCompAsPrimitive, SimBlackboard.Get(), SimInput, MoverTimeStep, SimOutput);
+		ModeFSM->OnSimulationTick(UpdatedComponent, UpdatedCompAsPrimitive.Get() ? UpdatedCompAsPrimitive.Get() : GetBulletPhysicsBodyComponent(), SimBlackboard.Get(), SimInput, MoverTimeStep, SimOutput);
 	}
 
 	if (FBulletUpdatedMotionState* OutputSyncState = SimOutput.SyncState.Collection.FindMutableDataByType<FBulletUpdatedMotionState>())
@@ -746,8 +745,8 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 
 		if (BulletMoverComponentCVars::WarnOnPostSimDifference)
 		{
-			if (UpdatedComponent->GetComponentLocation().Equals(OutputSyncState->GetLocation_WorldSpace()) == false ||
-				UpdatedComponent->GetComponentQuat().Equals(OutputSyncState->GetOrientation_WorldSpace().Quaternion(), UE_KINDA_SMALL_NUMBER) == false)
+			if (UpdatedComponent->GetComponentLocation().Equals(OutputSyncState->GetLocation_WorldSpace_Quantized()) == false ||
+				UpdatedComponent->GetComponentQuat().Equals(OutputSyncState->GetOrientation_WorldSpace_Quantized().Quaternion(), UE_KINDA_SMALL_NUMBER) == false)
 			{
 				UE_LOG(LogBulletMover, Warning, TEXT("Detected pos/rot difference between Mover actor (%s) sync state and scene component after sim ticking. This indicates a movement mode may not be authoring the final state correctly."), *GetNameSafe(UpdatedComponent->GetOwner()));
 			}
@@ -802,9 +801,9 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 	// Get our rigid body and apply central impulse
 	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
-		const FBulletMoverTargetSyncState* OutState = SimOutput.SyncState.Collection.FindDataByType<FBulletMoverTargetSyncState>();
+		const FBulletUpdatedMotionState* OutState = SimOutput.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 		if (!OutState) return;
-		Subsystem->UpdateActorVelocity(GetOwner(), OutState->GetTargetVelocity_WorldSpace(), OutState->GetTargetAngularVelocity_WorldSpace());
+		Subsystem->ApplyVelocity(GetBulletPhysicsBodyComponent(), OutState->GetVelocity_WorldSpace_Quantized(), OutState->GetAngularVelocityDegrees_WorldSpace_Quantized());
 	}
 	
 }
@@ -814,20 +813,32 @@ void UBulletMoverComponent::PostPhysicsTick(FBulletMoverTickEndData& SimOutput)
 	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::PostPhysicsTick);
 	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
+		if (!BulletPhysicsComponent && !UpdatedCompAsPrimitive) return;
 		FBulletUpdatedMotionState& FinalState = SimOutput.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 		
-		const int Id = Subsystem->GetActorRootShapeId(GetOwner());
 		FTransform T;
 		FVector V, A, F;
-		Subsystem->GetMotionState(Id, T, V, A, F);
+		Subsystem->GetPhysicsState(BulletPhysicsComponent ? BulletPhysicsComponent : UpdatedCompAsPrimitive, T, V, A, F);
 		
-		const FString MyRole = GetOwnerRole() == ROLE_Authority ? "Server" : "Client"; 
+		USceneComponent* U = GetBulletPhysicsBodyComponent();
+		
+		if (!U) return;
+		
+		// The state's properties are usually worldspace already, but may need to be adjusted to match the current movement base
+		const FVector WorldLocation = T.GetLocation();
+		const FRotator WorldOrientation = T.GetRotation().Rotator();
+		
+		FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
+		
+		const FTransform NewTransform = U->GetComponentTransform().GetRelativeTransform(UpdatedComponent->GetComponentTransform()).Inverse() * Transform;
+		
+		/*const FString MyRole = GetOwnerRole() == ROLE_Authority ? "Server" : "Client"; 
 		UE_LOG(LogBulletMover, Warning, TEXT("[MSL] NetMode = %s : Transform = %s"), *MyRole, *T.ToHumanReadableString());
 		UE_LOG(LogBulletMover, Warning, TEXT("[MSL] NetMode = %s : LinearVelocity = %s"), *MyRole, *V.ToCompactString());
-		UE_LOG(LogBulletMover, Warning, TEXT("[MSL] NetMode = %s : AngularVelocity = %s"), *MyRole, *A.ToCompactString());
+		UE_LOG(LogBulletMover, Warning, TEXT("[MSL] NetMode = %s : AngularVelocity = %s"), *MyRole, *A.ToCompactString());*/
 		
 		//TODO:@GreggoryAddison::CodeCompletion || The current base a player is standing on will need to be passed in... I think.
-		FinalState.SetTransforms_WorldSpace(T.GetLocation(), T.GetRotation().Rotator(), V, A, nullptr);
+		FinalState.SetTransforms_WorldSpace(NewTransform.GetLocation(), NewTransform.GetRotation().Rotator(), V, A, nullptr);
 	}
 }
 
@@ -1103,12 +1114,15 @@ void UBulletMoverComponent::SetFrameStateFromContext(const FBulletMoverSyncState
 			// the transform of the movement base, in case it has changed as well during the rollback.
 			MoverState->UpdateCurrentMovementBase();
 		}
-
+		
 		// The state's properties are usually worldspace already, but may need to be adjusted to match the current movement base
-		const FVector WorldLocation = MoverState->GetLocation_WorldSpace();
-		const FRotator WorldOrientation = MoverState->GetOrientation_WorldSpace();
+		const FVector WorldLocation = MoverState->GetLocation_WorldSpace_Quantized();
+		const FRotator WorldOrientation = MoverState->GetOrientation_WorldSpace_Quantized();
 		const FVector WorldVelocity = MoverState->GetVelocity_WorldSpace();
-
+		
+		FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
+		
+		
 		// Apply the desired transform to the scene component
 
 		// If we can, then we can utilize grouped movement updates to reduce the number of calls to SendPhysicsTransform
@@ -1121,14 +1135,65 @@ void UBulletMoverComponent::SetFrameStateFromContext(const FBulletMoverSyncState
 				EScopedUpdate::DeferredGroupUpdates,
 				/*bRequireOverlapsEventFlagToQueueOverlaps*/ true);
 
-			FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
-			UpdatedComponent->SetWorldTransform(Transform, /*bSweep*/false, nullptr, ETeleportType::TeleportPhysics);
+			
+			UpdatedComponent->SetWorldTransform(Transform, /*bSweep*/false, nullptr, ETeleportType::None);
 			UpdatedComponent->ComponentVelocity = WorldVelocity;
 		}
 		else
 		{
-			FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
-			UpdatedComponent->SetWorldTransform(Transform, /*bSweep*/false, nullptr, ETeleportType::None);
+			UpdatedComponent->SetWorldTransform(Transform, /*bSweep*/false, nullptr, ETeleportType::TeleportPhysics);
+			UpdatedComponent->ComponentVelocity = WorldVelocity;
+		}
+	}
+}
+
+void UBulletMoverComponent::SetFrameStateFromContextFromNestedChild(const FBulletMoverSyncState* SyncState,
+	const FBulletMoverAuxStateContext* AuxState, bool bRebaseBasedState)
+{
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletMoverComponent::SetFrameStateFromContext);
+	UpdateCachedFrameState(SyncState, AuxState);
+
+	if (FBulletUpdatedMotionState* MoverState = const_cast<FBulletUpdatedMotionState*>(LastMoverDefaultSyncState))
+	{
+		if (bRebaseBasedState && MoverState->GetMovementBase())
+		{
+			// Note that this is modifying our cached mover state from what we received from Network Prediction. We are resampling
+			// the transform of the movement base, in case it has changed as well during the rollback.
+			MoverState->UpdateCurrentMovementBase();
+		}
+
+		USceneComponent* U = GetBulletPhysicsBodyComponent();
+		
+		if (!U) return;
+		
+		// The state's properties are usually worldspace already, but may need to be adjusted to match the current movement base
+		const FVector WorldLocation = MoverState->GetLocation_WorldSpace_Quantized();
+		const FRotator WorldOrientation = MoverState->GetOrientation_WorldSpace_Quantized();
+		const FVector WorldVelocity = MoverState->GetVelocity_WorldSpace();
+		
+		FTransform Transform(WorldOrientation, WorldLocation, UpdatedComponent->GetComponentTransform().GetScale3D());
+		
+		const FTransform NewTransform = U->GetComponentTransform().GetRelativeTransform(UpdatedComponent->GetComponentTransform()).Inverse() * Transform;
+		
+		// Apply the desired transform to the scene component
+
+		// If we can, then we can utilize grouped movement updates to reduce the number of calls to SendPhysicsTransform
+		if (IsUsingDeferredGroupMovement())
+		{
+			// Signal to the USceneComponent that we are moving that this should be in a grouped update
+			// and not apply changes on the physics thread immediately
+			FScopedMovementUpdate MovementUpdate(
+				UpdatedComponent,
+				EScopedUpdate::DeferredGroupUpdates,
+				/*bRequireOverlapsEventFlagToQueueOverlaps*/ true);
+
+			
+			UpdatedComponent->SetWorldTransform(NewTransform, /*bSweep*/false, nullptr, ETeleportType::TeleportPhysics);
+			UpdatedComponent->ComponentVelocity = WorldVelocity;
+		}
+		else
+		{
+			UpdatedComponent->SetWorldTransform(NewTransform, /*bSweep*/false, nullptr, ETeleportType::TeleportPhysics);
 			UpdatedComponent->ComponentVelocity = WorldVelocity;
 		}
 	}
@@ -1176,6 +1241,38 @@ void UBulletMoverComponent::HandleImpact(FBulletMoverOnImpactParams& ImpactParam
 	}
 	
 	OnHandleImpact(ImpactParams);
+}
+
+void UBulletMoverComponent::FindDefaultComponents()
+{
+	FindDefaultUpdatedComponent();
+	
+	if (!IsValid(BulletPhysicsComponent))
+	{
+		const AActor* MyActor = GetOwner();
+		const UWorld* MyWorld = GetWorld();
+
+		if (MyActor && MyWorld && MyWorld->IsGameWorld())
+		{
+			// If the root is a bullet body just store it and return.
+			if (MyActor->GetRootComponent()->Implements<UBulletPrimitiveComponentInterface>())
+			{
+				SetBulletPhysicsComponent(Cast<UPrimitiveComponent>(MyActor->GetRootComponent()));
+				return;
+			}
+			
+			// Find the first child that is a bullet body and store that.
+			const int32 NumOfChildren = MyActor->GetRootComponent()->GetNumChildrenComponents();
+			for (int i = 0; i < NumOfChildren; ++i)
+			{
+				USceneComponent* ChildComponent = MyActor->GetRootComponent()->GetChildComponent(i);
+				if (!ChildComponent->Implements<UBulletPrimitiveComponentInterface>()) continue;
+				if (!ChildComponent->IsA(UPrimitiveComponent::StaticClass())) continue;
+				SetBulletPhysicsComponent(Cast<UPrimitiveComponent>(ChildComponent));
+				break;
+			}
+		}
+	}
 }
 
 void UBulletMoverComponent::OnHandleImpact(const FBulletMoverOnImpactParams& ImpactParams)
@@ -2200,6 +2297,8 @@ FTransform UBulletMoverComponent::GetUpdatedComponentTransform() const
 
 void UBulletMoverComponent::SetUpdatedComponent(USceneComponent* NewUpdatedComponent)
 {
+	//TODO:@GreggoryAddison::CodeCleanliness || We don't need to bind to the physics delegates in chaos if we are not registering for chaos collisions.
+	
 	// Remove delegates from old component
 	if (UpdatedComponent)
 	{
@@ -2244,10 +2343,27 @@ void UBulletMoverComponent::SetUpdatedComponent(USceneComponent* NewUpdatedCompo
 	UpdateTickRegistration();
 }
 
+void UBulletMoverComponent::SetBulletPhysicsComponent(UPrimitiveComponent* NewPhysicsComponent)
+{
+	//TODO:@GreggoryAddison::CodeCompletion || Need to unbind then rebind any delegates that we want to manage locally. A good one is on component hit so we can check for the ground without tracing. Meaning while falling I don't need to trace down I can just wait on the delegate signal
+	BulletPhysicsComponent = NewPhysicsComponent;
+	UpdatedCompAsPrimitive = NewPhysicsComponent;	
+}
+
 
 USceneComponent* UBulletMoverComponent::GetUpdatedComponent() const
 {
 	return UpdatedComponent.Get();
+}
+
+UPrimitiveComponent* UBulletMoverComponent::GetUpdatedPrimitive() const
+{
+	return UpdatedCompAsPrimitive.Get();
+}
+
+UPrimitiveComponent* UBulletMoverComponent::GetBulletPhysicsBodyComponent() const
+{
+	return BulletPhysicsComponent.Get();
 }
 
 USceneComponent* UBulletMoverComponent::GetPrimaryVisualComponent() const
@@ -2894,35 +3010,9 @@ void UBulletMoverComponent::CheckForExternalMovement(const FBulletMoverTickStart
 
 #pragma region BULLET PHYSICS
 
-TArray<UPrimitiveComponent*> UBulletMoverComponent::GetSecondaryCollisionShapes_Implementation() const
-{
-	return TArray<UPrimitiveComponent*>();
-}
 
-void UBulletMoverComponent::InitializeWithBullet()
-{
-	CreateShapesForRootComponent();
-	
-	if (bShouldCreateSecondaryShapes)
-	{
-		CreateSecondaryShapes();
-	}
-}
 
-void UBulletMoverComponent::CreateShapesForRootComponent()
-{
-	//TODO:@GreggoryAddison::CodeCompletion || Try and create the root shape for the character
-}
 
-void UBulletMoverComponent::CreateSecondaryShapes()
-{
-	const TArray<UPrimitiveComponent*> Comps(GetSecondaryCollisionShapes());
-	for (const UPrimitiveComponent* C : Comps)
-	{
-		//TODO:@GreggoryAddison::CodeCompletion || Try and create the root shape for the character	
-	}
-	
-}
 
 #pragma endregion 
 

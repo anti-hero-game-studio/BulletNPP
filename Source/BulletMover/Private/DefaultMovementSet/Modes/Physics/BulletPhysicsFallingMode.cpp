@@ -182,7 +182,7 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 	check(StartingSyncState);
 	
 	
-	FBulletMoverTargetSyncState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletMoverTargetSyncState>();
+	FBulletUpdatedMotionState& OutputSyncState = OutputState.SyncState.Collection.FindOrAddMutableDataByType<FBulletUpdatedMotionState>();
 	
 	FBulletFloorCheckResult FloorResult;
 	FloorCheck(StartingSyncState->GetLocation_WorldSpace(), ProposedMove.LinearVelocity,Params.TimeStep.StepMs * 0.001f, FloorResult);
@@ -192,7 +192,7 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 		// We are grounded and need to switch movement modes
 		OutputState.MovementEndState.RemainingMs = 0.0f;
 		OutputState.MovementEndState.NextModeName = DefaultModeNames::Walking;
-		OutputSyncState.UpdateTargetVelocity(StartingSyncState->GetVelocity_WorldSpace_Quantized(), StartingSyncState->GetAngularVelocityDegrees_WorldSpace_Quantized());
+		OutputSyncState.SetLinearAndAngularVelocity_WorldSpace(StartingSyncState->GetVelocity_WorldSpace_Quantized(), StartingSyncState->GetAngularVelocityDegrees_WorldSpace_Quantized());
 		return;
 	}
 
@@ -209,7 +209,7 @@ void UBulletPhysicsFallingMode::SimulationTick_Implementation(const FBulletSimul
 
 	OutputState.MovementEndState.RemainingMs = 0.0f;
 	OutputState.MovementEndState.NextModeName = Params.StartState.SyncState.MovementMode;
-	OutputSyncState.UpdateTargetVelocity(ProposedMove.LinearVelocity, ProposedMove.AngularVelocityDegrees);
+	OutputSyncState.SetLinearAndAngularVelocity_WorldSpace(ProposedMove.LinearVelocity, ProposedMove.AngularVelocityDegrees);
 }
 
 

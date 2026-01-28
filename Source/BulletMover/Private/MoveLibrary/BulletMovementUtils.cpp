@@ -850,6 +850,18 @@ bool UBulletMovementUtils::TestEncroachmentAndAdjust(const UBulletMoverComponent
 	return bFoundEncroacher;
 }
 
+FVector UBulletMovementUtils::GetAlignedVector(const FVector OriginalVector, const FVector AlignToVector)
+{
+	const FVector A = AlignToVector.GetSafeNormal();
+	return A * OriginalVector.Dot(A);
+}
+
+FVector UBulletMovementUtils::RemoveAlignedVector(const FVector OriginalVector, const FVector AlignToVector)
+{
+	const FVector A = AlignToVector.GetSafeNormal();
+	return OriginalVector - A * OriginalVector.Dot(A);
+}
+
 
 bool UBulletMovementUtils::TryMoveUpdatedComponent_Internal(const FBulletMovingComponentSet& MovingComps, const FVector& Delta, const FQuat& NewRotation, bool bSweep, EMoveComponentFlags MoveComponentFlags, FHitResult* OutHit, ETeleportType Teleport)
 {

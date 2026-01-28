@@ -1,9 +1,10 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MoveLibrary/BulletFloorQueryUtils.h"
 
 #include "BulletMoverComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Core/Interfaces/BulletPrimitiveComponentInterface.h"
 #include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 #include "MoveLibrary/BulletMovementUtils.h"
 #include "Engine/World.h"
@@ -21,7 +22,7 @@ namespace UE::FloorQueryUtility
 
 void UBulletFloorQueryUtils::FindFloor(const FBulletMovingComponentSet& MovingComps, float FloorSweepDistance, float MaxWalkSlopeCosine, bool bUseFlatBaseForFloorChecks, const FVector& Location, FBulletFloorCheckResult& OutFloorResult)
 {
-	if (!MovingComps.UpdatedComponent->IsQueryCollisionEnabled())
+	if (!MovingComps.UpdatedPrimitive->IsQueryCollisionEnabled() && !MovingComps.UpdatedPrimitive->Implements<UBulletPrimitiveComponentInterface>())
 	{
 		OutFloorResult.Clear();
 		return;
@@ -44,7 +45,7 @@ void UBulletFloorQueryUtils::ComputeFloorDist(const FBulletMovingComponentSet& M
 	// TODO: pluggable shapes
 	float PawnRadius = 0.0f;
 	float PawnHalfHeight = 0.0f;
-	UCapsuleComponent* CapsuleComponent = Cast<UCapsuleComponent>(MovingComps.UpdatedComponent);
+	UCapsuleComponent* CapsuleComponent = Cast<UCapsuleComponent>(MovingComps.UpdatedPrimitive);
 	CapsuleComponent->GetScaledCapsuleSize(PawnRadius, PawnHalfHeight);
 	//MovingComps.UpdatedPrimitive->CalcBoundingCylinder(PawnRadius, PawnHalfHeight);
 	FVector UpDirection = MovingComps.MoverComponent->GetUpDirection();
@@ -124,7 +125,7 @@ void UBulletFloorQueryUtils::ComputeFloorDist(const FBulletMovingComponentSet& M
 		QueryParams.TraceTag = SCENE_QUERY_STAT_NAME_ONLY(FloorLineTrace);
 
 		FHitResult Hit(1.f);
-		bBlockingHit = MovingComps.UpdatedComponent->GetWorld()->LineTraceSingleByChannel(Hit, LineTraceStart, LineTraceStart + Down, CollisionChannel, QueryParams, ResponseParam);
+		bBlockingHit = MovingComps.UpdatedComponent->GetWorld()->LineTraceSingleByChannel(Hit, LineTraceStart, Down, CollisionChannel, QueryParams, ResponseParam);
 		
 		if (bBlockingHit && Hit.Time > 0.f)
 		{
@@ -149,6 +150,7 @@ void UBulletFloorQueryUtils::ComputeFloorDist(const FBulletMovingComponentSet& M
 bool UBulletFloorQueryUtils::FloorSweepTest(const FBulletMovingComponentSet& MovingComps, FHitResult& OutHit, const FVector& Start, const FVector& End, ECollisionChannel TraceChannel, const struct FCollisionShape& CollisionShape, const struct FCollisionQueryParams& Params, const struct FCollisionResponseParams& ResponseParam, bool bUseFlatBaseForFloorChecks)
 {
 	const FVector DirAwayFromFloor = (Start - End).GetSafeNormal();
+	const FVector DirTowardsTheFloor = (End - Start).GetSafeNormal();
 	if (!MovingComps.UpdatedPrimitive.IsValid() || !DirAwayFromFloor.IsNormalized())
 	{
 		return false;
@@ -167,6 +169,8 @@ bool UBulletFloorQueryUtils::FloorSweepTest(const FBulletMovingComponentSet& Mov
 	const FQuat UpDirOrientation = FRotationMatrix::MakeFromZX(DirAwayFromFloor, FVector::ForwardVector).ToQuat();
 
 	bool bBlockingHit = false;
+	
+	const FVector Dir = End.ProjectOnTo(DirTowardsTheFloor);
 
 	if (bUseFlatBaseForFloorChecks)
 	{
@@ -178,7 +182,7 @@ bool UBulletFloorQueryUtils::FloorSweepTest(const FBulletMovingComponentSet& Mov
 		// First test with the box rotated so the corners are along the major axes (ie rotated 45 degrees).
 		const FQuat Rotate45LocalYaw = FQuat::MakeFromEuler(FVector(0.0f, 0.0f, 45.0f));
 		
-		Subsystem->SweepTraceSingle(BoxShape, Start, End, (UpDirOrientation * Rotate45LocalYaw), ECC_Visibility, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
+		Subsystem->SweepTraceSingle(BoxShape, Start, End, (UpDirOrientation * Rotate45LocalYaw), TraceChannel, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
 		bBlockingHit = OutHit.bBlockingHit;
 
 		if (!bBlockingHit)
@@ -186,13 +190,13 @@ bool UBulletFloorQueryUtils::FloorSweepTest(const FBulletMovingComponentSet& Mov
 			// Test again with the same box, not rotated.
 			
 			OutHit.Reset(1.f, false);
-			Subsystem->SweepTraceSingle(BoxShape, Start, End, (UpDirOrientation), ECC_Visibility, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
+			Subsystem->SweepTraceSingle(BoxShape, Start, End, (UpDirOrientation), TraceChannel, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
 			bBlockingHit = OutHit.bBlockingHit;
 		}
 	}
 	else
 	{
-		Subsystem->SweepTraceSingle(CollisionShape, Start, End, (UpDirOrientation), ECC_Visibility, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
+		Subsystem->SweepTraceSingle(CollisionShape, Start, Dir, (UpDirOrientation), TraceChannel, TArray<AActor*>{MovingComps.UpdatedComponent->GetOwner()}, OutHit);
 		bBlockingHit = OutHit.bBlockingHit;
 	}
 
