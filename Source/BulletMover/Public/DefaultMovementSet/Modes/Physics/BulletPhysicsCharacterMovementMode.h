@@ -12,7 +12,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract, Within = BulletMoverComponent, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced)
 class BULLETMOVER_API UBulletPhysicsCharacterMovementMode : public UBulletPhysicsMovementMode
 {
 	GENERATED_BODY()

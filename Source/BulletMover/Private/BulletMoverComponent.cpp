@@ -716,6 +716,18 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 	SimOutput.AuxState = SimInput.AuxState;
 
 	FBulletCharacterDefaultInputs* Input = SimInput.InputCmd.Collection.FindMutableDataByType<FBulletCharacterDefaultInputs>();
+
+	if (Input && bIsResimulating && GetOwnerRole() == ROLE_SimulatedProxy && UBulletNetworkPredictionWorldManager::ActiveInstance)
+	{
+		const FBulletNetworkPredictionSettings NetworkPredictionSettings = UBulletNetworkPredictionWorldManager::ActiveInstance->GetSettings();
+		if (NetworkPredictionSettings.SimulatedProxyNetworkLOD == EBulletNetworkLOD::ForwardPredict)
+		{
+			const int DecayKey = CachedNewestSimTickTimeStep.ServerFrame - InTimeStep.ServerFrame;
+			//TODO:@GreggoryAddison::InputDecay || Create a curve that has an input decay amount based on how many frames we've resimmed so far.
+			Input->Decay(0);
+		}
+	}
+	
 	
 	if (Input && !Input->SuggestedMovementMode.IsNone())
 	{
@@ -802,7 +814,7 @@ void UBulletMoverComponent::SimulationTick(const FBulletMoverTimeStep& InTimeSte
 	}
 	
 	// Get our rigid body and apply central impulse
-	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>(); !bIgnoreVelocityGeneratedByMovementMode)
 	{
 		const FBulletUpdatedMotionState* OutState = SimOutput.SyncState.Collection.FindDataByType<FBulletUpdatedMotionState>();
 		if (!OutState) return;

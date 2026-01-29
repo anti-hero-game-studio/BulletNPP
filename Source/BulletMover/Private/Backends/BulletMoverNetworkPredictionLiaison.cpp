@@ -11,6 +11,7 @@
 #include "Misc/DataValidation.h"
 #endif
 
+#include "BulletInputContainerStruct.h"
 #include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(BulletMoverNetworkPredictionLiaison)
@@ -109,7 +110,7 @@ void UBulletMoverNetworkPredictionLiaisonComponent::RestorePhysicsFrame(const FB
 			const FBulletFixedTickState& FixedTickState = UBulletNetworkPredictionWorldManager::ActiveInstance->GetFixedTickState();
 			FBulletNetSimTimeStep TimeStep = FixedTickState.GetNextTimeStep();
 			NewBaseSimTimeMs = TimeStep.TotalSimulationTime;
-			NextFrameNum = TimeStep.Frame;
+			NextFrameNum = TimeStep.Frame - FixedTickState.Offset;
 		}
 		break; 
 
@@ -130,18 +131,19 @@ void UBulletMoverNetworkPredictionLiaisonComponent::RestorePhysicsFrame(const FB
 	MoverTimeStep.BaseSimTimeMs = NewBaseSimTimeMs;
 	MoverTimeStep.StepMs = 0;
 	
+	
+	
+	
 	//TODO:@GreggoryAddison::CodeCompletion || This should set the physics state of all mover bodies back to their authoritative state. Static colliders don't need to be reset
 	if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
 	{
 		if (!MoverComp) return;
-		const UPrimitiveComponent* P = MoverComp->GetUpdatedComponent<UPrimitiveComponent>();
+		const UPrimitiveComponent* P = MoverComp->GetBulletPhysicsBodyComponent();
 		if (!P) return;
 
-		const FBulletUpdatedMotionState* S = SyncState->Collection.FindDataByType<FBulletUpdatedMotionState>(); 
-		const FBulletMoverTargetSyncState* T = SyncState->Collection.FindDataByType<FBulletMoverTargetSyncState>(); 
-		if (S && T)
+		if (const FBulletUpdatedMotionState* S = SyncState->Collection.FindDataByType<FBulletUpdatedMotionState>())
 		{
-			Subsystem->K2_SetPhysicsState(P, S->GetTransform_WorldSpace(), S->GetVelocity_WorldSpace(), S->GetAngularVelocityDegrees_WorldSpace());
+			Subsystem->K2_SetPhysicsState(P, S->GetTransform_WorldSpace_Quantized(), S->GetVelocity_WorldSpace_Quantized(), S->GetAngularVelocityDegrees_WorldSpace_Quantized());
 		}
 	}
 	
@@ -186,6 +188,27 @@ void UBulletMoverNetworkPredictionLiaisonComponent::SimulationTick(const FBullet
 	StartData.InputCmd  = *SimInput.Cmd;
 	StartData.SyncState = *SimInput.Sync;
 	StartData.AuxState  = *SimInput.Aux;
+	
+	const FBulletNetworkPredictionSettings NetworkPredictionSettings = UBulletNetworkPredictionWorldManager::ActiveInstance->GetSettings();
+	if (MoverComp->GetOwnerRole() == ROLE_SimulatedProxy && NetworkPredictionSettings.SimulatedProxyNetworkLOD == EBulletNetworkLOD::ForwardPredict)
+	{
+		if (StartData.InputCmd.Collection.GetDataArray().Num() == 0)
+		{
+			// Copy the inputs from the sync state to the input command for the sim proxy.
+			if (const FBulletMoverInputContainerDataStruct* InputContainer = static_cast<FBulletMoverInputContainerDataStruct*>(StartData.SyncState.Collection.FindDataByType(FBulletMoverInputContainerDataStruct::StaticStruct())))
+			{
+				for (auto InputStructIt = InputContainer->Collection.GetCollectionDataIterator(); InputStructIt; ++InputStructIt)
+				{
+					if (const FBulletMoverDataStructBase* InputDataStruct = InputStructIt->Get())
+					{
+						StartData.InputCmd.Collection.AddDataByCopy(InputDataStruct);
+					}
+				}
+			}
+		}
+		
+		
+	}
 
 	// Ensure persistent SyncStates are present in the start state for a SimTick.
 	for (const FBulletMoverDataPersistence& PersistentSyncEntry : MoverComp->PersistentSyncStateDataTypes)

@@ -18,10 +18,10 @@ struct FBulletFloorCheckResult;
 UCLASS(MinimalAPI, Blueprintable, BlueprintType, Experimental)
 class UBulletPhysicsFallingMode : public UBulletPhysicsCharacterMovementMode
 {
-GENERATED_BODY()
-
+	GENERATED_BODY()
 
 public:
+	
 	UE_API UBulletPhysicsFallingMode(const FObjectInitializer& ObjectInitializer);
 
 	UE_API virtual void OnRegistered(const FName ModeName) override;
@@ -84,6 +84,15 @@ public:
 	float TerminalVerticalSpeed;
 	
 protected:
+	/**
+	 * Is called at the end of the tick in falling mode. Handles checking any landings that should occur and switching to specific modes
+	 * (i.e. landing on a walkable surface would switch to the walking movement mode) 
+	 */
+	UFUNCTION(BlueprintCallable, Category=Mover)
+	UE_API virtual void ProcessLanded(const FBulletFloorCheckResult& FloorResult, FVector& Velocity, FBulletRelativeBaseInfo& BaseInfo, FBulletMoverTickEndData& TickEndData) const;
+
+	UE_API void CaptureFinalState(const FBulletUpdatedMotionState* StartSyncState, const FVector& FinalLocation, const FRotator& FinalRotation, const FBulletFloorCheckResult& FloorResult, float DeltaSeconds, float DeltaSecondsUsed, const FVector& AngularVelocityDegrees, FBulletUpdatedMotionState& OutputSyncState, FBulletMoverTickEndData& TickEndData, FBulletMovementRecord& Record) const;
+
 	TWeakObjectPtr<const UBulletCommonLegacyMovementSettings> CommonLegacySettings;
 };
 

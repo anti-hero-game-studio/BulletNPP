@@ -56,11 +56,11 @@ void UBulletPhysicsWalkingMode::GenerateMove_Implementation(const FBulletMoverTi
 	// If there's no intent from input to change orientation, use the current orientation
 	if (!CharacterInputs || CharacterInputs->OrientationIntent.IsNearlyZero())
 	{
-		IntendedOrientation_WorldSpace = StartingSyncState->GetOrientation_WorldSpace();
+		IntendedOrientation_WorldSpace = StartingSyncState->GetOrientation_WorldSpace_Quantized();
 	}
 	else
 	{
-		IntendedOrientation_WorldSpace = CharacterInputs->GetOrientationIntentDir_WorldSpace().ToOrientationRotator();
+		IntendedOrientation_WorldSpace = UE::BulletNetQuant::QuantizeRotatorCompressedShort(CharacterInputs->GetOrientationIntentDir_WorldSpace().ToOrientationRotator());
 	}
 
 	IntendedOrientation_WorldSpace = UBulletMovementUtils::ApplyGravityToOrientationIntent(IntendedOrientation_WorldSpace, MoverComp->GetWorldToGravityTransform(), CommonLegacySettings->bShouldRemainVertical);
@@ -81,8 +81,8 @@ void UBulletPhysicsWalkingMode::GenerateMove_Implementation(const FBulletMoverTi
 	}
 
 	Params.OrientationIntent = IntendedOrientation_WorldSpace;
-	Params.PriorVelocity = FVector::VectorPlaneProject(StartingSyncState->GetVelocity_WorldSpace(), MovementNormal);
-	Params.PriorOrientation = StartingSyncState->GetOrientation_WorldSpace();
+	Params.PriorVelocity = FVector::VectorPlaneProject(StartingSyncState->GetVelocity_WorldSpace_Quantized(), MovementNormal);
+	Params.PriorOrientation = StartingSyncState->GetOrientation_WorldSpace_Quantized();
 	Params.GroundNormal = MovementNormal;
 	Params.TurningRate = CommonLegacySettings->TurningRate;
 	Params.TurningBoost = CommonLegacySettings->TurningBoost;
@@ -134,7 +134,7 @@ void UBulletPhysicsWalkingMode::SimulationTick_Implementation(const FBulletSimul
 
 	const FVector OrigMoveDelta = ProposedMove.LinearVelocity * DeltaSeconds;
 
-	const FVector StartLocation = StartingSyncState->GetLocation_WorldSpace();
+	const FVector StartLocation = StartingSyncState->GetLocation_WorldSpace_Quantized();
 	const FVector TargetLocation = StartLocation + OrigMoveDelta;
 
 
@@ -154,7 +154,7 @@ void UBulletPhysicsWalkingMode::SimulationTick_Implementation(const FBulletSimul
 
 	OutputSyncState.MoveDirectionIntent = (ProposedMove.bHasDirIntent ? ProposedMove.DirectionIntent : FVector::ZeroVector);
 
-	const FRotator StartingOrient = StartingSyncState->GetOrientation_WorldSpace();
+	const FRotator StartingOrient = StartingSyncState->GetOrientation_WorldSpace_Quantized();
 	const FRotator TargetOrient = UBulletMovementUtils::ApplyAngularVelocityToRotator(StartingOrient, ProposedMove.AngularVelocityDegrees, DeltaSeconds);
 	const bool bIsOrientationChanging = !StartingOrient.Equals(TargetOrient);
 

@@ -281,13 +281,13 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 	for (TUniquePtr<IBulletFixedRollbackService>& Ptr : Services.FixedRollback.Array)
 	{
 		const int32 ReqFrame = Ptr->QueryRollback(&FixedTickState);
-		if (ReqFrame != INDEX_NONE)
+		if (ReqFrame > INDEX_NONE)
 		{
-			RollbackFrame = (RollbackFrame == INDEX_NONE ? ReqFrame : FMath::Min(RollbackFrame, ReqFrame));
+			RollbackFrame = (RollbackFrame <= INDEX_NONE ? ReqFrame : FMath::Min(RollbackFrame, ReqFrame));
 		}
 	}
 
-	if (RollbackFrame != INDEX_NONE)
+	if (RollbackFrame > INDEX_NONE)
 	{
 		QUICK_SCOPE_CYCLE_COUNTER(STAT_BNP_ROLLBACK);
 		TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::Rollback);
@@ -302,16 +302,17 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 			
 			
 			bool bFirstStep = true;
+			UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>();
 
 			// Do rollback as necessary
 			for (int32 Frame=RollbackFrame; Frame < EndFrame; ++Frame)
 			{
 				
 				const int32 ServerInputFrame = Frame + FixedTickState.Offset;
-				UE_LOG(LogBulletNetworkPrediction, Warning, TEXT(" [F]Previous Pending Frame = %d"), FixedTickState.PendingFrame);
+				/*UE_LOG(LogBulletNetworkPrediction, Warning, TEXT(" [F]Previous Pending Frame = %d"), FixedTickState.PendingFrame);
 				UE_LOG(LogBulletNetworkPrediction, Warning, TEXT(" [F]Roll Back Frame = %d"), Frame);
 				UE_LOG(LogBulletNetworkPrediction, Warning, TEXT(" [F]Next Time Stamp Frame = %d"), FixedTickState.GetNextTimeStep().Frame);
-				UE_LOG(LogBulletNetworkPrediction, Warning, TEXT(" [F]Server Frame = %d"), ServerInputFrame);
+				UE_LOG(LogBulletNetworkPrediction, Warning, TEXT(" [F]Server Frame = %d"), ServerInputFrame);*/
 				FixedTickState.PendingFrame = Frame;
 				FBulletNetSimTimeStep Step = FixedTickState.GetNextTimeStep();
 				FBulletServiceTimeStep ServiceStep = FixedTickState.GetNextServiceTimeStep();
@@ -323,29 +324,40 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 				// bFirstStep will indicate that even if they don't have a correction, they need to rollback their historic state
 				for (TUniquePtr<IBulletFixedRollbackService>& Ptr : Services.FixedRollback.Array)
 				{
-					UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("Roll Back : Mover Pre-StepRollBack : Frame = %d"), Frame);
+					//UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("Roll Back : Mover Pre-StepRollBack : Frame = %d"), Frame);
 					Ptr->PreStepRollback(Step, ServiceStep, FixedTickState.Offset, bFirstStep);
 				}
-				for (TUniquePtr<IBulletFixedPhysicsRollbackService>& Ptr : Services.FixedPhysicsRollback.Array)
+
+				if (bFirstStep && Subsystem)
 				{
-					UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("Roll Back : Physics Pre-StepRollBack : Frame = %d"), Frame);
-					Ptr->PreStepRollback(Step, ServiceStep, FixedTickState.Offset, bFirstStep);
+					Subsystem->RestoreState(Frame);
+				}
+				
+				{
+					for (TUniquePtr<IBulletFixedPhysicsRollbackService>& Ptr : Services.FixedPhysicsRollback.Array)
+					{
+						//UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("Roll Back : Physics Pre-StepRollBack : Frame = %d"), Frame);
+						Ptr->PreStepRollback(Step, ServiceStep, FixedTickState.Offset, bFirstStep);
+					}
+					
+					Subsystem->UpdateAABB();
 				}
 				// Run Sim ticks
 				for (TUniquePtr<IBulletFixedRollbackService>& Ptr : Services.FixedRollback.Array)
 				{
-					UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("Roll Back : Mover StepRollBack : Frame = %d"), Frame);
+					//UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("Roll Back : Mover StepRollBack : Frame = %d"), Frame);
 					Ptr->StepRollback(Step, ServiceStep);
 				}
 				
 				//TODO:@GreggoryAddison::CodeCompletion || I will have to manually add decay on inputs that I don't own
 				{
 					TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::BulletPhysicsTick_Rollback);
-					if (UBulletPhysicsWorldSubsystem* Subsystem = GetWorld()->GetSubsystem<UBulletPhysicsWorldSubsystem>())
+					if (Subsystem)
 					{
-						UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("Roll Back : Physics Step : Frame = %d"), Frame);
+						//UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("Roll Back : Physics Step : Frame = %d"), Frame);
 						const double FixedTimeStep = Step.StepMS * 0.001;
-						Subsystem->StepPhysics(FixedTimeStep, 1, FixedTimeStep);
+						Subsystem->StepPhysics(FixedTimeStep, 0, FixedTimeStep);
+						Subsystem->SaveState(Step.Frame);
 					}
 				
 				}
@@ -355,7 +367,7 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 					TRACE_CPUPROFILER_EVENT_SCOPE(BulletNetworkPrediction::PostBulletPhysicsTick_Rollback);
 					for (TUniquePtr<IBulletLocalPhysicsService>& Ptr : Services.FixedPhysics.Array)
 					{
-						UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("[MSL] Roll Back : Post Physics Step : Frame = %d"), Frame);
+						//UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("[MSL] Roll Back : Post Physics Step : Frame = %d"), Frame);
 						Ptr->Tick(Step, ServiceStep);
 					}
 				}
@@ -371,12 +383,12 @@ void UBulletNetworkPredictionWorldManager::ReconcileSimulationsPostNetworkUpdate
 			// As our input frames make the round trip, we'll get some slack and be doing corrections in the above code block
 			// (Setting the correction data now most likely is still wrong and not worth the iteration time)
 			
-			UE_LOG(LogBulletNetworkPrediction, Log, TEXT("RollbackFrame %d EQUAL PendingFrame %d... Offset: %d"), RollbackFrame, FixedTickState.PendingFrame, FixedTickState.Offset);
+			UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("RollbackFrame %d EQUAL PendingFrame %d... Offset: %d"), RollbackFrame, FixedTickState.PendingFrame, FixedTickState.Offset);
 		}
 		else if (RollbackFrame > FixedTickState.PendingFrame)
 		{
 			// Most likely we haven't had a confirmed frame yet so our local frame -> server mapping hasn't been set yet
-			UE_LOG(LogBulletNetworkPrediction, Log, TEXT("RollbackFrame %d AHEAD of PendingFrame %d... Offset: %d"), RollbackFrame, FixedTickState.PendingFrame, FixedTickState.Offset);
+			UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("RollbackFrame %d AHEAD of PendingFrame %d... Offset: %d"), RollbackFrame, FixedTickState.PendingFrame, FixedTickState.Offset);
 		}
 	}
 
@@ -490,6 +502,7 @@ void UBulletNetworkPredictionWorldManager::BeginNewSimulationFrame_Internal(floa
 						//UE_LOG(LogBulletNetworkPrediction, Warning, TEXT("[MSL] Time | DeltaTime = %f | Frame = %d"), DeltaTimeSeconds, Step.Frame);
 						const double FixedTimeStep = Step.StepMS * 0.001;
 						Subsystem->StepPhysics(DeltaTimeSeconds, 1, FixedTimeStep);
+						Subsystem->SaveState(Step.Frame);
 					}
 				
 				}

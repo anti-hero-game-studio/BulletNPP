@@ -247,16 +247,16 @@ bool FBulletUpdatedMotionState::ShouldReconcile(const FBulletMoverDataStructBase
 
 	if (!bIsNearEnough)
 	{
-		UE_LOG(LogBulletMover, Error, TEXT("Client And Server Locations Are Out Of Sync"))
+		/*UE_LOG(LogBulletMover, Error, TEXT("Client And Server Locations Are Out Of Sync"))
 		UE_LOG(LogBulletMover, Error, TEXT("Client Velocity : %s"), *GetLocation_WorldSpace().ToCompactString())
-		UE_LOG(LogBulletMover, Error, TEXT("Server Velocity : %s"), *AuthoritySyncState->GetLocation_WorldSpace().ToCompactString())
+		UE_LOG(LogBulletMover, Error, TEXT("Server Velocity : %s"), *AuthoritySyncState->GetLocation_WorldSpace().ToCompactString())*/
 	}
 	
 	if (!bIsFastEnough)
 	{
-		UE_LOG(LogBulletMover, Error, TEXT("Client And Server Velocity Are Out Of Sync"))
+		/*UE_LOG(LogBulletMover, Error, TEXT("Client And Server Velocity Are Out Of Sync"))
 		UE_LOG(LogBulletMover, Error, TEXT("Client Velocity : %s"), *GetVelocity_WorldSpace().ToCompactString())
-		UE_LOG(LogBulletMover, Error, TEXT("Server Velocity : %s"), *AuthoritySyncState->GetVelocity_WorldSpace().ToCompactString())
+		UE_LOG(LogBulletMover, Error, TEXT("Server Velocity : %s"), *AuthoritySyncState->GetVelocity_WorldSpace().ToCompactString())*/
 	}
 
 	return /*bAreInDifferentSpaces || */!bIsNearEnough || !bIsFastEnough;
@@ -509,6 +509,60 @@ FVector FBulletUpdatedMotionState::GetAngularVelocityDegrees_WorldSpace() const
 FVector FBulletUpdatedMotionState::GetAngularVelocityDegrees_BaseSpace() const
 {
 	return AngularVelocityDegrees;
+}
+
+FTransform FBulletUpdatedMotionState::GetTransform_WorldSpace_Quantized() const
+{
+	const FVector LQuantized = UE::BulletNetQuant::QuantizePackedVector<100>(GetLocation_BaseSpace());
+	const FRotator RQuantized = UE::BulletNetQuant::QuantizeRotatorCompressedShort(GetOrientation_BaseSpace());
+	const FVector BLQuantized = UE::BulletNetQuant::QuantizePackedVector<100>(MovementBasePos);
+	const FRotator BRQuantized = UE::BulletNetQuant::QuantizeRotatorCompressedShort(MovementBaseQuat.Rotator());
+	if (MovementBase.IsValid())
+	{
+		return FTransform(RQuantized, LQuantized) * FTransform(BRQuantized, BLQuantized);
+	}
+
+	return FTransform(RQuantized, LQuantized);
+}
+
+FVector FBulletUpdatedMotionState::GetLocation_WorldSpace_Quantized() const
+{
+	const FVector LocalQ = UE::BulletNetQuant::QuantizePackedVector<100>(GetLocation_BaseSpace());
+	if (MovementBase.IsValid())
+	{
+		return FTransform(MovementBaseQuat, MovementBasePos).TransformPositionNoScale(LocalQ);
+	}
+	return LocalQ;
+}
+
+FVector FBulletUpdatedMotionState::GetVelocity_WorldSpace_Quantized() const
+{
+	const FVector LocalQ = UE::BulletNetQuant::QuantizePackedVector<10>(GetVelocity_BaseSpace());
+	if (MovementBase.IsValid())
+	{
+		return MovementBaseQuat.RotateVector(LocalQ);
+	}
+	return LocalQ;
+}
+
+FVector FBulletUpdatedMotionState::GetAngularVelocityDegrees_WorldSpace_Quantized() const
+{
+	const FVector LocalQ = UE::BulletNetQuant::QuantizePackedVector<10>(GetAngularVelocityDegrees_BaseSpace());
+	if (MovementBase.IsValid())
+	{
+		return MovementBaseQuat.RotateVector(LocalQ);
+	}
+	return LocalQ;
+}
+
+FRotator FBulletUpdatedMotionState::GetOrientation_WorldSpace_Quantized() const
+{
+	const FRotator LocalQ = UE::BulletNetQuant::QuantizeRotatorCompressedShort(GetOrientation_BaseSpace());
+	if (MovementBase.IsValid())
+	{
+		return (MovementBaseQuat * FQuat(LocalQ)).Rotator();
+	}
+	return LocalQ;
 }
 
 // FBulletMoverTargetSyncState ///////////////////////////////////////////////////

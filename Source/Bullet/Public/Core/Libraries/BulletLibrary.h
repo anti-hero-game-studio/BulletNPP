@@ -119,6 +119,14 @@ public:
 				ToBulletPosition(T.GetLocation(), WorldOrigin));
 	}
 	
+	static btTransform ToBulletTransform(const FVector& Location, const FQuat& Rotation, const FVector& WorldOrigin = FVector::Zero())
+	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(BulletHelpers::ToBulletTransform);
+		return btTransform(
+				ToBulletQuat(Rotation),
+				ToBulletPosition(Location, WorldOrigin));
+	}
+	
 	
 	static bool IsAnyCollisionAllowed(const btCollisionObject* A, const btCollisionObject* B)
 	{

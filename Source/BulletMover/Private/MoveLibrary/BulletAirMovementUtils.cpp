@@ -3,6 +3,7 @@
 #include "MoveLibrary/BulletAirMovementUtils.h"
 
 #include "BulletMoverComponent.h"
+#include "Core/Singletons/BulletPhysicsWorldSubsystem.h"
 #include "MoveLibrary/BulletAsyncMovementUtils.h"
 #include "MoveLibrary/BulletFloorQueryUtils.h"
 #include "MoveLibrary/BulletMovementUtils.h"

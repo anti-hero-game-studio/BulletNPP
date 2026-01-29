@@ -15,8 +15,8 @@
 #include "Core/CollisionFilters/UnrealCollisionDispatcher.h"
 #include "Core/CollisionFilters/BulletOverlappingPairCache.h"
 #include "Core/ContactHandling/BulletContactGatherer.h"
+#include "Core/ContactHandling/BulletContactResults.h"
 #include "Core/Interfaces/BulletPrimitiveComponentInterface.h"
-#include "GameFramework/PhysicsVolume.h"
 
 int32 DrawDebugShapes = 0;
 static FAutoConsoleVariableRef CVarDrawDebugShapes(
@@ -74,14 +74,47 @@ void UBulletPhysicsWorldSubsystem::OnWorldEndPlay(UWorld& InWorld)
 
 void UBulletPhysicsWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
-	FName BypassTag = FName("bypass");
 	
 	Super::OnWorldBeginPlay(InWorld);
 	
-	const UBulletCoreSettings* Settings = GetDefault<UBulletCoreSettings>(); 
+	TArray<AActor*> dynamicActors;
+	
+	// Iterate over all Actors in the world
 	for (TActorIterator<AActor> ActorItr(&InWorld); ActorItr; ++ActorItr)
 	{
 		AActor* Actor = *ActorItr;
+		if (!Actor)
+			continue;
+		
+		bool bShouldRegister = false;
+		TInlineComponentArray<UPrimitiveComponent*, 20> Components;
+		
+		// Collisions from Meshes
+		Actor->GetComponents(UPrimitiveComponent::StaticClass(), Components);
+		for (UPrimitiveComponent* Comp : Components)
+		{
+			if (!Comp) continue;
+			if (Comp->Implements<UBulletPrimitiveComponentInterface>())
+			{
+				bShouldRegister = true;
+				break;
+			}
+		}
+		
+		if (!bShouldRegister) continue;
+		
+		dynamicActors.Add(Actor);
+	}
+
+	// Might not be needed, but keeping it because I don't want to debug
+	// deterministic behaviour changes across multiple instances...
+	dynamicActors.Sort([](const AActor& A, const AActor& B) {
+		return A.GetName() < B.GetName();
+	});
+	
+
+	for (AActor* Actor : dynamicActors)
+	{
 		if (!Actor) continue;
 
 		bool bShouldRegister = true;
@@ -94,7 +127,6 @@ void UBulletPhysicsWorldSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 		if (!bShouldRegister) continue;
 		
 		RegisterBulletRigidBody(Actor);
-		
 	}
 }
 
@@ -540,6 +572,7 @@ void UBulletPhysicsWorldSubsystem::CleanUpBulletWorld()
 	BtGhostBodies.Empty();
 }
 
+
 FUnrealShapeDescriptor UBulletPhysicsWorldSubsystem::GetShapeDescriptorData(const AActor* Actor) const
 {
 	if (!Actor) return FUnrealShapeDescriptor();
@@ -548,6 +581,15 @@ FUnrealShapeDescriptor UBulletPhysicsWorldSubsystem::GetShapeDescriptorData(cons
 	
 	return GlobalShapeDescriptorDataCache[Actor];
 }
+
+FVector UBulletPhysicsWorldSubsystem::GetVelocity(const int32& ID) const
+{
+	const btRigidBody* Rb = GetRigidBody(ID);
+	
+	if (!Rb) return FVector();
+	
+	return BulletHelpers::ToUnrealVector3(Rb->getLinearVelocity());
+};
 
 int32 UBulletPhysicsWorldSubsystem::GetActorRootShapeId(const AActor* Actor) const
 {
@@ -852,6 +894,7 @@ void UBulletPhysicsWorldSubsystem::BroadcastComponentHit(const FBulletHitEvent& 
 }
 
 
+
 btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, const FTransform& FinalTransform, btCollisionShape* CollisionShape,  const FBulletPhysicsBodySettings& Options)
 {
 	btVector3 Inertia;
@@ -861,6 +904,7 @@ btRigidBody* UBulletPhysicsWorldSubsystem::AddRigidBodyCollider(AActor* Actor, c
 	btRigidBody* Body = new btRigidBody(RBInfo);
 	Body->setWorldTransform(BulletHelpers::ToBulletTransform(FinalTransform, UE_WORLD_ORIGIN));
 	MotionState->CacheOwner(Body);
+	
 	if (Options.bKeepShapeVertical)
 	{
 		Body->setAngularFactor(btVector3(0, 0, 1));
@@ -981,19 +1025,164 @@ void UBulletPhysicsWorldSubsystem::SetPhysicsState(const int ID, const FTransfor
 	if (btRigidBody* RB = GetRigidBody(ID)) 
 	{
 		RB->setWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
-		/*if (RB->getMotionState())
+		if (RB->getMotionState())
 		{
 			RB->getMotionState()->setWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
-		}*/
+		}
 		RB->clearForces();
 		RB->setLinearVelocity(BulletHelpers::ToBulletPosition(Velocity, UE_WORLD_ORIGIN));
 		RB->setAngularVelocity(BulletHelpers::ToBulletPosition(AngularVelocity, UE_WORLD_ORIGIN));
-		/*RB->setInterpolationWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
+		RB->setInterpolationWorldTransform(BulletHelpers::ToBulletTransform(Transforms, UE_WORLD_ORIGIN));
 		RB->setInterpolationLinearVelocity(BulletHelpers::ToBulletPosition(Velocity, UE_WORLD_ORIGIN));
-		RB->setInterpolationAngularVelocity(BulletHelpers::ToBulletPosition(AngularVelocity, UE_WORLD_ORIGIN));*/
-		
-		BtWorld->updateSingleAabb(RB);
+		RB->setInterpolationAngularVelocity(BulletHelpers::ToBulletPosition(AngularVelocity, UE_WORLD_ORIGIN));
 	}
+}
+
+void UBulletPhysicsWorldSubsystem::UpdateAABB() const
+{
+	BtWorld->updateAabbs();
+}
+
+void UBulletPhysicsWorldSubsystem::TestCollisions(const FTransform& T, const int32& ID, TArray<FBulletHitEvent>& OutHits) const
+{
+	btCollisionObject* Obj = GetCollisionBody(ID);
+	if (!Obj) return;
+	
+	btPairCachingGhostObject* Ghost = new btPairCachingGhostObject();
+	Ghost->setCollisionShape(Obj->getCollisionShape());
+	Ghost->setWorldTransform(BulletHelpers::ToBulletTransform(T, UE_WORLD_ORIGIN));
+	
+	BtWorld->addCollisionObject(Ghost);
+	
+	Ghost->setCollisionFlags(Ghost->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+
+	FBulletContactResult_FirstHit cr;
+	BtWorld->contactTest(Ghost, cr);
+	OutHits = cr.Results;
+	
+	//delete Ghost;
+}
+
+void UBulletPhysicsWorldSubsystem::TestCollisions(const FTransform& T, const UPrimitiveComponent* Target, TArray<FBulletHitEvent>& OutHits) const
+{
+	int32 ShapeId = FindShapeId(Target);
+	
+	if (ShapeId == INDEX_NONE) return;
+	
+	TestCollisions(T, ShapeId, OutHits);
+}
+
+FHitResult UBulletPhysicsWorldSubsystem::SweepGhostObject(const float Radius, const FTransform& Start, const FTransform& End)
+{
+	
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::SweepGhostShape);
+	/*if (!m_ghostObject)
+	{
+		m_ghostObject = new btPairCachingGhostObject();
+		btCollisionShape* Collider = GetSphereCollisionShape(Radius);
+		m_ghostObject->setCollisionShape(Collider);
+		m_ghostObject->setWorldTransform(BulletHelpers::ToBulletTransform(End, UE_WORLD_ORIGIN));
+		BtWorld->addCollisionObject(m_ghostObject);
+		BtGhostBodies.Add(m_ghostObject);
+		// No physical response, overlap only
+		m_ghostObject->setCollisionFlags(m_ghostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	}
+	
+	btCollisionShape* Collider = GetSphereCollisionShape(Radius);
+	
+	
+	btCollisionObjectArray CollisionArray;
+	
+		
+	btClosestNotMeConvexResultCallback RayCallback(&CollisionArray, BulletHelpers::ToBulletPosition(Start.GetLocation(), UE_WORLD_ORIGIN), BulletHelpers::ToBulletPosition(End.GetLocation(), UE_WORLD_ORIGIN), ECC_WorldStatic);
+	
+	
+	m_ghostObject->convexSweepTest
+	(
+		static_cast<const btConvexShape*>(Collider),
+		BulletHelpers::ToBulletTransform(Start, UE_WORLD_ORIGIN),
+		BulletHelpers::ToBulletTransform(End, UE_WORLD_ORIGIN),
+		RayCallback,
+		BtWorld->getDispatchInfo().m_allowedCcdPenetration
+	);
+	
+	ShowDebugShapes(FCollisionShape::MakeSphere(Radius), Start.GetLocation(), End.GetLocation(), End.GetRotation());
+	
+	FHitResult HitResult;
+	ConstructHitResult(RayCallback, HitResult);
+
+	return HitResult;*/
+	
+	if (!m_ghostObject)
+	{
+		m_ghostObject = new btPairCachingGhostObject();
+		btCollisionShape* Collider = GetSphereCollisionShape(Radius);
+		m_ghostObject->setCollisionShape(Collider);
+		m_ghostObject->setWorldTransform(BulletHelpers::ToBulletTransform(End, UE_WORLD_ORIGIN));
+		BtWorld->addCollisionObject(m_ghostObject);
+		BtGhostBodies.Add(m_ghostObject);
+		// No physical response, overlap only
+		m_ghostObject->setCollisionFlags(m_ghostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+	}
+	
+	
+	btManifoldArray manifoldArray; btBroadphasePairArray& pairArray = m_ghostObject->getOverlappingPairCache()->getOverlappingPairArray(); 
+	int numPairs = pairArray.size();
+
+	for (int i = 0; i < numPairs; ++i) { manifoldArray.clear();
+
+		const btBroadphasePair& pair = pairArray[i];
+
+		btBroadphasePair* collisionPair =  BtWorld->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
+
+		if (!collisionPair) continue;
+
+		if (collisionPair->m_algorithm)
+		{
+			collisionPair->m_algorithm->getAllContactManifolds(manifoldArray);
+		}
+
+		for (int j = 0; j < manifoldArray.size(); j++) {
+			btPersistentManifold* manifold = manifoldArray[j];
+
+			bool isFirstBody = manifold->getBody0() == m_ghostObject;
+
+			btScalar direction = isFirstBody ? btScalar(-1.0) : btScalar(1.0);
+
+			for (int p = 0; p < manifold->getNumContacts(); ++p) 
+			{
+				const btManifoldPoint& pt = manifold->getContactPoint(p);
+				if (pt.getDistance() < 0.f) {
+					const btVector3& ptA = pt.getPositionWorldOnA(); const
+					btVector3& ptB = pt.getPositionWorldOnB(); const btVector3& normalOnB =
+					pt.m_normalWorldOnB;
+
+					// handle collisions here
+					FHitResult Hit(NoInit);
+					Hit.bBlockingHit = true;
+					Hit.ImpactPoint = BulletHelpers::ToUnrealPosition(pt.getPositionWorldOnA(), FVector::ZeroVector);
+					Hit.ImpactNormal = BulletHelpers::ToUnrealNormal(pt.m_normalWorldOnB);
+					Hit.PenetrationDepth = BulletHelpers::ToUnrealFloat(pt.getDistance());
+					
+					if (DrawDebugTraces > 0)
+					{
+						DrawDebugLine(GetWorld(), Start.GetLocation(), Hit.ImpactPoint, FColor::Green, false, DrawDebugTraces);
+
+						if (Hit.bBlockingHit)
+						{
+							DrawDebugSolidBox(GetWorld(), Hit.ImpactPoint, FVector(10.f), FColor::Red, false, DrawDebugTraces);
+						}
+					}
+					
+					//BtWorld->removeCollisionObject(m_ghostObject);
+					return Hit;
+				}
+			}
+		}
+	}
+	
+	return FHitResult();
+	
 }
 
 void UBulletPhysicsWorldSubsystem::GetPhysicsState(const UPrimitiveComponent* Target, FTransform& Transforms, FVector& Velocity, FVector& AngularVelocity,FVector& Force)
@@ -1056,11 +1245,13 @@ void UBulletPhysicsWorldSubsystem::GetMotionState(int Id, FTransform& Transforms
 
 void UBulletPhysicsWorldSubsystem::StepPhysics(const float DeltaSeconds, const int MaxSubSteps, const float FixedTimeStep)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(StepPhysics);
+	
 	if (OnPrePhysicsStep.IsBound())
 	{
 		OnPrePhysicsStep.Broadcast(FixedTimeStep);
 	}
-	TRACE_CPUPROFILER_EVENT_SCOPE(StepPhysics);
+	
 	BtWorld->stepSimulation(FixedTimeStep,MaxSubSteps,FixedTimeStep);
 
 #if WITH_EDITOR
@@ -1321,6 +1512,11 @@ TArray<FHitResult> UBulletPhysicsWorldSubsystem::SweepBoxMultiByChannel(const FV
 	HitBodyIds = SweepTraceMulti(Shape, Start, End, Rotation.Quaternion(), Channel, ActorsToIgnore, Hits);
 	
 	return Hits;
+}
+
+FHitResult UBulletPhysicsWorldSubsystem::SweepGhostSphere(const float Radius, const FTransform Start, const FTransform End)
+{
+	return SweepGhostObject(Radius, Start, End);
 }
 
 int32 UBulletPhysicsWorldSubsystem::LineTraceSingle(const FVector& Start, const FVector& End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit)
@@ -1664,6 +1860,16 @@ void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btCollisionWorld::Cl
 
 		OutHit.PhysMaterial = UserData->PhysMaterial;
 	}
+
+	if (DrawDebugTraces > 0)
+	{
+		DrawDebugLine(GetWorld(), From, HitLocation, FColor::Green, false, DrawDebugTraces);
+
+		if (OutHit.bBlockingHit)
+		{
+			DrawDebugSolidBox(GetWorld(), HitLocation, FVector(10.f), FColor::Red, false, DrawDebugTraces);
+		}
+	}
 }
 
 void UBulletPhysicsWorldSubsystem::ConstructHitResult(const btAllNotMeRaycastResultCallback& Result, TArray<FHitResult>& OutHits) const
@@ -1775,6 +1981,7 @@ int32 UBulletPhysicsWorldSubsystem::SweepTraceInternal(const btTransform& From, 
 		To,
 		Result
 	);
+	
 	
 	ConstructHitResult(Result, OutHit);
 	
@@ -2027,6 +2234,252 @@ void UBulletPhysicsWorldSubsystem::ExtractPhysicsGeometry(UPrimitiveComponent* P
 
 }
 
+#pragma region SNAPSHOT HISTORY
+void UBulletPhysicsWorldSubsystem::SaveState(const int32 CommandFrame)
+{
+	TRACE_CPUPROFILER_EVENT_SCOPE(UBulletPhysicsWorldSubsystem::SaveState);
+	const UBulletCoreSettings* Settings = GetDefault<UBulletCoreSettings>();
+	if (!Settings) return;
+	
+	EnsureHistoryAllocated();
 
+	btDiscreteDynamicsWorld* World = GetBulletWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const int32 SlotIndex = (Settings->StateHistorySizeFrames > 0) ? (CommandFrame % Settings->StateHistorySizeFrames) : 0;
+	FBulletFrameSnapshot& Slot = FrameHistory[SlotIndex];
+
+	Slot.CommandFrame = CommandFrame;
+	Slot.Bodies.Reset();
+
+	const int32 NumObjs = World->getNumCollisionObjects();
+	Slot.Bodies.Reserve(NumObjs);
+
+	for (int32 i = 0; i < NumObjs; ++i)
+	{
+		btCollisionObject* Obj = World->getCollisionObjectArray()[i];
+		if (!Obj) continue;
+
+		btRigidBody* Body = btRigidBody::upcast(Obj);
+		if (!Body) continue;
+
+		if (!ShouldSnapshotBody(*Body)) continue;
+
+		const uint64 Key = BulletGetBodyKey64(Obj);;
+		if (Key == 0)
+		{
+			// You REALLY want stable keys. 0 is often "unset".
+			// If you prefer, you can auto-assign here, but do it consistently across client/server.
+			// For now we skip to avoid restoring wrong objects.
+			continue;
+		}
+
+		FBulletRigidBodySnapshot Snap;
+		CaptureBodySnapshot(*Body, Snap);
+		Slot.Bodies.Add(MoveTemp(Snap));
+	}
+}
+
+bool UBulletPhysicsWorldSubsystem::RestoreState(const int32 CommandFrame)
+{
+	const UBulletCoreSettings* Settings = GetDefault<UBulletCoreSettings>();
+	if (!Settings) return false;
+	
+	EnsureHistoryAllocated();
+
+	btDiscreteDynamicsWorld* World = GetBulletWorld();
+	if (!World)
+	{
+		return false;
+	}
+
+	const int32 SlotIndex = (Settings->StateHistorySizeFrames > 0) ? (CommandFrame % Settings->StateHistorySizeFrames) : 0;
+	const FBulletFrameSnapshot& Slot = FrameHistory[SlotIndex];
+
+	// Guard: this slot must actually correspond to the requested CommandFrame
+	if (Slot.CommandFrame != CommandFrame)
+	{
+		return false;
+	}
+
+	// Build a lookup from BodyKey -> snapshot
+	// (You can optimize this to a persistent map if needed.)
+	TMap<uint32, const FBulletRigidBodySnapshot*> SnapByKey;
+	SnapByKey.Reserve(Slot.Bodies.Num());
+	for (const FBulletRigidBodySnapshot& Snap : Slot.Bodies)
+	{
+		SnapByKey.Add(Snap.BodyKey, &Snap);
+	}
+
+	const int32 NumObjs = World->getNumCollisionObjects();
+
+	// Restore bodies that exist in both the world and the snapshot
+	for (int32 i = 0; i < NumObjs; ++i)
+	{
+		btCollisionObject* Obj = World->getCollisionObjectArray()[i];
+		if (!Obj) continue;
+
+		btRigidBody* Body = btRigidBody::upcast(Obj);
+		if (!Body) continue;
+
+		if (!ShouldSnapshotBody(*Body)) continue;
+
+		
+		const uint64 Key = BulletGetBodyKey64(Obj);;
+		if (const FBulletRigidBodySnapshot* Snap = SnapByKey.FindRef(Key))
+		{
+			ApplyBodySnapshot(*Body, *Snap);
+		}
+	}
+
+	// After mass transform changes, update broadphase pairs and AABBs so the next simulation step is stable.
+	// This avoids "one-frame weirdness" where broadphase still has old proxies.
+	World->updateAabbs();
+	World->computeOverlappingPairs();
+
+	// If you rely on constraints, you may need to:
+	// - also restore constraint motor targets / runtime params here, or
+	// - force island recomputation. Bullet does this during step; the above helps.
+	return true;
+}
+
+void UBulletPhysicsWorldSubsystem::ResetStateHistory()
+{
+	EnsureHistoryAllocated();
+	for (FBulletFrameSnapshot& Slot : FrameHistory)
+	{
+		Slot.CommandFrame = INDEX_NONE;
+		Slot.Bodies.Reset();
+	}
+}
+
+void UBulletPhysicsWorldSubsystem::EnsureHistoryAllocated()
+{
+	const UBulletCoreSettings* Settings = GetDefault<UBulletCoreSettings>();
+	if (!Settings) return;
+
+	if (const int32 Size = FMath::Max(1, Settings->StateHistorySizeFrames); FrameHistory.Num() != Size)
+	{
+		FrameHistory.SetNum(Size);
+		for (FBulletFrameSnapshot& Slot : FrameHistory)
+		{
+			Slot.CommandFrame = INDEX_NONE;
+			Slot.Bodies.Reset();
+		}
+	}
+}
+
+void UBulletPhysicsWorldSubsystem::CaptureBodySnapshot(btRigidBody& Body, FBulletRigidBodySnapshot& Out) const
+{
+	const btCollisionObject* Obj = &Body;
+	Out.BodyKey = BulletGetBodyKey64(Obj);
+
+	// World transform
+	{
+		const FTransform T = BulletHelpers::ToUnrealTransform(Body.getWorldTransform(), UE_WORLD_ORIGIN);
+		Out.Position = T.GetLocation();
+		Out.Rotation = T.GetRotation();
+	}
+
+	// Velocities
+	Out.LinearVelocity  = BulletHelpers::ToUnrealVector3(Body.getLinearVelocity());
+	Out.AngularVelocity = BulletHelpers::ToUnrealVector3(Body.getAngularVelocity());
+
+	// Activation / sleeping
+	Out.ActivationState = Body.getActivationState();
+
+	// Interpolation state (relevant for CCD/interpolation)
+	{
+		const FTransform T = BulletHelpers::ToUnrealTransform(Body.getInterpolationWorldTransform(), UE_WORLD_ORIGIN);
+		Out.InterpPosition = T.GetLocation();
+		Out.InterpRotation = T.GetRotation();
+		Out.InterpLinearVelocity  = BulletHelpers::ToUnrealVector3(Body.getInterpolationLinearVelocity());
+		Out.InterpAngularVelocity = BulletHelpers::ToUnrealVector3(Body.getInterpolationAngularVelocity());
+	}
+
+	// Optional debug info
+	Out.CollisionFlags = Body.getCollisionFlags();
+	Out.IslandTag = Body.getIslandTag();
+}
+
+bool UBulletPhysicsWorldSubsystem::ApplyBodySnapshot(btRigidBody& Body, const FBulletRigidBodySnapshot& Snap) const
+{
+	const UBulletCoreSettings* Settings = GetDefault<UBulletCoreSettings>();
+	if (!Settings) return false;
+	// Set transforms
+	const btTransform NewWorld = BulletHelpers::ToBulletTransform(Snap.Position, Snap.Rotation);
+	Body.setWorldTransform(NewWorld);
+
+	// Important: for some setups, also set motion state's world transform (prevents render/physics mismatch)
+	if (btMotionState* MotionState = Body.getMotionState())
+	{
+		MotionState->setWorldTransform(NewWorld);
+	}
+
+	// Restore velocities
+	Body.setLinearVelocity(BulletHelpers::ToBulletVector3(Snap.LinearVelocity));
+	Body.setAngularVelocity(BulletHelpers::ToBulletVector3(Snap.AngularVelocity));
+
+	// Clear forces so replay deterministically re-applies them (typical rollback behavior)
+	Body.clearForces();
+
+	// Restore interpolation/CCD-related values if desired
+	if (Settings->bRestoreInterpolationState)
+	{
+		const btTransform NewInterp = BulletHelpers::ToBulletTransform(Snap.InterpPosition, Snap.InterpRotation);
+		Body.setInterpolationWorldTransform(NewInterp);
+		Body.setInterpolationLinearVelocity(BulletHelpers::ToBulletVector3(Snap.InterpLinearVelocity));
+		Body.setInterpolationAngularVelocity(BulletHelpers::ToBulletVector3(Snap.InterpAngularVelocity));
+	}
+
+	// Restore activation state
+	if (Settings->bRestoreActivationState)
+	{
+		Body.setActivationState(Snap.ActivationState);
+
+		// If snapshot says active, ensure it stays active.
+		// If snapshot says sleeping, you generally want it to remain sleeping (helps island determinism).
+		if (Snap.ActivationState == ACTIVE_TAG ||
+			Snap.ActivationState == DISABLE_DEACTIVATION)
+		{
+			Body.activate(true);
+		}
+	}
+
+	// When you change transforms on dynamic bodies, ensure broadphase AABBs are updated.
+	// (Bullet does this in step, but if you restore and then immediately query, you want consistency.)
+	Body.updateInertiaTensor();
+
+	return true;
+}
+
+bool UBulletPhysicsWorldSubsystem::ShouldSnapshotBody(const btRigidBody& Body) const
+{
+	const UBulletCoreSettings* Settings = GetDefault<UBulletCoreSettings>();
+	if (!Settings) return false;
+	
+	if (Settings->bOnlyStoreSnapshotsClientSide && GetWorld()->GetNetMode() != NM_Client)
+	{
+		return false;
+	}
+	
+	// Snapshot everything that can affect players.
+	// If you truly want "only movers", treat kinematic + dynamic as movers.
+	if (!Settings->bSnapshotOnlyMovers)
+	{
+		return true;
+	}
+
+	
+
+	// Skip static bodies (mass == 0 and not kinematic)
+	const bool bIsStatic = (Body.getInvMass() == btScalar(0)) && ((Body.getCollisionFlags() & btCollisionObject::CF_KINEMATIC_OBJECT) == 0);
+	return !bIsStatic;
+}
+
+#pragma endregion
 
 

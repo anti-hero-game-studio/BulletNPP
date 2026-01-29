@@ -8,9 +8,6 @@
 
 UBulletCoreSettings::UBulletCoreSettings()
 {
-	ActorFilter.Add(APawn::StaticClass());
-	ActorFilter.Add(AStaticMeshActor::StaticClass());
-	ActorFilter.Add(ABulletPhysicsActor::StaticClass());
 }
 
 #if WITH_EDITOR

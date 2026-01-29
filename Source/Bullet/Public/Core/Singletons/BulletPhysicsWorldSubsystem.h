@@ -24,6 +24,43 @@
 #include "Templates/Function.h"
 #include "BulletPhysicsWorldSubsystem.generated.h"
 
+USTRUCT()
+struct FBulletRigidBodySnapshot
+{
+	GENERATED_BODY()
+
+	// Stable key to find the body on restore
+	UPROPERTY() uint64 BodyKey = 0;
+
+	// Core kinematic state
+	UPROPERTY() FVector Position = FVector::ZeroVector;
+	UPROPERTY() FQuat   Rotation = FQuat::Identity;
+	UPROPERTY() FVector LinearVelocity = FVector::ZeroVector;
+	UPROPERTY() FVector AngularVelocity = FVector::ZeroVector;
+
+	// Bullet activation / sleep state (critical for determinism)
+	UPROPERTY() int32 ActivationState = 0; // btCollisionObject::ActivationState enum values
+
+	// Interpolation state used by Bullet (important if using CCD/interpolation)
+	UPROPERTY() FVector InterpPosition = FVector::ZeroVector;
+	UPROPERTY() FQuat   InterpRotation = FQuat::Identity;
+	UPROPERTY() FVector InterpLinearVelocity = FVector::ZeroVector;
+	UPROPERTY() FVector InterpAngularVelocity = FVector::ZeroVector;
+
+	// Optional: useful for sanity checks / ensuring same object type
+	UPROPERTY() int32 CollisionFlags = 0;
+	UPROPERTY() int32 IslandTag = 0; // mostly debug; can help detect mismatches
+};
+
+USTRUCT()
+struct FBulletFrameSnapshot
+{
+	GENERATED_BODY()
+
+	UPROPERTY() int32 CommandFrame = INDEX_NONE;
+	UPROPERTY() TArray<FBulletRigidBodySnapshot> Bodies; // all rollback-participating bodies for that frame
+};
+
 
 class FUnrealCollisionDispatcher;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhysicsStep, const float&, DeltaTime);
@@ -68,6 +105,7 @@ protected:
 	
 	UPROPERTY(BlueprintAssignable, Category="Bullet Physics|Delegates")
 	FOnPhysicsStep OnPostPhysicsStep;
+
 #pragma endregion
 	
 public:
@@ -148,6 +186,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries", meta=( AutoCreateRefTerm = "ActorsToIgnore"))
 	UPARAM(DisplayName=Hits) TArray<FHitResult> SweepBoxMultiByChannel(const FVector BoxExtents, const FVector Start, const FVector End, 
 		const FRotator Rotation, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, TArray<int32>& HitBodyIds);
+	
+	UFUNCTION(BlueprintCallable, Category="Bullet Physics|Scene Queries")
+	FHitResult SweepGhostSphere(const float Radius, const FTransform Start, const FTransform End);
 	
 	int32 LineTraceSingle(const FVector& Start, const FVector& End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, FHitResult& OutHit);
 	TArray<int32> LineTraceMulti(const FVector& Start, const FVector& End, const TEnumAsByte<ECollisionChannel> Channel, const TArray<AActor*>& ActorsToIgnore, TArray<FHitResult>& OutHits);
@@ -279,6 +320,42 @@ private:
 	
 #pragma endregion
 	
+#pragma region SNAPSHOT HISTORY
+public:
+	// Main API you asked for:
+	// Call after physics step for CommandFrame.
+	void SaveState(const int32 CommandFrame);
+
+	// Call before client rollback replay; restores bodies to snapshot at CommandFrame.
+	bool RestoreState(const int32 CommandFrame);
+	
+	// Optional: you can call this if your world changes drastically (level load, etc.)
+	void ResetStateHistory();
+	
+private:
+	// Circular buffer keyed by CommandFrame.
+	// Index = CommandFrame % StateHistorySizeFrames.
+	TArray<FBulletFrameSnapshot> FrameHistory;
+
+	// Internal helpers
+	void EnsureHistoryAllocated();
+	void CaptureBodySnapshot(btRigidBody& Body, FBulletRigidBodySnapshot& Out) const;
+	bool ApplyBodySnapshot(btRigidBody& Body, const FBulletRigidBodySnapshot& Snap) const;
+
+	bool ShouldSnapshotBody(const btRigidBody& Body) const;
+	
+	// ... inside UBulletPhysicsWorldSubsystem
+	
+	
+
+	static FORCEINLINE uint64 BulletGetBodyKey64(const btCollisionObject* Obj)
+	{
+		check(Obj);
+		return Obj->getWorldArrayIndex();
+	}
+	
+#pragma endregion
+	
 
 #pragma region DATA CACHE
 	
@@ -296,6 +373,7 @@ public:
 	
 #pragma region HELPERS
 	
+	FVector GetVelocity(const int32& ID) const;
 	int32 GetActorRootShapeId(const AActor* Actor) const;
 	int32 FindShapeId(const UPrimitiveComponent* Target) const;
 	bool IsBodyValid(const UPrimitiveComponent* Target) const;
@@ -305,6 +383,12 @@ public:
 	bool IsGhostBodyActive(const UPrimitiveComponent* Target) const;
 	void SetRigidBodyActiveState(const UPrimitiveComponent* Target, bool Active) const;
 	void SetPhysicsState(int ID, const FTransform& Transforms, const FVector& Velocity, const FVector& AngularVelocity) const;
+	void UpdateAABB() const;
+	
+	void TestCollisions(const FTransform& T, const int32& ID, TArray<FBulletHitEvent>& OutHits) const;
+	void TestCollisions(const FTransform& T, const UPrimitiveComponent* Target, TArray<FBulletHitEvent>& OutHits) const;
+	
+	FHitResult SweepGhostObject(const float Radius, const FTransform& Start, const FTransform& End);
 	
 	const FCollisionResponseContainer& GetCollisionResponseContainer(const UPrimitiveComponent* Target) const;
 	btCollisionObject* GetCollisionBody(const int32& Id) const;
@@ -342,7 +426,8 @@ private:
 	FBulletContactGatherer Gatherer;
 	static void BroadcastSymmetricHits(const FBulletHitEvent& Base);
 	static void BroadcastComponentHit(const FBulletHitEvent& E);
-	
-	
+
+
+	btPairCachingGhostObject* m_ghostObject;
 #pragma endregion 
 };

@@ -861,6 +861,10 @@ public:
 	// Whether to warn when we detect that an external system has moved our object, outside of movement simulation control
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BulletMover", AdvancedDisplay)
 	uint8 bWarnOnExternalMovement : 1 = 1;
+	
+	// Whether to warn when we detect that an external system has moved our object, outside of movement simulation control
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BulletMover", AdvancedDisplay)
+	uint8 bIgnoreVelocityGeneratedByMovementMode : 1 = 0;
 
 	// If enabled, we'll accept any movements from an external system in the next simulation state update
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BulletMover", AdvancedDisplay)
